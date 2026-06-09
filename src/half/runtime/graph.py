@@ -15,8 +15,8 @@ from typing import Any
 
 from langgraph.graph import END, StateGraph
 
-from src.runtime.checkpointer import create_secure_checkpointer
-from src.runtime.nodes import (
+from half.runtime.checkpointer import create_secure_checkpointer
+from half.runtime.nodes import (
     phase_1_architecture,
     phase_1_discovery,
     phase_1_gate,
@@ -42,7 +42,8 @@ from src.runtime.nodes import (
     route_from_finality_gate,
     route_from_gate,
 )
-from src.runtime.state import HalfState, initial_state
+from half.runtime.state import HalfState, initial_state
+from half import config
 
 logger = logging.getLogger("half.runtime.graph")
 
@@ -281,7 +282,7 @@ def _deploy_node(state: HalfState) -> dict[str, Any]:
 def create_half_executor(
     project_name: str = "default",
     mode: str = "full",
-    db_path: str = ".hale/state/checkpoints/checkpoints.db",
+    db_path: str = config.CHECKPOINTS_DB,
 ) -> tuple[Any, HalfState]:
     """Create a fully compiled HALF execution graph with checkpointer.
 

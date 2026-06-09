@@ -12,8 +12,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from src.agent_mail.git_backend import GitMailBackend
-from src.agent_mail.models import (
+from half.agent_mail.git_backend import GitMailBackend
+from half.agent_mail.models import (
     Agent,
     FileLease,
     LeaseStatus,
@@ -21,6 +21,7 @@ from src.agent_mail.models import (
     MessageType,
     now_iso,
 )
+from half import config
 
 
 class AgentMailDatabase:
@@ -30,7 +31,7 @@ class AgentMailDatabase:
     """
 
     def __init__(
-        self, db_path: str | Path = ".hale/agent-mail/mail.db", enable_git: bool = True
+        self, db_path: str | Path = config.AGENT_MAIL_DB, enable_git: bool = True
     ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)

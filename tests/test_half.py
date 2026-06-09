@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from src.state import (
+from half.state import (
     StateMachineContext,
     validate_metadata_filters,
     validate_metadata_write,
@@ -91,14 +91,14 @@ class TestOrchestrator:
 
     def test_create_orchestrator(self):
         """Creating an orchestrator with default mode."""
-        from src.core.orchestrator import Orchestrator, PipelineMode
+        from half.core.orchestrator import Orchestrator, PipelineMode
 
         orch = Orchestrator(project_name="test", mode=PipelineMode.FULL)
         assert orch.project_name == "test"
 
     def test_pipeline_status(self):
         """Pipeline status should report correct initial state."""
-        from src.core.orchestrator import Orchestrator, PipelineMode
+        from half.core.orchestrator import Orchestrator, PipelineMode
 
         orch = Orchestrator(project_name="test", mode=PipelineMode.FULL)
         status = orch.get_pipeline_status()
@@ -112,7 +112,7 @@ class TestErrorBudget:
 
     def test_create_budget(self):
         """Creating a budget should show full points."""
-        from src.core.error_budget import ErrorBudgetTracker
+        from half.core.error_budget import ErrorBudgetTracker
 
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
@@ -123,7 +123,7 @@ class TestErrorBudget:
 
     def test_deduct_points(self):
         """Recording failures should deduct points."""
-        from src.core.error_budget import ErrorBudgetTracker
+        from half.core.error_budget import ErrorBudgetTracker
 
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
@@ -134,7 +134,7 @@ class TestErrorBudget:
 
     def test_exhaust_budget(self):
         """Recording many failures should exhaust the budget."""
-        from src.core.error_budget import ErrorBudgetTracker
+        from half.core.error_budget import ErrorBudgetTracker
 
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
@@ -146,7 +146,7 @@ class TestErrorBudget:
 
     def test_invalid_event_type_raises(self):
         """Invalid event type should raise ValueError."""
-        from src.core.error_budget import ErrorBudgetTracker
+        from half.core.error_budget import ErrorBudgetTracker
 
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
@@ -159,7 +159,7 @@ class TestArtifactManager:
 
     def test_ensure_phase_dir(self):
         """Should create phase directory."""
-        from src.core.artifacts import ArtifactManager
+        from half.core.artifacts import ArtifactManager
 
         with tempfile.TemporaryDirectory() as tmp:
             mgr = ArtifactManager(Path(tmp))
@@ -169,7 +169,7 @@ class TestArtifactManager:
 
     def test_write_and_read_artifact(self):
         """Should write and read an artifact."""
-        from src.core.artifacts import ArtifactManager
+        from half.core.artifacts import ArtifactManager
 
         with tempfile.TemporaryDirectory() as tmp:
             mgr = ArtifactManager(Path(tmp))

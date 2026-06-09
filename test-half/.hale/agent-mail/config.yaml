@@ -1,0 +1,9 @@
+# Agent Mail Configuration
+server:
+  host: 127.0.0.1
+  port: 9721
+database:
+  path: .hale/agent-mail/mail.db
+  wal_mode: true
+auth:
+  enabled: false  # Local-only, no auth needed

@@ -9,6 +9,7 @@ Wraps LangGraph's SQLite checkpointer with:
 """
 
 from __future__ import annotations
+from half import config
 
 import logging
 import sqlite3
@@ -17,7 +18,7 @@ from typing import Any
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
-from src.state import (
+from half.state import (
     validate_metadata_write,
 )
 
@@ -25,7 +26,7 @@ logger = logging.getLogger("half.runtime.checkpointer")
 
 
 def create_secure_checkpointer(
-    db_path: str | Path = ".hale/state/checkpoints/checkpoints.db",
+    db_path: str | Path = config.CHECKPOINTS_DB,
 ) -> SqliteSaver:
     """Create a LangGraph checkpointer with WAL mode and security hardening.
 
@@ -115,7 +116,7 @@ def _check_wal_mode(conn: sqlite3.Connection) -> bool:
 
 
 def get_checkpoint_paths(
-    base_dir: str | Path = ".hale/state/checkpoints",
+    base_dir: str | Path = config.CHECKPOINTS_DIR,
 ) -> dict[str, Path]:
     """Get all checkpoint-related paths.
 

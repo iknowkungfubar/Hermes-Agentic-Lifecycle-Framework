@@ -10,8 +10,8 @@ Decentralized agent coordination layer:
 
 from __future__ import annotations
 
-from src.agent_mail.database import AgentMailDatabase
-from src.agent_mail.models import (
+from half.agent_mail.database import AgentMailDatabase
+from half.agent_mail.models import (
     Agent,
     FileLease,
     LeaseStatus,
@@ -19,7 +19,7 @@ from src.agent_mail.models import (
     MessageType,
     make_email,
 )
-from src.agent_mail.server import mcp, run_server
+from half.agent_mail.server import mcp, run_server
 
 __all__ = [
     "Agent",

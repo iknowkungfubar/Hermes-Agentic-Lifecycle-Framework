@@ -7,13 +7,14 @@ for private, air-gapped voice interaction with the Command Center.
 Hardware-accelerated via AMD ROCm on RDNA3 (RX 7900 XTX).
 
 Usage:
-    from src.half_voice import VoiceEngine
+    from half.half_voice import VoiceEngine
     engine = VoiceEngine()
     text = engine.transcribe("input.wav")   # STT
     engine.speak("Hello, Commander")         # TTS
 """
 
 from __future__ import annotations
+from half import config
 
 import json
 import logging
@@ -40,7 +41,7 @@ class VoiceEngine:
         whisper_exec: str = "",
         piper_exec: str = "",
         piper_voice: str = "en_US-less-medium.onnx",
-        models_dir: str | Path = ".hale/voice-models",
+        models_dir: str | Path = config.VOICE_MODELS_DIR,
         device: str = "auto",  # auto, cpu, rocm, cuda
     ):
         self.models_dir = Path(models_dir)

@@ -10,6 +10,7 @@ checkpoint loading to prevent malicious object reconstruction.
 """
 
 from __future__ import annotations
+from half import config
 
 import hashlib
 import json
@@ -38,7 +39,7 @@ ALLOWED_METADATA_KEYS: set[str] = {
     "retry_count",
 }
 
-CHECKPOINT_DIR: Path = Path(".hale/state/checkpoints")
+CHECKPOINT_DIR: Path = Path(config.CHECKPOINTS_DIR)
 
 # ─── Validation Functions ─────────────────────────────────────────────────────
 

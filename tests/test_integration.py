@@ -14,7 +14,7 @@ class TestGitMailBackend:
 
     def test_init_repo(self):
         """Initializing Git backend should create a .git directory."""
-        from src.agent_mail.git_backend import GitMailBackend
+        from half.agent_mail.git_backend import GitMailBackend
 
         with tempfile.TemporaryDirectory() as tmp:
             mail_dir = Path(tmp) / "agent-mail"
@@ -25,7 +25,7 @@ class TestGitMailBackend:
 
     def test_commit_message(self):
         """Committing a message should appear in log."""
-        from src.agent_mail.git_backend import GitMailBackend
+        from half.agent_mail.git_backend import GitMailBackend
 
         with tempfile.TemporaryDirectory() as tmp:
             mail_dir = Path(tmp) / "agent-mail"
@@ -42,7 +42,7 @@ class TestGitMailBackend:
 
     def test_commit_lease(self):
         """Committing a lease should appear in log."""
-        from src.agent_mail.git_backend import GitMailBackend
+        from half.agent_mail.git_backend import GitMailBackend
 
         with tempfile.TemporaryDirectory() as tmp:
             mail_dir = Path(tmp) / "agent-mail"
@@ -61,7 +61,7 @@ class TestVoiceEngine:
 
     def test_init(self):
         """Creating a VoiceEngine should not raise."""
-        from src.half_voice import VoiceEngine
+        from half.half_voice import VoiceEngine
 
         engine = VoiceEngine()
         assert engine is not None
@@ -71,7 +71,7 @@ class TestVoiceEngine:
 
     def test_tts_fails_gracefully(self):
         """TTS without Piper installed should raise RuntimeError."""
-        from src.half_voice import VoiceEngine
+        from half.half_voice import VoiceEngine
 
         engine = VoiceEngine()
         if not engine._tts_available:
@@ -80,7 +80,7 @@ class TestVoiceEngine:
 
     def test_stt_fails_gracefully(self):
         """STT without Whisper installed should raise RuntimeError."""
-        from src.half_voice import VoiceEngine
+        from half.half_voice import VoiceEngine
 
         engine = VoiceEngine()
         if not engine._stt_available:
@@ -93,14 +93,14 @@ class TestFocalboardClient:
 
     def test_init(self):
         """Creating client should not raise."""
-        from src.half_focalboard import FocalboardClient
+        from half.half_focalboard import FocalboardClient
 
         client = FocalboardClient()
         assert client.base_url == "http://127.0.0.1:8000"
 
     def test_list_boards_offline(self):
         """Listing boards when Focalboard is offline should return empty list."""
-        from src.half_focalboard import FocalboardClient
+        from half.half_focalboard import FocalboardClient
 
         client = FocalboardClient(base_url="http://127.0.0.1:1")
         boards = client.list_boards()
@@ -108,7 +108,7 @@ class TestFocalboardClient:
 
     def test_create_board_offline(self):
         """Creating board offline should return board with empty id."""
-        from src.half_focalboard import FocalboardClient
+        from half.half_focalboard import FocalboardClient
 
         client = FocalboardClient(base_url="http://127.0.0.1:1")
         board = client.create_board("Test", "Description")
@@ -117,7 +117,7 @@ class TestFocalboardClient:
 
     def test_create_task_offline(self):
         """Creating task offline should return card with empty id."""
-        from src.half_focalboard import FocalboardClient
+        from half.half_focalboard import FocalboardClient
 
         client = FocalboardClient(base_url="http://127.0.0.1:1")
         card = client.create_task("board-1", "Test Task", phase="phase-1")
@@ -126,7 +126,7 @@ class TestFocalboardClient:
 
     def test_task_from_phase_step(self):
         """Creating a task from a phase step should set correct metadata."""
-        from src.half_focalboard import FocalboardClient
+        from half.half_focalboard import FocalboardClient
 
         card = FocalboardClient.task_from_phase_step(
             "phase-2", "Implementation", "HALF-Implement",
@@ -137,7 +137,7 @@ class TestFocalboardClient:
 
     def test_update_task_status_offline(self):
         """Updating task status offline should return False."""
-        from src.half_focalboard import FocalboardClient
+        from half.half_focalboard import FocalboardClient
 
         client = FocalboardClient(base_url="http://127.0.0.1:1")
         result = client.update_task_status("card-1", "done")
@@ -149,7 +149,7 @@ class TestHalfSidecar:
 
     def test_status_returns_dict(self):
         """Status command should return a dict with expected keys."""
-        from src.half_sidecar import cmd_status
+        from half.half_sidecar import cmd_status
 
         result = cmd_status()
         assert "status" in result
@@ -158,14 +158,14 @@ class TestHalfSidecar:
 
     def test_gate_check_unknown_phase(self):
         """Gate check for unsupported phase should return error."""
-        from src.half_sidecar import cmd_gate_check
+        from half.half_sidecar import cmd_gate_check
 
         result = cmd_gate_check("phase-99")
         assert result["status"] == "error"
 
     def test_generate_mrp(self):
         """MRP generation should return a dict with checks."""
-        from src.half_sidecar import cmd_generate_mrp
+        from half.half_sidecar import cmd_generate_mrp
 
         with tempfile.TemporaryDirectory() as tmp:
             original = Path.cwd()
@@ -180,7 +180,7 @@ class TestHalfSidecar:
 
     def test_voice_stt_nonexistent(self):
         """Voice STT with nonexistent file should return error gracefully."""
-        from src.half_sidecar import cmd_voice_stt
+        from half.half_sidecar import cmd_voice_stt
 
         result = cmd_voice_stt("/nonexistent/audio.wav")
         assert result["status"] in ("error", "ok")  # ok if whisper is installed

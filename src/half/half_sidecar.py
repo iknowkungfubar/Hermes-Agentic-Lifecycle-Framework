@@ -20,6 +20,7 @@ Commands:
 """
 
 from __future__ import annotations
+from half import config
 
 import json
 import logging
@@ -36,11 +37,11 @@ logger = logging.getLogger("half.sidecar")
 
 def cmd_status() -> dict[str, Any]:
     """Return pipeline status as JSON."""
-    from src.runtime.state import initial_state
+    from half.runtime.state import initial_state
 
     state = initial_state(project_name="default")
 
-    artifacts_dir = Path(".hale/artifacts")
+    artifacts_dir = Path(config.ARTIFACTS_DIR)
     completed: list[str] = []
     if artifacts_dir.exists():
         for phase_dir in sorted(artifacts_dir.iterdir()):
@@ -61,7 +62,7 @@ def cmd_status() -> dict[str, Any]:
 
 def cmd_run_phase(phase: str) -> dict[str, Any]:
     """Execute a pipeline phase."""
-    from src.runtime.graph import create_half_executor
+    from half.runtime.graph import create_half_executor
 
     logger.info("Running phase: %s", phase)
     try:
@@ -80,10 +81,10 @@ def cmd_run_phase(phase: str) -> dict[str, Any]:
 
 def cmd_gate_check(phase: str) -> dict[str, Any]:
     """Run gate checks for a phase."""
-    from src.core.gate_checker import GateChecker
+    from half.core.gate_checker import GateChecker
 
     logger.info("Gate check for phase: %s", phase)
-    checker = GateChecker(artifacts_dir=Path(".hale/artifacts"))
+    checker = GateChecker(artifacts_dir=Path(config.ARTIFACTS_DIR))
 
     if phase == "phase-1":
         results = checker.check_phase_1()
@@ -119,7 +120,7 @@ def cmd_generate_mrp() -> dict[str, Any]:
             "rollback_plan_exists": Path(".hale/artifacts/phase-4/rollback-plan.md").exists(),
             "monitoring_configured": True,
         },
-        "status": "ready" if Path(".hale/finality-gate.json").exists() else "pending",
+        "status": "ready" if Path(config.FINALITY_GATE_FILE).exists() else "pending",
     }
 
     mrp_path = Path(".hale/artifacts/phase-4/mrp.json")
@@ -132,7 +133,7 @@ def cmd_generate_mrp() -> dict[str, Any]:
 
 def cmd_voice_stt(audio_path: str) -> dict[str, Any]:
     """Transcribe audio file to text."""
-    from src.half_voice import VoiceEngine
+    from half.half_voice import VoiceEngine
 
     engine = VoiceEngine()
     try:
@@ -144,7 +145,7 @@ def cmd_voice_stt(audio_path: str) -> dict[str, Any]:
 
 def cmd_voice_tts(text: str) -> dict[str, Any]:
     """Convert text to speech."""
-    from src.half_voice import VoiceEngine
+    from half.half_voice import VoiceEngine
 
     engine = VoiceEngine()
     try:
@@ -156,7 +157,7 @@ def cmd_voice_tts(text: str) -> dict[str, Any]:
 
 def cmd_focalboard_create() -> dict[str, Any]:
     """Create a Focalboard board for the current project."""
-    from src.half_focalboard import FocalboardClient
+    from half.half_focalboard import FocalboardClient
 
     client = FocalboardClient()
     board = client.create_board(
