@@ -1,0 +1,157 @@
+# HALF — FOSS Observability & Security Stack
+# Deploys the complete HALF toolchain:
+#   - LangWatch (LLMOps monitoring)
+#   - Laminar (OpenTelemetry tracing)
+#   - Grafana + Prometheus (infrastructure metrics)
+#   - PostgreSQL + Redis (state storage)
+#
+# External tools (install separately):
+#   - NVIDIA garak: pip install garak
+#   - Perplexity Bumblebee: go install github.com/perplexityai/bumblebee/cmd/bumblebee@latest
+#   - LM Studio: download from lmstudio.ai (AMD ROCm native)
+#
+# Usage:
+#   docker compose -f docker/docker-compose.foss.yml up -d
+#   docker compose -f docker/docker-compose.foss.yml down
+
+version: "3.8"
+
+networks:
+  half-observability:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  langwatch_data:
+  laminar_data:
+  postgres_data:
+
+services:
+  # ─── State Storage ──────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: half-postgres
+    networks:
+      - half-observability
+    environment:
+      POSTGRES_DB: half
+      POSTGRES_USER: half
+      POSTGRES_PASSWORD: ${HALF_DB_PASSWORD:-half_secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U half"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: half-redis
+    networks:
+      - half-observability
+    ports:
+      - "127.0.0.1:6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── LLMOps: LangWatch ──────────────────────────────────────────────────────
+  # Self-hosted LLM observability: prompt management, eval, analytics
+  langwatch:
+    image: ghcr.io/langwatch/langwatch:latest
+    container_name: half-langwatch
+    networks:
+      - half-observability
+    ports:
+      - "127.0.0.1:3100:3000"
+    environment:
+      DATABASE_URL: postgresql://half:${HALF_DB_PASSWORD:-half_secret}@postgres:5432/half
+      REDIS_URL: redis://redis:6379/0
+      NEXTAUTH_SECRET: ${HALF_LANGWATCH_SECRET:-change-me-in-production}
+      NEXTAUTH_URL: http://localhost:3100
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── Tracing: Laminar ───────────────────────────────────────────────────────
+  # Rust-based OpenTelemetry tracing for multi-step agent actions
+  laminar:
+    image: ghcr.io/lmnr-ai/lmnr:latest
+    container_name: half-laminar
+    networks:
+      - half-observability
+    ports:
+      - "127.0.0.1:3200:3000"
+    environment:
+      DATABASE_URL: postgresql://half:${HALF_DB_PASSWORD:-half_secret}@postgres:5432/half
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://laminar:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── Metrics: Prometheus ────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: half-prometheus
+    networks:
+      - half-observability
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+
+  # ─── Dashboards: Grafana ────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: half-grafana
+    networks:
+      - half-observability
+    ports:
+      - "127.0.0.1:3300:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${HALF_GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # ─── Agent Mail MCP Server ──────────────────────────────────────────────────
+  agent-mail:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent-mail
+    container_name: half-agent-mail
+    networks:
+      - half-observability
+    ports:
+      - "127.0.0.1:9721:9721"
+    volumes:
+      - ..:/workspace:ro
+    environment:
+      HALF_AGENT_MAIL_DB: /workspace/.hale/agent-mail/mail.db
+    restart: unless-stopped
