@@ -1,0 +1,84 @@
+# HALF Fail-Safe Configuration
+# Copy this to .hale/fail-safes.yaml and customize per project
+
+fail_safe:
+  enabled: true
+  max_retries: 3
+  escalation_path:
+    step_retry:
+      max_attempts: 3
+      cooldown_seconds: 30
+      strategy: "analyze_failure → adjust → retry"
+      log_path: ".hale/logs/retries.log"
+
+    phase_retry:
+      trigger: "3 consecutive step failures in same phase"
+      action: "re-run entire phase with expanded context from previous phase"
+      max_attempts: 2
+
+    human_escalation:
+      trigger: "phase retry also fails OR critical gate failure"
+      cooldown: "indefinite (waits for human)"
+      action: |
+        1. Generate gap report at .hale/gates/gap-report.md
+        2. Pause all pipeline execution
+        3. Deliver gap report to user
+        4. Wait for human decision
+
+  circuit_breakers:
+    - name: "test-fail-cascade"
+      condition: ">5 test suites fail in same run"
+      action: "halt phase 2 — flag architecture-level issue"
+
+    - name: "security-critical"
+      condition: "CRITICAL severity security finding"
+      action: "halt phase 3 — run fix-as-you-go before proceeding"
+
+    - name: "deployment-regression"
+      condition: "Docker build fails after 3 retries"
+      action: "halt phase 4 — require human intervention"
+
+    - name: "coverage-decline"
+      condition: "coverage drops >5% from previous phase"
+      action: "warn — require justification before proceeding"
+
+  observability:
+    metrics_path: ".hale/metrics/"
+    log_path: ".hale/logs/"
+    telemetry: "stdout"  # options: prometheus, stdout, disabled
+
+    metrics:
+      phase_duration_seconds:
+        description: "Time spent in each phase"
+        labels: [phase, project]
+      gate_check_success:
+        description: "1 = pass, 0 = fail"
+        labels: [gate_id, project]
+      retry_count:
+        description: "Number of retries per gate"
+        labels: [gate_id, project]
+      total_steps:
+        description: "Total steps completed in pipeline"
+        labels: [project]
+
+error_budget:
+  window_days: 30
+  total_points: 100
+  deductions:
+    phase_1_gate_fail: 5
+    phase_2_gate_fail: 10
+    phase_3_gate_fail: 15
+    phase_4_gate_fail: 20
+    production_incident_p1: 25
+    production_incident_p2: 15
+    production_incident_p3: 5
+  thresholds:
+    warning:
+      percent: 40
+      action: "Increase gate strictness — add secondary review"
+    critical:
+      percent: 20
+      action: "Pause automation — human review of pipeline health required"
+    exhausted:
+      percent: 0
+      action: "Full pipeline review required before resuming any automation"

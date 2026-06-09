@@ -1,0 +1,36 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches: [main, master]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to staging
+        run: |
+          echo "Staging deployment triggered by CI success"
+          echo "In production: docker compose up -d --wait"
+      - name: Smoke tests
+        run: |
+          echo "Smoke tests would run here"
+          echo "curl -f http://localhost:8000/health"
+
+  deploy-production:
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Finality Gate
+        run: |
+          echo "=== HALF Finality Gate ==="
+          echo "Production deployment requires manual approval."
+          echo "Verify: Merge-Readiness Pack (MRP) generated → Human sign-off required"
+      - run: echo "Deployment would proceed after MRP approval"

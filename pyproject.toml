@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes-half"
+version = "1.0.0"
+description = "Hermes Agentic Lifecycle Framework — transform concepts into production software"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Hermes Agent / Turin Tech Solutions", email = "josh@turintechsolutions.com"}
+]
+requires-python = ">=3.13"
+keywords = ["half", "lifecycle", "sdlc", "agentic-se"]
+
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9",
+    "mypy>=1.14",
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+    "pytest-asyncio>=0.25",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D",      # docstring rules (not enforced in this repo)
+    "ANN",    # annotation rules (not enforced in this repo)
+    "COM812", # trailing comma (handled by formatter)
+    "INP001", # implicit namespace package
+    "FBT001", # boolean positional args (pragmatic)
+    "FBT002", # boolean positional args (pragmatic)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]  # allow assert in tests
+"scripts/**" = ["T201", "INP001"]  # allow print in scripts
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+allow_untyped_defs = false
+disallow_untyped_decorators = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --cov=src --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*", "scripts/*"]
+
+[tool.coverage.report]
+fail_under = 15
+show_missing = true
