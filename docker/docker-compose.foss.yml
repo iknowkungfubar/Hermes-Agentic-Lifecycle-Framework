@@ -29,6 +29,7 @@ volumes:
   langwatch_data:
   laminar_data:
   postgres_data:
+  focalboard_data:
 
 services:
   # ─── State Storage ──────────────────────────────────────────────────────────
@@ -154,4 +155,21 @@ services:
       - ..:/workspace:ro
     environment:
       HALF_AGENT_MAIL_DB: /workspace/.hale/agent-mail/mail.db
+    restart: unless-stopped
+
+  # ─── Focalboard (Kanban / Task Management) ──────────────────────────────────
+  focalboard:
+    image: mattermost/focalboard:latest
+    container_name: half-focalboard
+    networks:
+      - half-observability
+    ports:
+      - "127.0.0.1:8200:8000"
+    volumes:
+      - focalboard_data:/data
+      - ./focalboard-config.json:/config.json:ro
+    environment:
+      - FB_SERVER_PORT=8000
+      - FB_DB_TYPE=sqlite3
+      - FB_DB_FILE=/data/focalboard.db
     restart: unless-stopped

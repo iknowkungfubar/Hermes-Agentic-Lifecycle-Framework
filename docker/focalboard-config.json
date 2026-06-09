@@ -1,0 +1,18 @@
+{
+  "serverRoot": "http://localhost:8200",
+  "port": 8000,
+  "dbtype": "sqlite3",
+  "dbconfig": "/data/focalboard.db",
+  "useSSL": false,
+  "webpath": "/opt/focalboard/webapp/pack",
+  "filespath": "/data/files",
+  "telemetry": false,
+  "prometheus_addr": "0.0.0.0:9092",
+  "session_expire_time": 3600,
+  "session_refresh_time": 1800,
+  "local_only": true,
+  "enable_public_shared_boards": false,
+  "auth_mode": "native",
+  "enable_teams": false,
+  "enable_user_creation": true
+}

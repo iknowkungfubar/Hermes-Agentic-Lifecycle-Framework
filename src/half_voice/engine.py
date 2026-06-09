@@ -1,0 +1,316 @@
+"""
+HALF — Voice Module: Speech-to-Text & Text-to-Speech
+
+Wraps local Whisper.cpp (STT) and Piper (TTS) engines
+for private, air-gapped voice interaction with the Command Center.
+
+Hardware-accelerated via AMD ROCm on RDNA3 (RX 7900 XTX).
+
+Usage:
+    from src.half_voice import VoiceEngine
+    engine = VoiceEngine()
+    text = engine.transcribe("input.wav")   # STT
+    engine.speak("Hello, Commander")         # TTS
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import subprocess
+import tempfile
+from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger("half.voice")
+
+
+class VoiceEngine:
+    """Speech-to-Text and Text-to-Speech engine.
+
+    Uses Whisper.cpp for STT (runs locally on AMD ROCm).
+    Uses Piper for TTS (runs locally on CPU/ROCm).
+
+    Falls back gracefully if engines aren't installed.
+    """
+
+    def __init__(
+        self,
+        whisper_model: str = "ggml-large-v3-q5_0.bin",
+        whisper_exec: str = "",
+        piper_exec: str = "",
+        piper_voice: str = "en_US-less-medium.onnx",
+        models_dir: str | Path = ".hale/voice-models",
+        device: str = "auto",  # auto, cpu, rocm, cuda
+    ):
+        self.models_dir = Path(models_dir)
+        self.models_dir.mkdir(parents=True, exist_ok=True)
+
+        self.whisper_model = whisper_model
+        self.whisper_exec = whisper_exec or self._find_whisper()
+        self.piper_exec = piper_exec or self._find_piper()
+        self.piper_voice = piper_voice
+        self.device = device
+
+        self._stt_available = bool(self.whisper_exec)
+        self._tts_available = bool(self.piper_exec)
+
+        if not self._stt_available:
+            logger.info("Whisper.cpp not found — STT disabled (install: https://github.com/ggerganov/whisper.cpp)")
+        if not self._tts_available:
+            logger.info("Piper not found — TTS disabled (install: https://github.com/rhasspy/piper)")
+
+    def _find_whisper(self) -> str:
+        """Find whisper.cpp executable."""
+        candidates = ["whisper-cli", "whisper", "./whisper", "main"]
+        for cmd in candidates:
+            path = self._which(cmd)
+            if path:
+                return path
+        # Check common locations
+        for loc in [
+            "/usr/local/bin/whisper-cli",
+            "/opt/whisper.cpp/main",
+            os.path.expanduser("~/whisper.cpp/main"),
+        ]:
+            if os.path.isfile(loc) and os.access(loc, os.X_OK):
+                return loc
+        return ""
+
+    def _find_piper(self) -> str:
+        """Find piper executable."""
+        candidates = ["piper", "piper-tts"]
+        for cmd in candidates:
+            path = self._which(cmd)
+            if path:
+                return path
+        for loc in [
+            "/usr/local/bin/piper",
+            "/opt/piper/piper",
+            os.path.expanduser("~/piper/piper"),
+        ]:
+            if os.path.isfile(loc) and os.access(loc, os.X_OK):
+                return loc
+        return ""
+
+    @staticmethod
+    def _which(cmd: str) -> str:
+        """Check if a command exists in PATH."""
+        try:
+            result = subprocess.run(
+                ["which", cmd], capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+        return ""
+
+    # ─── Speech-to-Text ───────────────────────────────────────────────────
+
+    def transcribe(self, audio_path: str | Path, language: str = "en") -> str:
+        """Transcribe an audio file to text using Whisper.cpp.
+
+        Args:
+            audio_path: Path to audio file (wav, mp3, etc.).
+            language: Language code (default: en).
+
+        Returns:
+            Transcribed text.
+
+        Raises:
+            RuntimeError: If STT is not available.
+        """
+        if not self._stt_available:
+            raise RuntimeError(
+                "STT unavailable — Whisper.cpp not found. "
+                "Install from https://github.com/ggerganov/whisper.cpp"
+            )
+
+        audio_path = Path(audio_path)
+        if not audio_path.exists():
+            raise FileNotFoundError(f"Audio file not found: {audio_path}")
+
+        cmd = [
+            self.whisper_exec,
+            "-m", str(self.models_dir / self.whisper_model),
+            "-f", str(audio_path),
+            "-l", language,
+            "-oj",  # JSON output
+        ]
+
+        if self.device == "rocm":
+            cmd.extend(["--gpu", "1"])
+
+        logger.info("Transcribing %s...", audio_path.name)
+
+        try:
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=300
+            )
+            if result.returncode != 0:
+                logger.warning("Whisper stderr: %s", result.stderr[:500])
+                return "[transcription failed]"
+
+            # Parse JSON output
+            try:
+                data = json.loads(result.stdout)
+                if isinstance(data, dict):
+                    return data.get("text", "").strip()
+                elif isinstance(data, list):
+                    return " ".join(s.get("text", "") for s in data).strip()
+            except json.JSONDecodeError:
+                pass
+
+            # Fallback: return raw stdout
+            return result.stdout.strip()
+
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("Whisper transcription timed out")
+
+    def transcribe_microphone(self, duration_seconds: int = 5) -> str:
+        """Record from microphone and transcribe.
+
+        Requires 'arecord' (Linux) or 'sox' installed.
+
+        Args:
+            duration_seconds: Recording duration.
+
+        Returns:
+            Transcribed text.
+        """
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            temp_path = f.name
+
+        try:
+            # Record using arecord (Linux)
+            record_cmd = [
+                "arecord", "-f", "S16_LE", "-r", "16000",
+                "-c", "1", "-d", str(duration_seconds),
+                temp_path,
+            ]
+            subprocess.run(record_cmd, check=True, timeout=duration_seconds + 5)
+
+            # Transcribe
+            return self.transcribe(temp_path)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("Microphone recording timed out")
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Recording failed: {e}")
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    # ─── Text-to-Speech ───────────────────────────────────────────────────
+
+    def speak(self, text: str, output_path: str | Path = "") -> str:
+        """Convert text to speech using Piper.
+
+        Args:
+            text: Text to speak.
+            output_path: Optional output WAV path. Auto-temp if empty.
+
+        Returns:
+            Path to generated audio file.
+
+        Raises:
+            RuntimeError: If TTS is not available.
+        """
+        if not self._tts_available:
+            raise RuntimeError(
+                "TTS unavailable — Piper not found. "
+                "Install from https://github.com/rhasspy/piper"
+            )
+
+        if not output_path:
+            output_path = str(Path(tempfile.mkdtemp()) / "output.wav")
+
+        cmd = [
+            self.piper_exec,
+            "--model", str(self.models_dir / self.piper_voice),
+            "--output-file", output_path,
+        ]
+
+        logger.info("Generating TTS for %d chars...", len(text))
+
+        try:
+            result = subprocess.run(
+                cmd,
+                input=text.encode("utf-8"),
+                capture_output=True,
+                timeout=60,
+            )
+            if result.returncode != 0:
+                logger.warning("Piper stderr: %s", result.stderr[:500])
+                raise RuntimeError(f"TTS generation failed: {result.stderr[:200]}")
+
+            logger.info("TTS output: %s", output_path)
+            return str(output_path)
+
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("Piper TTS timed out")
+
+    def speak_async(self, text: str) -> None:
+        """Speak text asynchronously (fire-and-forget).
+
+        Args:
+            text: Text to speak.
+        """
+        import threading
+        thread = threading.Thread(target=self.speak, args=(text,), daemon=True)
+        thread.start()
+
+    # ─── Model Management ─────────────────────────────────────────────────
+
+    def download_model(self, model_type: str = "whisper") -> bool:
+        """Download voice models.
+
+        Args:
+            model_type: 'whisper' or 'piper'.
+
+        Returns:
+            True if downloaded successfully.
+        """
+        if model_type == "whisper":
+            url = (
+                f"https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
+                f"{self.whisper_model}"
+            )
+            target = self.models_dir / self.whisper_model
+        elif model_type == "piper":
+            url = (
+                f"https://huggingface.co/rhasspy/piper-voices/resolve/main/en/"
+                f"{self.piper_voice}"
+            )
+            target = self.models_dir / self.piper_voice
+        else:
+            raise ValueError(f"Unknown model type: {model_type}")
+
+        if target.exists():
+            logger.info("Model already exists: %s", target)
+            return True
+
+        logger.info("Downloading %s from %s...", model_type, url)
+        try:
+            subprocess.run(
+                ["curl", "-L", "-o", str(target), url],
+                check=True, timeout=600,
+            )
+            logger.info("Downloaded: %s", target)
+            return True
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:
+            logger.error("Download failed: %s", e)
+            return False
+
+    @property
+    def is_available(self) -> dict[str, bool]:
+        """Check if voice engines are available.
+
+        Returns:
+            Dict with 'stt' and 'tts' availability.
+        """
+        return {
+            "stt": self._stt_available,
+            "tts": self._tts_available,
+        }

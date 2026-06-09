@@ -20,12 +20,16 @@ from src.agent_mail.models import (
     MessageType,
     now_iso,
 )
+from src.agent_mail.git_backend import GitMailBackend
 
 
 class AgentMailDatabase:
-    """SQLite-backed persistent store for Agent Mail."""
+    """SQLite-backed persistent store for Agent Mail.
 
-    def __init__(self, db_path: str | Path = ".hale/agent-mail/mail.db"):
+    Backed by Git for full audit trail and decentralized backup.
+    """
+
+    def __init__(self, db_path: str | Path = ".hale/agent-mail/mail.db", enable_git: bool = True):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
@@ -35,6 +39,15 @@ class AgentMailDatabase:
         self._conn.execute("PRAGMA journal_mode=WAL;")
         self._conn.execute("PRAGMA synchronous=NORMAL;")
         self._conn.execute("PRAGMA busy_timeout=5000;")
+
+        # Initialize Git backend for audit trail
+        self._git: GitMailBackend | None = None
+        if enable_git:
+            try:
+                self._git = GitMailBackend(mail_dir=self.db_path.parent)
+            except Exception as e:
+                import logging
+                logging.getLogger("half.agent_mail").warning("Git backend disabled: %s", e)
 
         self._init_schema()
 
@@ -111,6 +124,11 @@ class AgentMailDatabase:
             (email, name, role, now),
         )
         self._conn.commit()
+
+        # Git audit trail
+        if self._git:
+            self._git.commit_agent_registered(email, role)
+
         return agent
 
     def get_agent(self, email: str) -> Optional[Agent]:
@@ -213,6 +231,11 @@ class AgentMailDatabase:
             ),
         )
         self._conn.commit()
+
+        # Git audit trail
+        if self._git:
+            self._git.commit_message_sent(msg_id, sender, recipients)
+
         return message
 
     def get_messages(
@@ -313,6 +336,10 @@ class AgentMailDatabase:
         )
         self._conn.commit()
 
+        # Git audit trail
+        if self._git:
+            self._git.commit_lease_acquired(lease_id, file_path, agent_email)
+
         return FileLease(
             id=lease_id,
             file_path=file_path,
@@ -339,6 +366,15 @@ class AgentMailDatabase:
             (now_iso(), lease_id, agent_email),
         )
         self._conn.commit()
+
+        # Git audit trail
+        if self._git and cursor.rowcount > 0:
+            file_path = self._conn.execute(
+                "SELECT file_path FROM file_leases WHERE id = ?", (lease_id,)
+            ).fetchone()
+            if file_path:
+                self._git.commit_lease_released(lease_id, file_path["file_path"], agent_email)
+
         return cursor.rowcount > 0
 
     def get_active_leases(self, agent_email: Optional[str] = None) -> list[FileLease]:
