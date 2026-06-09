@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from langgraph.graph import END, StateGraph
+from langgraph.graph import END, START, StateGraph
 
 from half.runtime.checkpointer import create_secure_checkpointer
 from half.runtime.nodes import (
@@ -112,6 +112,7 @@ def build_half_graph() -> StateGraph:  # type: ignore[type-arg]
     workflow.add_node("deploy", _deploy_node)
 
     # ─── Phase 1 Edges ────────────────────────────────────────────────────
+    workflow.add_edge(START, "phase_1_discovery")
     workflow.add_edge("phase_1_discovery", "phase_1_specification")
     workflow.add_edge("phase_1_specification", "phase_1_architecture")
     workflow.add_edge("phase_1_architecture", "phase_1_gate")
