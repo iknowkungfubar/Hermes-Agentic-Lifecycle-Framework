@@ -147,11 +147,22 @@ fn approve_deployment(
 fn run_goal_command(command: String, state: tauri::State<AppState>) -> Result<String, String> {
     let path = state.project_path.lock().map_err(|e| e.to_string())?;
 
-    let output = Command::new("python3")
-        .args(["-m", "src.core.orchestrator", &command])
+    // Try the sidecar entry point first
+    let result = Command::new("python3")
+        .args(["-m", "src.half_sidecar"])
+        .arg(&command)
         .current_dir(&*path)
         .output()
-        .map_err(|e| format!("Failed to execute command: {}", e))?;
+        .map_err(|e| format!("Failed to execute command: {}", e));
+
+    // If that fails, fall back to direct module execution
+    let output = result.or_else(|_| {
+        Command::new("python3")
+            .args(["-m", "src.core.orchestrator", &command])
+            .current_dir(&*path)
+            .output()
+            .map_err(|e| format!("Failed to execute command: {}", e))
+    })?;
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();

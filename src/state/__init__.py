@@ -262,8 +262,8 @@ class StateMachineContext:
             "phase-5",
         }
         if phase not in valid_phases:
-            msg = f"Invalid phase transition: {phase}"
-            raise ValueError(msg)
+            err_msg = f"Invalid phase transition: {phase}"
+            raise ValueError(err_msg)
 
         self._phase = phase
         self._metadata["phase"] = phase
