@@ -1,0 +1,52 @@
+site_name: HALF — Hermes Agentic Lifecycle Framework
+site_description: Transform high-level business concepts into production-ready software
+repo_url: https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - content.code.copy
+    - content.tabs.link
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Your First Project: getting-started/first-project.md
+  - User Guide:
+    - Overview: guide/overview.md
+    - "Phase 1: Discovery & Strategy": guide/phase-1.md
+    - "Phase 2: Development & Coding": guide/phase-2.md
+    - "Phase 3: Quality Assurance": guide/phase-3.md
+    - "Phase 4: Polish & Deployment": guide/phase-4.md
+    - "Phase 5: Iteration": guide/phase-5.md
+  - Reference:
+    - CLI Reference: reference/cli.md
+    - Configuration: reference/configuration.md
+    - Agent Mail: reference/agent-mail.md
+    - Voice Engine: reference/voice.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+copyright: Copyright &copy; 2026 Turin Tech Solutions. MIT License.
