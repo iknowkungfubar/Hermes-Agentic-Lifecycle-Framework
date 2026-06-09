@@ -22,8 +22,8 @@ from src.agent_mail.models import (
 from src.agent_mail.server import mcp, run_server
 
 __all__ = [
-    "AgentMailDatabase",
     "Agent",
+    "AgentMailDatabase",
     "FileLease",
     "LeaseStatus",
     "Message",

@@ -9,11 +9,11 @@ full audit trail and decentralized backup.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("half.agent_mail.git")
 
@@ -69,7 +69,7 @@ class GitMailBackend:
         """
         try:
             result = subprocess.run(
-                ["git"] + list(args),
+                ["git", *list(args)],
                 cwd=str(self.mail_dir),
                 capture_output=True,
                 text=True,
@@ -81,13 +81,16 @@ class GitMailBackend:
                     logger.warning("Git warning: %s", result.stderr.strip())
             return result.stdout.strip()
         except subprocess.TimeoutExpired:
-            logger.error("Git command timed out: %s", " ".join(args))
-            raise RuntimeError(f"Git command timed out: {' '.join(args)}")
+            logger.exception("Git command timed out: %s", " ".join(args))
+            msg = f"Git command timed out: {' '.join(args)}"
+            raise RuntimeError(msg)
         except FileNotFoundError:
             logger.warning("Git not found — Agent Mail running without Git backup")
             return ""
 
-    def commit_message_sent(self, message_id: str, sender: str, recipients: list[str]) -> None:
+    def commit_message_sent(
+        self, message_id: str, sender: str, recipients: list[str]
+    ) -> None:
         """Record a sent message in Git history.
 
         Args:
@@ -98,10 +101,8 @@ class GitMailBackend:
         subject = f"mail: {sender} -> {', '.join(recipients)}"
         body = f"Message {message_id} sent by {sender}"
         self._git("add", "mail.db")
-        try:
+        with contextlib.suppress(RuntimeError):
             self._git("commit", "-m", subject, "-m", body)
-        except RuntimeError:
-            pass
 
     def commit_lease_acquired(self, lease_id: str, file_path: str, agent: str) -> None:
         """Record a file lease acquisition in Git history.
@@ -114,10 +115,8 @@ class GitMailBackend:
         subject = f"lease: {agent} acquired {file_path}"
         body = f"Lease {lease_id}: {file_path} reserved by {agent}"
         self._git("add", "mail.db")
-        try:
+        with contextlib.suppress(RuntimeError):
             self._git("commit", "-m", subject, "-m", body)
-        except RuntimeError:
-            pass
 
     def commit_lease_released(self, lease_id: str, file_path: str, agent: str) -> None:
         """Record a file lease release in Git history.
@@ -130,10 +129,8 @@ class GitMailBackend:
         subject = f"lease: {agent} released {file_path}"
         body = f"Lease {lease_id}: {file_path} released by {agent}"
         self._git("add", "mail.db")
-        try:
+        with contextlib.suppress(RuntimeError):
             self._git("commit", "-m", subject, "-m", body)
-        except RuntimeError:
-            pass
 
     def commit_agent_registered(self, agent_email: str, role: str) -> None:
         """Record an agent registration in Git history.
@@ -144,10 +141,8 @@ class GitMailBackend:
         """
         subject = f"agent: {agent_email} registered as {role}"
         self._git("add", "mail.db")
-        try:
+        with contextlib.suppress(RuntimeError):
             self._git("commit", "-m", subject)
-        except RuntimeError:
-            pass
 
     def get_log(self, max_count: int = 50) -> list[dict[str, str]]:
         """Get the Git commit log for the mail repository.
@@ -160,7 +155,8 @@ class GitMailBackend:
         """
         try:
             output = self._git(
-                "log", f"--max-count={max_count}",
+                "log",
+                f"--max-count={max_count}",
                 "--format=%H|%an|%ai|%s",
             )
             if not output:
@@ -170,12 +166,14 @@ class GitMailBackend:
             for line in output.split("\n"):
                 if "|" in line:
                     parts = line.split("|", 3)
-                    commits.append({
-                        "hash": parts[0][:8],
-                        "author": parts[1],
-                        "date": parts[2],
-                        "subject": parts[3] if len(parts) > 3 else "",
-                    })
+                    commits.append(
+                        {
+                            "hash": parts[0][:8],
+                            "author": parts[1],
+                            "date": parts[2],
+                            "subject": parts[3] if len(parts) > 3 else "",
+                        }
+                    )
             return commits
         except RuntimeError:
             return []
@@ -203,7 +201,9 @@ class GitMailBackend:
         try:
             result = subprocess.run(
                 ["du", "-sh", str(self.mail_dir / ".git")],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             return result.stdout.strip().split()[0] if result.stdout else "unknown"
         except (subprocess.TimeoutExpired, FileNotFoundError):

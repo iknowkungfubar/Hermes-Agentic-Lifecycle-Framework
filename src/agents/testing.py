@@ -36,7 +36,7 @@ class TestQualityReport:
 class TestingAgent:
     """Phase 3A: Test suite completeness verification and gap filling."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.coverage: dict[str, FRTestCoverage] = {}
 
     def add_fr(self, fr_id: str) -> None:

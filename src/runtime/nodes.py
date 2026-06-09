@@ -7,13 +7,12 @@ Nodes implement the tri-phasic execution loop: Research → Plan → Implement.
 
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from src.runtime.state import HalfState, is_gate_passed, phase_artifacts_dir
+from src.runtime.state import HalfState, phase_artifacts_dir
 
 logger = logging.getLogger("half.runtime.nodes")
 
@@ -29,7 +28,12 @@ def phase_1_discovery(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 1A: Requirements discovery")
     return {
         "current_step": "phase-1-discovery",
-        "messages": [{"role": "assistant", "content": "Phase 1A complete: Requirements discovered"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 1A complete: Requirements discovered",
+            }
+        ],
     }
 
 
@@ -38,7 +42,12 @@ def phase_1_specification(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 1B: Specification generation")
     return {
         "current_step": "phase-1-specification",
-        "messages": [{"role": "assistant", "content": "Phase 1B complete: Specification generated"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 1B complete: Specification generated",
+            }
+        ],
     }
 
 
@@ -47,7 +56,9 @@ def phase_1_architecture(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 1C: Architecture design")
     return {
         "current_step": "phase-1-architecture",
-        "messages": [{"role": "assistant", "content": "Phase 1C complete: Architecture designed"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 1C complete: Architecture designed"}
+        ],
     }
 
 
@@ -73,15 +84,20 @@ def phase_1_gate(state: HalfState) -> dict[str, Any]:
     gate_result = {
         "gate_id": "G1",
         "passed": passed,
-        "details": f"Missing artifacts: {missing}" if missing else "All 5 artifacts present",
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "details": f"Missing artifacts: {missing}"
+        if missing
+        else "All 5 artifacts present",
+        "timestamp": datetime.now(tz=UTC).isoformat(),
     }
 
     return {
         "gate_results": [gate_result],
         "current_step": "phase-1-gate",
         "messages": [
-            {"role": "assistant", "content": f"Phase 1 Gate: {'PASSED' if passed else 'FAILED'}"}
+            {
+                "role": "assistant",
+                "content": f"Phase 1 Gate: {'PASSED' if passed else 'FAILED'}",
+            }
         ],
     }
 
@@ -94,7 +110,9 @@ def phase_2_scaffold(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 2A: Repository scaffold")
     return {
         "current_step": "phase-2-scaffold",
-        "messages": [{"role": "assistant", "content": "Phase 2A complete: Repository scaffolded"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 2A complete: Repository scaffolded"}
+        ],
     }
 
 
@@ -103,7 +121,9 @@ def phase_2_implement(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 2B: Implementation")
     return {
         "current_step": "phase-2-implement",
-        "messages": [{"role": "assistant", "content": "Phase 2B complete: Implementation done"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 2B complete: Implementation done"}
+        ],
     }
 
 
@@ -117,14 +137,17 @@ def phase_2_gate(state: HalfState) -> dict[str, Any]:
         "gate_id": "G2",
         "passed": passed,
         "details": "Tests pass, lint 0, type check 0, coverage ≥80%",
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "timestamp": datetime.now(tz=UTC).isoformat(),
     }
 
     return {
         "gate_results": [gate_result],
         "current_step": "phase-2-gate",
         "messages": [
-            {"role": "assistant", "content": f"Phase 2 Gate: {'PASSED' if passed else 'FAILED'}"}
+            {
+                "role": "assistant",
+                "content": f"Phase 2 Gate: {'PASSED' if passed else 'FAILED'}",
+            }
         ],
     }
 
@@ -137,7 +160,9 @@ def phase_3_testing(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 3A: Testing")
     return {
         "current_step": "phase-3-testing",
-        "messages": [{"role": "assistant", "content": "Phase 3A complete: Test suite verified"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 3A complete: Test suite verified"}
+        ],
     }
 
 
@@ -146,7 +171,9 @@ def phase_3_security(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 3B: Security")
     return {
         "current_step": "phase-3-security",
-        "messages": [{"role": "assistant", "content": "Phase 3B complete: Security scan done"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 3B complete: Security scan done"}
+        ],
     }
 
 
@@ -155,7 +182,12 @@ def phase_3_integration(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 3C: Integration testing")
     return {
         "current_step": "phase-3-integration",
-        "messages": [{"role": "assistant", "content": "Phase 3C complete: Integration tests passed"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 3C complete: Integration tests passed",
+            }
+        ],
     }
 
 
@@ -166,7 +198,7 @@ def phase_3_gate(state: HalfState) -> dict[str, Any]:
         "gate_id": "G3",
         "passed": True,
         "details": "No CRITICAL security findings, all integration tests pass",
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "timestamp": datetime.now(tz=UTC).isoformat(),
     }
     return {
         "gate_results": [gate_result],
@@ -183,7 +215,9 @@ def phase_4_infrastructure(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 4A: Infrastructure")
     return {
         "current_step": "phase-4-infrastructure",
-        "messages": [{"role": "assistant", "content": "Phase 4A complete: IaC generated"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 4A complete: IaC generated"}
+        ],
     }
 
 
@@ -192,7 +226,9 @@ def phase_4_cicd(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 4B: CI/CD")
     return {
         "current_step": "phase-4-cicd",
-        "messages": [{"role": "assistant", "content": "Phase 4B complete: CI/CD configured"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 4B complete: CI/CD configured"}
+        ],
     }
 
 
@@ -202,7 +238,9 @@ def phase_4_launch(state: HalfState) -> dict[str, Any]:
     return {
         "current_step": "phase-4-launch",
         "mrp_generated": True,
-        "messages": [{"role": "assistant", "content": "Phase 4C complete: MRP generated"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 4C complete: MRP generated"}
+        ],
     }
 
 
@@ -216,8 +254,10 @@ def phase_4_gate(state: HalfState) -> dict[str, Any]:
     gate_result = {
         "gate_id": "G4",
         "passed": approved,
-        "details": "Finality Gate: awaiting human sign-off" if not approved else "Finality Gate: APPROVED",
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "details": "Finality Gate: awaiting human sign-off"
+        if not approved
+        else "Finality Gate: APPROVED",
+        "timestamp": datetime.now(tz=UTC).isoformat(),
     }
 
     return {
@@ -240,7 +280,9 @@ def phase_5_observe(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 5A: Observability")
     return {
         "current_step": "phase-5-observe",
-        "messages": [{"role": "assistant", "content": "Phase 5A complete: Monitoring active"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 5A complete: Monitoring active"}
+        ],
     }
 
 
@@ -249,7 +291,9 @@ def phase_5_iterate(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 5B: Iteration")
     return {
         "current_step": "phase-5-iterate",
-        "messages": [{"role": "assistant", "content": "Phase 5B complete: Triage active"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 5B complete: Triage active"}
+        ],
     }
 
 
@@ -258,7 +302,9 @@ def phase_5_codify(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 5C: Codification")
     return {
         "current_step": "phase-5-codify",
-        "messages": [{"role": "assistant", "content": "Phase 5C complete: Codification active"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 5C complete: Codification active"}
+        ],
     }
 
 
@@ -269,12 +315,14 @@ def phase_5_gate(state: HalfState) -> dict[str, Any]:
         "gate_id": "G5",
         "passed": True,
         "details": "Monitoring loops active, Codification Imperative active",
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "timestamp": datetime.now(tz=UTC).isoformat(),
     }
     return {
         "gate_results": [gate_result],
         "current_step": "phase-5-gate",
-        "messages": [{"role": "assistant", "content": "Phase 5 Gate: PASSED — Cycle complete"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 5 Gate: PASSED — Cycle complete"}
+        ],
     }
 
 
@@ -291,7 +339,11 @@ def route_from_gate(state: HalfState) -> str:
     if last_gate.get("passed", False):
         current = state.get("current_phase", "phase-1")
         phase_order = [
-            "phase-1", "phase-2", "phase-3", "phase-4", "phase-5",
+            "phase-1",
+            "phase-2",
+            "phase-3",
+            "phase-4",
+            "phase-5",
         ]
         try:
             idx = phase_order.index(current)

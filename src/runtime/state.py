@@ -6,7 +6,7 @@ TypedDict state definitions for the SDLC state machine.
 
 from __future__ import annotations
 
-from typing import Annotated, Any, Dict, List, Optional, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from langgraph.graph.message import add_messages
 
@@ -57,7 +57,7 @@ class HalfState(TypedDict):
     error_budget_remaining: int
 
     # Messages (for LangGraph message passing)
-    messages: Annotated[list, add_messages]
+    messages: Annotated[list[dict[str, Any]], add_messages]
 
     # Agent coordination
     agent_mailbox: dict[str, list[dict[str, Any]]]

@@ -34,7 +34,7 @@ class Component:
 class ArchitectAgent:
     """Phase 1C: Ideal State Architecture generation."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.adrs: list[ArchitectureDecisionRecord] = []
         self.components: list[Component] = []
         self.architecture_description: str = ""

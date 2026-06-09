@@ -102,7 +102,7 @@ class ErrorBudgetTracker:
 
     def _calculate_remaining(self) -> int:
         """Calculate remaining budget points."""
-        total_deducted = sum(e["deduction"] for e in self._events)
+        total_deducted: int = sum(e["deduction"] for e in self._events)
         return max(0, self.total_points - total_deducted)
 
     def get_status(self) -> dict[str, Any]:

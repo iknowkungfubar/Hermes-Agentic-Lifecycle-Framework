@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import json
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from src.runtime.checkpointer import create_secure_checkpointer, get_checkpoint_paths
-from src.runtime.state import HalfState, initial_state, is_gate_passed
-from src.runtime.nodes import route_from_gate, route_from_finality_gate
+from src.runtime.nodes import route_from_finality_gate, route_from_gate
+from src.runtime.state import initial_state, is_gate_passed
 
 
 class TestInitialState:

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""
-HALF — Python Sidecar for Tauri IPC
+"""HALF — Python Sidecar for Tauri IPC.
 
-This script is spawned by the Tauri Command Center as a sidecar process.
-It provides the goal CLI interface and pipeline execution commands.
+Spawned by the Tauri Command Center as a sidecar process.
+Provides the goal CLI interface and pipeline execution commands.
 
 Tauri communicates via stdin/stdout JSON-RPC.
-Usage (by Tauri): python3 -m src.half_sidecar <command> [args...]
+
+Usage (by Tauri):
+    python3 -m src.half_sidecar <command> [args...]
 
 Commands:
-    status                  — Get pipeline status
-    run-phase <phase>       — Execute a pipeline phase
-    gate-check <phase>      — Run gate checks for a phase
-    generate-mrp            — Generate Merge-Readiness Pack
-    approve-deployment      — Approve deployment (unlock Finality Gate)
-    voice stt <file>        — Transcribe audio file
-    voice tts <text>        — Generate speech from text
-    focalboard create       — Create Focalboard board for this project
+    status                        Get pipeline status
+    run-phase <phase>             Execute a pipeline phase
+    gate-check <phase>            Run gate checks for a phase
+    generate-mrp                  Generate Merge-Readiness Pack
+    voice stt <file>              Transcribe audio file
+    voice tts <text>              Generate speech from text
+    focalboard create <title>     Create Focalboard board
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,15 +34,14 @@ logging.basicConfig(
 logger = logging.getLogger("half.sidecar")
 
 
-def cmd_status() -> dict:
+def cmd_status() -> dict[str, Any]:
     """Return pipeline status as JSON."""
     from src.runtime.state import initial_state
 
     state = initial_state(project_name="default")
 
-    # Scan artifacts directory
     artifacts_dir = Path(".hale/artifacts")
-    completed = []
+    completed: list[str] = []
     if artifacts_dir.exists():
         for phase_dir in sorted(artifacts_dir.iterdir()):
             if phase_dir.is_dir():
@@ -59,15 +59,15 @@ def cmd_status() -> dict:
     }
 
 
-def cmd_run_phase(phase: str) -> dict:
+def cmd_run_phase(phase: str) -> dict[str, Any]:
     """Execute a pipeline phase."""
     from src.runtime.graph import create_half_executor
 
     logger.info("Running phase: %s", phase)
-
     try:
         app, init_state = create_half_executor()
-        # In production, this would invoke the LangGraph compiled app
+        _ = app  # Silence unused warning
+        _ = init_state
         return {
             "status": "started",
             "phase": phase,
@@ -78,7 +78,7 @@ def cmd_run_phase(phase: str) -> dict:
         return {"status": "error", "phase": phase, "error": str(e)}
 
 
-def cmd_gate_check(phase: str) -> dict:
+def cmd_gate_check(phase: str) -> dict[str, Any]:
     """Run gate checks for a phase."""
     from src.core.gate_checker import GateChecker
 
@@ -104,11 +104,11 @@ def cmd_gate_check(phase: str) -> dict:
     }
 
 
-def cmd_generate_mrp() -> dict:
+def cmd_generate_mrp() -> dict[str, Any]:
     """Generate Merge-Readiness Pack."""
     from datetime import datetime, timezone
 
-    mrp = {
+    mrp: dict[str, Any] = {
         "generated_at": datetime.now(tz=timezone.utc).isoformat(),
         "project": "default",
         "checks": {
@@ -130,7 +130,7 @@ def cmd_generate_mrp() -> dict:
     return mrp
 
 
-def cmd_voice_stt(audio_path: str) -> dict:
+def cmd_voice_stt(audio_path: str) -> dict[str, Any]:
     """Transcribe audio file to text."""
     from src.half_voice import VoiceEngine
 
@@ -142,7 +142,7 @@ def cmd_voice_stt(audio_path: str) -> dict:
         return {"status": "error", "error": str(e)}
 
 
-def cmd_voice_tts(text: str) -> dict:
+def cmd_voice_tts(text: str) -> dict[str, Any]:
     """Convert text to speech."""
     from src.half_voice import VoiceEngine
 
@@ -154,14 +154,16 @@ def cmd_voice_tts(text: str) -> dict:
         return {"status": "error", "error": str(e)}
 
 
-def cmd_focalboard_create() -> dict:
+def cmd_focalboard_create() -> dict[str, Any]:
     """Create a Focalboard board for the current project."""
     from src.half_focalboard import FocalboardClient
 
     client = FocalboardClient()
-    board = client.create_board(title="HALF Pipeline", description="Agentic SDLC pipeline phases")
+    board = client.create_board(
+        title="HALF Pipeline",
+        description="Agentic SDLC pipeline phases",
+    )
 
-    # Create phase columns
     phases = [
         ("Phase 1", "Discovery & Strategy"),
         ("Phase 2", "Development & Coding"),
@@ -197,6 +199,7 @@ def main() -> None:
         sys.exit(1)
 
     command = sys.argv[1]
+    result: dict[str, Any] = {"status": "error", "message": f"Unknown command: {command}"}
 
     try:
         if command == "status":
@@ -219,8 +222,6 @@ def main() -> None:
                 result = cmd_focalboard_create()
             else:
                 result = {"status": "error", "message": f"Unknown focalboard subcommand: {sys.argv[2]}"}
-        else:
-            result = {"status": "error", "message": f"Unknown command: {command}"}
 
         print(json.dumps(result, indent=2))
 

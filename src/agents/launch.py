@@ -88,7 +88,7 @@ READINESS_CHECKS: list[ReadinessCheck] = [
 class LaunchAgent:
     """Phase 4C: Production readiness verification."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.checks: dict[str, ReadinessCheck] = {c.id: c for c in READINESS_CHECKS}
 
     def mark_complete(self, check_id: str) -> None:

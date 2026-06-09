@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
@@ -30,7 +30,7 @@ mcp = FastMCP(
 # ─── Database Singleton ───────────────────────────────────────────────────────
 
 
-_db: Optional[AgentMailDatabase] = None
+_db: AgentMailDatabase | None = None
 
 
 def get_db() -> AgentMailDatabase:
@@ -230,7 +230,9 @@ def acquire_lease(
         Dict with lease status and ID.
     """
     db = get_db()
-    lease = db.acquire_lease(file_path=file_path, agent_email=agent_email, reason=reason)
+    lease = db.acquire_lease(
+        file_path=file_path, agent_email=agent_email, reason=reason
+    )
 
     if lease is None:
         return {

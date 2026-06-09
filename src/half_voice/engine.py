@@ -21,7 +21,6 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger("half.voice")
 
@@ -57,9 +56,13 @@ class VoiceEngine:
         self._tts_available = bool(self.piper_exec)
 
         if not self._stt_available:
-            logger.info("Whisper.cpp not found — STT disabled (install: https://github.com/ggerganov/whisper.cpp)")
+            logger.info(
+                "Whisper.cpp not found — STT disabled (install: https://github.com/ggerganov/whisper.cpp)"
+            )
         if not self._tts_available:
-            logger.info("Piper not found — TTS disabled (install: https://github.com/rhasspy/piper)")
+            logger.info(
+                "Piper not found — TTS disabled (install: https://github.com/rhasspy/piper)"
+            )
 
     def _find_whisper(self) -> str:
         """Find whisper.cpp executable."""
@@ -123,20 +126,25 @@ class VoiceEngine:
             RuntimeError: If STT is not available.
         """
         if not self._stt_available:
-            raise RuntimeError(
+            msg = (
                 "STT unavailable — Whisper.cpp not found. "
                 "Install from https://github.com/ggerganov/whisper.cpp"
             )
+            raise RuntimeError(msg)
 
         audio_path = Path(audio_path)
         if not audio_path.exists():
-            raise FileNotFoundError(f"Audio file not found: {audio_path}")
+            msg = f"Audio file not found: {audio_path}"
+            raise FileNotFoundError(msg)
 
         cmd = [
             self.whisper_exec,
-            "-m", str(self.models_dir / self.whisper_model),
-            "-f", str(audio_path),
-            "-l", language,
+            "-m",
+            str(self.models_dir / self.whisper_model),
+            "-f",
+            str(audio_path),
+            "-l",
+            language,
             "-oj",  # JSON output
         ]
 
@@ -146,28 +154,33 @@ class VoiceEngine:
         logger.info("Transcribing %s...", audio_path.name)
 
         try:
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=300
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
             if result.returncode != 0:
                 logger.warning("Whisper stderr: %s", result.stderr[:500])
                 return "[transcription failed]"
 
             # Parse JSON output
             try:
-                data = json.loads(result.stdout)
-                if isinstance(data, dict):
-                    return data.get("text", "").strip()
-                elif isinstance(data, list):
-                    return " ".join(s.get("text", "") for s in data).strip()
+                data_json = json.loads(result.stdout)
+                if isinstance(data_json, dict):
+                    text: str = data_json.get("text", "")
+                    return text
+                if isinstance(data_json, list):
+                    parts: list[str] = []
+                    for s in data_json:
+                        if isinstance(s, dict):
+                            parts.append(s.get("text", ""))
+                    return " ".join(parts)
             except json.JSONDecodeError:
                 pass
 
             # Fallback: return raw stdout
-            return result.stdout.strip()
+            text_fallback: str = result.stdout.strip()
+            return text_fallback
 
         except subprocess.TimeoutExpired:
-            raise RuntimeError("Whisper transcription timed out")
+            msg = "Whisper transcription timed out"
+            raise RuntimeError(msg)
 
     def transcribe_microphone(self, duration_seconds: int = 5) -> str:
         """Record from microphone and transcribe.
@@ -186,8 +199,15 @@ class VoiceEngine:
         try:
             # Record using arecord (Linux)
             record_cmd = [
-                "arecord", "-f", "S16_LE", "-r", "16000",
-                "-c", "1", "-d", str(duration_seconds),
+                "arecord",
+                "-f",
+                "S16_LE",
+                "-r",
+                "16000",
+                "-c",
+                "1",
+                "-d",
+                str(duration_seconds),
                 temp_path,
             ]
             subprocess.run(record_cmd, check=True, timeout=duration_seconds + 5)
@@ -195,9 +215,11 @@ class VoiceEngine:
             # Transcribe
             return self.transcribe(temp_path)
         except subprocess.TimeoutExpired:
-            raise RuntimeError("Microphone recording timed out")
+            msg = "Microphone recording timed out"
+            raise RuntimeError(msg)
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"Recording failed: {e}")
+            msg = f"Recording failed: {e}"
+            raise RuntimeError(msg)
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
@@ -218,18 +240,21 @@ class VoiceEngine:
             RuntimeError: If TTS is not available.
         """
         if not self._tts_available:
-            raise RuntimeError(
+            msg = (
                 "TTS unavailable — Piper not found. "
                 "Install from https://github.com/rhasspy/piper"
             )
+            raise RuntimeError(msg)
 
         if not output_path:
             output_path = str(Path(tempfile.mkdtemp()) / "output.wav")
 
         cmd = [
             self.piper_exec,
-            "--model", str(self.models_dir / self.piper_voice),
-            "--output-file", output_path,
+            "--model",
+            str(self.models_dir / self.piper_voice),
+            "--output-file",
+            output_path,
         ]
 
         logger.info("Generating TTS for %d chars...", len(text))
@@ -242,14 +267,18 @@ class VoiceEngine:
                 timeout=60,
             )
             if result.returncode != 0:
-                logger.warning("Piper stderr: %s", result.stderr[:500])
-                raise RuntimeError(f"TTS generation failed: {result.stderr[:200]}")
+                stderr_text = result.stderr[:500].decode("utf-8", errors="replace")
+                logger.warning("Piper stderr: %s", stderr_text)
+                stderr_short = result.stderr[:200].decode("utf-8", errors="replace")
+                msg = f"TTS generation failed: {stderr_short}"
+                raise RuntimeError(msg)
 
             logger.info("TTS output: %s", output_path)
             return str(output_path)
 
         except subprocess.TimeoutExpired:
-            raise RuntimeError("Piper TTS timed out")
+            msg = "Piper TTS timed out"
+            raise RuntimeError(msg)
 
     def speak_async(self, text: str) -> None:
         """Speak text asynchronously (fire-and-forget).
@@ -258,6 +287,7 @@ class VoiceEngine:
             text: Text to speak.
         """
         import threading
+
         thread = threading.Thread(target=self.speak, args=(text,), daemon=True)
         thread.start()
 
@@ -285,7 +315,8 @@ class VoiceEngine:
             )
             target = self.models_dir / self.piper_voice
         else:
-            raise ValueError(f"Unknown model type: {model_type}")
+            msg = f"Unknown model type: {model_type}"
+            raise ValueError(msg)
 
         if target.exists():
             logger.info("Model already exists: %s", target)
@@ -295,12 +326,13 @@ class VoiceEngine:
         try:
             subprocess.run(
                 ["curl", "-L", "-o", str(target), url],
-                check=True, timeout=600,
+                check=True,
+                timeout=600,
             )
             logger.info("Downloaded: %s", target)
             return True
         except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:
-            logger.error("Download failed: %s", e)
+            logger.exception("Download failed: %s", e)
             return False
 
     @property

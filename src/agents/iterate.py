@@ -91,7 +91,7 @@ def estimate_size(issue: Issue) -> str:
 class IterateAgent:
     """Phase 5B: Issue tracking and triage workflow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.issues: list[Issue] = []
         self.triage_results: list[TriageResult] = []
 

@@ -10,16 +10,14 @@ Wraps LangGraph's SQLite checkpointer with:
 
 from __future__ import annotations
 
-import json
 import logging
 import sqlite3
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from src.state import (
-    ALLOWED_METADATA_KEYS,
     validate_metadata_write,
 )
 
@@ -80,16 +78,23 @@ def create_secure_checkpointer(
     # Use the standard SqliteSaver with our secured connection
     checkpointer = SqliteSaver(conn)
 
-    # Patch metadata write to enforce allowlist
+    # Wrap put() with metadata validation via subclassing
     original_put = checkpointer.put
 
-    def secured_put(config, checkpoint, metadata, new_versions, *args, **kwargs):
+    def secured_put(
+        config: Any,
+        checkpoint: Any,
+        metadata: Any,
+        new_versions: Any,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
         """Wrapper that validates metadata before writing."""
         if metadata:
             validate_metadata_write(metadata)
         return original_put(config, checkpoint, metadata, new_versions, *args, **kwargs)
 
-    checkpointer.put = secured_put
+    checkpointer.put = secured_put  # type: ignore[method-assign]
 
     logger.info(
         "Secure checkpointer initialized: %s (WAL=%s)",
@@ -102,10 +107,16 @@ def create_secure_checkpointer(
 def _check_wal_mode(conn: sqlite3.Connection) -> bool:
     """Verify WAL mode is active."""
     cursor = conn.execute("PRAGMA journal_mode;")
-    return cursor.fetchone()[0].upper() == "WAL"
+    row = cursor.fetchone()
+    if row is None:
+        return False
+    result: str = row[0]
+    return result.upper() == "WAL"
 
 
-def get_checkpoint_paths(base_dir: str | Path = ".hale/state/checkpoints") -> dict[str, Path]:
+def get_checkpoint_paths(
+    base_dir: str | Path = ".hale/state/checkpoints",
+) -> dict[str, Path]:
     """Get all checkpoint-related paths.
 
     Returns:
