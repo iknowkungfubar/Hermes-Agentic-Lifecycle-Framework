@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  half:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - .hale:/app/.hale
+    environment:
+      - HALF_PROJECT=${HALF_PROJECT:-default}
+      - HALF_MODE=${HALF_MODE:-full}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
