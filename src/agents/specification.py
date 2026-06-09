@@ -54,7 +54,7 @@ class Task:
 class SpecificationAgent:
     """Phase 1B: Generate formal specifications from requirements."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.functional_reqs: list[FunctionalRequirement] = []
         self.non_functional_reqs: list[NonFunctionalRequirement] = []
         self.api_contracts: list[APIContract] = []

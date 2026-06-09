@@ -85,7 +85,7 @@ class CodifyAgent:
     - New test cases for correctness issues
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.corrections: list[Correction] = []
 
     def register_correction(self, correction: Correction) -> None:

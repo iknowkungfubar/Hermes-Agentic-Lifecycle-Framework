@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import tempfile
 from pathlib import Path
 
@@ -114,6 +113,7 @@ class TestErrorBudget:
     def test_create_budget(self):
         """Creating a budget should show full points."""
         from src.core.error_budget import ErrorBudgetTracker
+
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
             status = budget.get_status()
@@ -124,6 +124,7 @@ class TestErrorBudget:
     def test_deduct_points(self):
         """Recording failures should deduct points."""
         from src.core.error_budget import ErrorBudgetTracker
+
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
             budget.record_failure("phase_1_gate_fail", "Test failure")
@@ -134,6 +135,7 @@ class TestErrorBudget:
     def test_exhaust_budget(self):
         """Recording many failures should exhaust the budget."""
         from src.core.error_budget import ErrorBudgetTracker
+
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
             for _ in range(5):
@@ -145,6 +147,7 @@ class TestErrorBudget:
     def test_invalid_event_type_raises(self):
         """Invalid event type should raise ValueError."""
         from src.core.error_budget import ErrorBudgetTracker
+
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
         with pytest.raises(ValueError, match="Unknown event type"):

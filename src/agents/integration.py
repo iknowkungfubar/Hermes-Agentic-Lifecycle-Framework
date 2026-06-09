@@ -38,7 +38,7 @@ class IntegrationTestResult:
 class IntegrationAgent:
     """Phase 3C: Integration and contract testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.results: list[IntegrationTestResult] = []
 
     def add_suite_result(

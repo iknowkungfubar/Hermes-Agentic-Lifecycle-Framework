@@ -15,8 +15,8 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from urllib.request import Request, urlopen
 from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 logger = logging.getLogger("half.focalboard")
 
@@ -70,8 +70,8 @@ class FocalboardClient:
         self,
         method: str,
         path: str,
-        data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Make an HTTP request to the Focalboard API.
 
         Args:
@@ -97,10 +97,12 @@ class FocalboardClient:
 
         try:
             with urlopen(req, timeout=10) as resp:
-                return json.loads(resp.read().decode("utf-8"))
+                result_bytes = resp.read()
+                return json.loads(result_bytes.decode("utf-8"))  # type: ignore[no-any-return]
         except URLError as e:
             logger.warning("Focalboard API error: %s", e)
-            raise RuntimeError(f"Focalboard API error: {e}")
+            msg = f"Focalboard API error: {e}"
+            raise RuntimeError(msg)
         except json.JSONDecodeError:
             return {}
 
@@ -133,7 +135,7 @@ class FocalboardClient:
             logger.warning("Could not create Focalboard board (offline?)")
             return FocalboardBoard(id="", title=title, description=description)
 
-    def list_boards(self) -> List[FocalboardBoard]:
+    def list_boards(self) -> list[FocalboardBoard]:
         """List all boards.
 
         Returns:
@@ -217,7 +219,7 @@ class FocalboardClient:
         except RuntimeError:
             return False
 
-    def get_tasks_by_phase(self, board_id: str, phase: str) -> List[FocalboardCard]:
+    def get_tasks_by_phase(self, board_id: str, phase: str) -> list[FocalboardCard]:
         """Get all tasks for a specific HALF phase.
 
         Args:

@@ -49,7 +49,7 @@ class ImplementAgent:
     4. Commit
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.harnesses: list[TestHarness] = []
         self.results: list[ImplementationResult] = []
 

@@ -8,9 +8,8 @@ for decentralized multi-agent coordination.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
 
 
 class MessageType(Enum):
@@ -88,12 +87,12 @@ class FileLease:
 
 def now_iso() -> str:
     """Get current timestamp in ISO format."""
-    return datetime.now(tz=timezone.utc).isoformat()
+    return datetime.now(tz=UTC).isoformat()
 
 
 def default_expiry(hours: int = 2) -> str:
     """Get a default lease expiry timestamp."""
-    return datetime.now(tz=timezone.utc).isoformat()
+    return datetime.now(tz=UTC).isoformat()
 
 
 def make_email(agent_name: str) -> str:

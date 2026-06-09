@@ -14,31 +14,30 @@ import logging
 from typing import Any
 
 from langgraph.graph import END, StateGraph
-from langgraph.checkpoint.sqlite import SqliteSaver
 
 from src.runtime.checkpointer import create_secure_checkpointer
 from src.runtime.nodes import (
-    phase_1_discovery,
-    phase_1_specification,
     phase_1_architecture,
+    phase_1_discovery,
     phase_1_gate,
-    phase_2_scaffold,
-    phase_2_implement,
+    phase_1_specification,
     phase_2_gate,
-    phase_3_testing,
-    phase_3_security,
-    phase_3_integration,
+    phase_2_implement,
+    phase_2_scaffold,
     phase_3_gate,
-    phase_4_infrastructure,
+    phase_3_integration,
+    phase_3_security,
+    phase_3_testing,
     phase_4_cicd,
-    phase_4_launch,
     phase_4_gate,
-    phase_5_observe,
-    phase_5_iterate,
+    phase_4_infrastructure,
+    phase_4_launch,
     phase_5_codify,
     phase_5_gate,
-    route_from_gate,
+    phase_5_iterate,
+    phase_5_observe,
     route_from_finality_gate,
+    route_from_gate,
 )
 from src.runtime.state import HalfState, initial_state
 
@@ -48,7 +47,7 @@ logger = logging.getLogger("half.runtime.graph")
 # ─── Graph Builder ────────────────────────────────────────────────────────────
 
 
-def build_half_graph() -> StateGraph:
+def build_half_graph() -> StateGraph:  # type: ignore[type-arg]
     """Build the complete HALF SDLC state machine graph.
 
     Graph structure:
@@ -190,11 +189,18 @@ def build_half_graph() -> StateGraph:
 def _retry_node(state: HalfState) -> dict[str, Any]:
     """Increment retry count and log."""
     retries = state.get("retry_count", 0) + 1
-    logger.warning("Retry %d/%d for phase %s", retries, state.get("max_retries", 3), state.get("current_phase"))
+    logger.warning(
+        "Retry %d/%d for phase %s",
+        retries,
+        state.get("max_retries", 3),
+        state.get("current_phase"),
+    )
     return {
         "retry_count": retries,
         "escalation_level": 1,
-        "messages": [{"role": "system", "content": f"Retry {retries}: re-running phase"}],
+        "messages": [
+            {"role": "system", "content": f"Retry {retries}: re-running phase"}
+        ],
     }
 
 
@@ -249,7 +255,12 @@ def _deploy_node(state: HalfState) -> dict[str, Any]:
     logger.info("Deployment approved — executing production deploy")
     return {
         "current_step": "deploying",
-        "messages": [{"role": "assistant", "content": "🚀 Deployment executing... MRP signed. Production release in progress."}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "🚀 Deployment executing... MRP signed. Production release in progress.",
+            }
+        ],
     }
 
 
@@ -260,7 +271,7 @@ def create_half_executor(
     project_name: str = "default",
     mode: str = "full",
     db_path: str = ".hale/state/checkpoints/checkpoints.db",
-) -> tuple:
+) -> tuple[Any, HalfState]:
     """Create a fully compiled HALF execution graph with checkpointer.
 
     Args:

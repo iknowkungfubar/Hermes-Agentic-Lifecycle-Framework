@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from src.agent_mail.database import AgentMailDatabase
-from src.agent_mail.models import MessageType, make_email
+from src.agent_mail.models import MessageType
 
 
 @pytest.fixture
@@ -85,8 +85,11 @@ class TestMessaging:
         db.register_agent(name="bob", role="reviewer")
 
         db.send_message(
-            MessageType.DIRECT, "alice@half.local", ["bob@half.local"],
-            "Test", "Hello Bob",
+            MessageType.DIRECT,
+            "alice@half.local",
+            ["bob@half.local"],
+            "Test",
+            "Hello Bob",
         )
         messages = db.get_messages("bob@half.local")
         assert len(messages) == 1
@@ -98,8 +101,11 @@ class TestMessaging:
         db.register_agent(name="bob", role="reviewer")
 
         db.send_message(
-            MessageType.DIRECT, "alice@half.local", ["bob@half.local"],
-            "Urgent", "Fix this bug!",
+            MessageType.DIRECT,
+            "alice@half.local",
+            ["bob@half.local"],
+            "Urgent",
+            "Fix this bug!",
         )
 
         unread = db.get_messages("bob@half.local", unread_only=True)
@@ -116,12 +122,18 @@ class TestMessaging:
         db.register_agent(name="bob", role="reviewer")
 
         msg1 = db.send_message(
-            MessageType.DIRECT, "alice@half.local", ["bob@half.local"],
-            "Thread start", "Message 1",
+            MessageType.DIRECT,
+            "alice@half.local",
+            ["bob@half.local"],
+            "Thread start",
+            "Message 1",
         )
         db.send_message(
-            MessageType.DIRECT, "bob@half.local", ["alice@half.local"],
-            "Re: Thread start", "Message 2",
+            MessageType.DIRECT,
+            "bob@half.local",
+            ["alice@half.local"],
+            "Re: Thread start",
+            "Message 2",
             thread_id=msg1.thread_id,
             in_reply_to=msg1.id,
         )

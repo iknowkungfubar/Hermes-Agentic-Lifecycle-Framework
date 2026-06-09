@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import sqlite3
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
+from src.agent_mail.git_backend import GitMailBackend
 from src.agent_mail.models import (
     Agent,
     FileLease,
@@ -20,7 +20,6 @@ from src.agent_mail.models import (
     MessageType,
     now_iso,
 )
-from src.agent_mail.git_backend import GitMailBackend
 
 
 class AgentMailDatabase:
@@ -29,7 +28,9 @@ class AgentMailDatabase:
     Backed by Git for full audit trail and decentralized backup.
     """
 
-    def __init__(self, db_path: str | Path = ".hale/agent-mail/mail.db", enable_git: bool = True):
+    def __init__(
+        self, db_path: str | Path = ".hale/agent-mail/mail.db", enable_git: bool = True
+    ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
@@ -47,7 +48,10 @@ class AgentMailDatabase:
                 self._git = GitMailBackend(mail_dir=self.db_path.parent)
             except Exception as e:
                 import logging
-                logging.getLogger("half.agent_mail").warning("Git backend disabled: %s", e)
+
+                logging.getLogger("half.agent_mail").warning(
+                    "Git backend disabled: %s", e
+                )
 
         self._init_schema()
 
@@ -131,7 +135,7 @@ class AgentMailDatabase:
 
         return agent
 
-    def get_agent(self, email: str) -> Optional[Agent]:
+    def get_agent(self, email: str) -> Agent | None:
         """Get an agent by email.
 
         Args:
@@ -160,7 +164,9 @@ class AgentMailDatabase:
         Returns:
             List of all agents.
         """
-        rows = self._conn.execute("SELECT * FROM agents ORDER BY registered_at").fetchall()
+        rows = self._conn.execute(
+            "SELECT * FROM agents ORDER BY registered_at"
+        ).fetchall()
         return [
             Agent(
                 email=r["email"],
@@ -305,7 +311,7 @@ class AgentMailDatabase:
         agent_email: str,
         reason: str = "",
         expiry_hours: int = 2,
-    ) -> Optional[FileLease]:
+    ) -> FileLease | None:
         """Acquire a file reservation lease.
 
         Args:
@@ -373,11 +379,13 @@ class AgentMailDatabase:
                 "SELECT file_path FROM file_leases WHERE id = ?", (lease_id,)
             ).fetchone()
             if file_path:
-                self._git.commit_lease_released(lease_id, file_path["file_path"], agent_email)
+                self._git.commit_lease_released(
+                    lease_id, file_path["file_path"], agent_email
+                )
 
         return cursor.rowcount > 0
 
-    def get_active_leases(self, agent_email: Optional[str] = None) -> list[FileLease]:
+    def get_active_leases(self, agent_email: str | None = None) -> list[FileLease]:
         """Get active leases, optionally filtered by agent.
 
         Args:

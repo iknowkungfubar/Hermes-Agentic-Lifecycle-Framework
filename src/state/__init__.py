@@ -217,7 +217,7 @@ class StateMachineContext:
 
         # Compute checksum of serialized content
         checksum = hashlib.sha256(serialized.encode()).hexdigest()
-        checkpoint_data["checksum"] = checksum
+        checkpoint_data["checksum"] = checksum  # type: ignore[assignment]
 
         # Re-serialize with checksum
         final_serialized = json.dumps(checkpoint_data, indent=2, default=str)
@@ -247,7 +247,7 @@ class StateMachineContext:
 
         # Load with full integrity check
         data = allowlist_safe_load(matches[0])
-        return data.get("state", {})
+        return data.get("state", {})  # type: ignore[no-any-return]
 
     def transition_to_phase(self, phase: str) -> None:
         """Transition the state machine to a new phase.
