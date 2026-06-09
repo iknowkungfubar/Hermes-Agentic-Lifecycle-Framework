@@ -114,39 +114,39 @@ class TestErrorBudget:
     def test_create_budget(self):
         """Creating a budget should show full points."""
         from src.core.error_budget import ErrorBudgetTracker
-
-        budget = ErrorBudgetTracker(total_points=100)
-        status = budget.get_status()
-        assert status["total"] == 100
-        assert status["remaining"] == 100
-        assert status["level"] == "healthy"
+        with tempfile.TemporaryDirectory() as tmp:
+            budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
+            status = budget.get_status()
+            assert status["total"] == 100
+            assert status["remaining"] == 100
+            assert status["level"] == "healthy"
 
     def test_deduct_points(self):
         """Recording failures should deduct points."""
         from src.core.error_budget import ErrorBudgetTracker
-
-        budget = ErrorBudgetTracker(total_points=100)
-        budget.record_failure("phase_1_gate_fail", "Test failure")
-        status = budget.get_status()
-        assert status["remaining"] == 95
-        assert status["level"] == "healthy"
+        with tempfile.TemporaryDirectory() as tmp:
+            budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
+            budget.record_failure("phase_1_gate_fail", "Test failure")
+            status = budget.get_status()
+            assert status["remaining"] == 95
+            assert status["level"] == "healthy"
 
     def test_exhaust_budget(self):
         """Recording many failures should exhaust the budget."""
         from src.core.error_budget import ErrorBudgetTracker
-
-        budget = ErrorBudgetTracker(total_points=100)
-        for _ in range(5):
-            budget.record_failure("production_incident_p1")
-        status = budget.get_status()
-        assert status["remaining"] == 0
-        assert status["level"] == "exhausted"
+        with tempfile.TemporaryDirectory() as tmp:
+            budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
+            for _ in range(5):
+                budget.record_failure("production_incident_p1")
+            status = budget.get_status()
+            assert status["remaining"] == 0
+            assert status["level"] == "exhausted"
 
     def test_invalid_event_type_raises(self):
         """Invalid event type should raise ValueError."""
         from src.core.error_budget import ErrorBudgetTracker
-
-        budget = ErrorBudgetTracker(total_points=100)
+        with tempfile.TemporaryDirectory() as tmp:
+            budget = ErrorBudgetTracker(total_points=100, state_dir=Path(tmp))
         with pytest.raises(ValueError, match="Unknown event type"):
             budget.record_failure("invalid_type")
 

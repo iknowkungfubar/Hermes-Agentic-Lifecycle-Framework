@@ -1,0 +1,12 @@
+/home/turin/Hermes-Agentic-Lifecycle-Framework/src-tauri/target/debug/deps/bitflags-501c750a22c4e5d0.d: /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/lib.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/iter.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/parser.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/traits.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/public.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/internal.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/external.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/external/serde.rs
+
+/home/turin/Hermes-Agentic-Lifecycle-Framework/src-tauri/target/debug/deps/libbitflags-501c750a22c4e5d0.rmeta: /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/lib.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/iter.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/parser.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/traits.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/public.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/internal.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/external.rs /home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/external/serde.rs
+
+/home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/lib.rs:
+/home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/iter.rs:
+/home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/parser.rs:
+/home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/traits.rs:
+/home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/public.rs:
+/home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/internal.rs:
+/home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/external.rs:
+/home/turin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.13.0/src/external/serde.rs:

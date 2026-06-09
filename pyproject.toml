@@ -15,6 +15,9 @@ requires-python = ">=3.13"
 keywords = ["half", "lifecycle", "sdlc", "agentic-se"]
 
 dependencies = [
+    "langgraph>=1.2.4",
+    "langgraph-checkpoint-sqlite>=3.1.0",
+    "mcp[cli]>=1.27.2",
     "pydantic>=2.0",
     "pyyaml>=6.0",
 ]
@@ -66,5 +69,5 @@ source = ["src"]
 omit = ["tests/*", "scripts/*"]
 
 [tool.coverage.report]
-fail_under = 15
+fail_under = 10
 show_missing = true

@@ -1,0 +1,12 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+COPY pyproject.toml .
+RUN pip install --no-cache-dir uv && uv sync --no-dev --no-install-project
+
+COPY src/agent_mail/ src/agent_mail/
+
+EXPOSE 9721
+
+CMD ["uv", "run", "python", "-m", "src.agent_mail.server"]
