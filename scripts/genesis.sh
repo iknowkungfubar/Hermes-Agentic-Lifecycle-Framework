@@ -229,35 +229,83 @@ skip_dirs:
 INDEXEOF
 echo -e "  ${GREEN}✓${NC} Indexing config created"
 
-echo -e "  ${YELLOW}[3/3]${NC} Creating LoopScript DAG template..."
+echo -e "  ${YELLOW}[3/4]${NC} Creating safety constraints (read-only vault, sandbox)..."
+cat > .hale/safety.yaml << SAFETYEOF
+# HALF Execution Safety Constraints
+sandbox:
+  enabled: true
+  runtime: podman  # or docker
+  network: none
+  read_only_mounts:
+    - source: vault_root
+      target: /workspace/vault
+      type: ro
+  dangerous_commands:
+    - "rm -rf /"
+    - "dd if="
+    - "mkfs"
+    - "format"
+    - ":(){ :|:& };:"
+hook_constraints:
+  reject_path_traversal: true
+  max_command_length: 4096
+SAFETYEOF
+echo -e "  ${GREEN}✓${NC} Safety constraints created"
+
+echo -e "  ${YELLOW}[4/4]${NC} Creating LoopScript DAG template..."
 cat > .hale/loopscript.yaml << LOOPEOF
 # LoopScript — Declarative DAG SOP
+# Defines the exact Standard Operating Procedure agents must follow
 version: "1.0"
 phases:
   - id: discover
     agent: HALF-Discovery
+    mode: read-only
     inputs: []
     outputs: [01-REQUIREMENTS.md]
   - id: specify
     agent: HALF-Specification
+    mode: design-only
     inputs: [01-REQUIREMENTS.md]
     outputs: [02-SPECIFICATION.md, 03-TASKS.md]
   - id: architect
     agent: HALF-Architect
+    mode: design-only
     inputs: [02-SPECIFICATION.md]
     outputs: [04-ARCHITECTURE.md, 05-ADRs.md]
   - id: scaffold
     agent: HALF-Scaffold
+    mode: write-restricted
     inputs: [03-TASKS.md]
     outputs: [repository-structure]
+  - id: research
+    agent: HALF-Research
+    mode: read-only
+    inputs: [04-ARCHITECTURE.md]
+    outputs: [codebase-analysis]
+  - id: plan
+    agent: HALF-Plan
+    mode: design-only
+    inputs: [codebase-analysis]
+    outputs: [implementation-spec]
   - id: implement
     agent: HALF-Implement
-    inputs: [03-TASKS.md, 04-ARCHITECTURE.md]
+    mode: write-restricted
+    inputs: [implementation-spec]
     outputs: [implemented-code]
+  - id: simplify
+    agent: HALF-CodeSimplifier
+    mode: write-restricted
+    inputs: [implemented-code]
+    outputs: [simplified-code]
 chain:
-  execute: [discover, specify, architect, scaffold, implement]
+  execute: [discover, specify, architect, scaffold, research, plan, implement, simplify]
+tri_phasic:
+  - research  # Read-Only
+  - plan      # Design-Only
+  - implement # Write-Restricted
 LOOPEOF
-echo -e "  ${GREEN}✓${NC} LoopScript DAG created"
+echo -e "  ${GREEN}✓${NC} LoopScript DAG created with tri-phasic execution loop"
 
 # ─── Prompt 4: Scaffold Command Center ────────────────────────────────────────
 echo ""

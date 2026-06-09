@@ -23,7 +23,10 @@ from src.runtime.nodes import (
     phase_1_specification,
     phase_2_gate,
     phase_2_implement,
+    phase_2_plan,
+    phase_2_research,
     phase_2_scaffold,
+    phase_2_simplify,
     phase_3_gate,
     phase_3_integration,
     phase_3_security,
@@ -74,9 +77,12 @@ def build_half_graph() -> StateGraph:  # type: ignore[type-arg]
     workflow.add_node("phase_1_architecture", phase_1_architecture)
     workflow.add_node("phase_1_gate", phase_1_gate)
 
-    # ─── Phase 2 Nodes ────────────────────────────────────────────────────
+    # ─── Phase 2 Nodes (Tri-Phasic Loop) ──────────────────────────────────
     workflow.add_node("phase_2_scaffold", phase_2_scaffold)
+    workflow.add_node("phase_2_research", phase_2_research)
+    workflow.add_node("phase_2_plan", phase_2_plan)
     workflow.add_node("phase_2_implement", phase_2_implement)
+    workflow.add_node("phase_2_simplify", phase_2_simplify)
     workflow.add_node("phase_2_gate", phase_2_gate)
 
     # ─── Phase 3 Nodes ────────────────────────────────────────────────────
@@ -118,9 +124,14 @@ def build_half_graph() -> StateGraph:  # type: ignore[type-arg]
         },
     )
 
-    # ─── Phase 2 Edges ────────────────────────────────────────────────────
-    workflow.add_edge("phase_2_scaffold", "phase_2_implement")
-    workflow.add_edge("phase_2_implement", "phase_2_gate")
+    # ─── Phase 2 Edges (Tri-Phasic Loop) ──────────────────────────────────
+    # Scaffold → Research (read-only) → Plan (design-only)
+    # → Implement (write-restricted) → Simplify (refactoring) → Gate
+    workflow.add_edge("phase_2_scaffold", "phase_2_research")
+    workflow.add_edge("phase_2_research", "phase_2_plan")
+    workflow.add_edge("phase_2_plan", "phase_2_implement")
+    workflow.add_edge("phase_2_implement", "phase_2_simplify")
+    workflow.add_edge("phase_2_simplify", "phase_2_gate")
     workflow.add_conditional_edges(
         "phase_2_gate",
         route_from_gate,
