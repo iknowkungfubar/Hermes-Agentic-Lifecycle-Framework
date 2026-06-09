@@ -181,6 +181,7 @@ jobs:
             semgrep-report.json
 """
         workflows_dir = self.target_dir / ".github" / "workflows"
+        workflows_dir.mkdir(parents=True, exist_ok=True)
         filepath = workflows_dir / "security-scan.yml"
         filepath.write_text(content)
         return str(filepath)
