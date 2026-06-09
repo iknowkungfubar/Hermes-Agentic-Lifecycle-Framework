@@ -24,6 +24,7 @@ def _write_artifact(phase: str, name: str, content: str) -> Path:
     phase_dir = Path(config.ARTIFACTS_DIR) / phase
     phase_dir.mkdir(parents=True, exist_ok=True)
     path = phase_dir / name
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
     logger.info("Artifact written: %s", path)
     return path
