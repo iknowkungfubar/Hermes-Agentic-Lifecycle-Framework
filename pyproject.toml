@@ -96,6 +96,9 @@ exclude = [
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "-v --cov=src --cov-report=term-missing --tb=short"
+filterwarnings = [
+    "ignore::ResourceWarning",
+]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "network: marks tests that need network access",

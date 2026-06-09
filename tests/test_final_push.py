@@ -12,6 +12,14 @@ from pathlib import Path
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _cleanup_db():
+    """Clean up database singleton after each test."""
+    yield
+    from half.agent_mail.database import cleanup_db
+    cleanup_db()
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # half/__main__.py — CLI coverage (31% → 85%+)
 # ═══════════════════════════════════════════════════════════════════════════════

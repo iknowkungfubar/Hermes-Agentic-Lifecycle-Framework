@@ -289,7 +289,13 @@ class VoiceEngine:
         """
         import threading
 
-        thread = threading.Thread(target=self.speak, args=(text,), daemon=True)
+        def _speak_wrapper(t: str) -> None:
+            try:
+                self.speak(t)
+            except Exception as exc:
+                logger.debug("Async TTS skipped: %s", exc)
+
+        thread = threading.Thread(target=_speak_wrapper, args=(text,), daemon=True)
         thread.start()
 
     # ─── Model Management ─────────────────────────────────────────────────

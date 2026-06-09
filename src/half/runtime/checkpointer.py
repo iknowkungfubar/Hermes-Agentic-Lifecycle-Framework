@@ -97,12 +97,27 @@ def create_secure_checkpointer(
 
     checkpointer.put = secured_put  # type: ignore[method-assign]
 
+    # Store connection for cleanup
+    checkpointer._conn = conn  # type: ignore[attr-defined]
+
     logger.info(
         "Secure checkpointer initialized: %s (WAL=%s)",
         db_path,
         _check_wal_mode(conn),
     )
     return checkpointer
+
+
+def close_checkpointer(checkpointer: Any) -> None:
+    """Close the checkpointer's database connection.
+
+    Args:
+        checkpointer: The checkpointer to close.
+    """
+    conn = getattr(checkpointer, "_conn", None)
+    if conn is not None:
+        conn.close()
+        logger.debug("Checkpointer connection closed")
 
 
 def _check_wal_mode(conn: sqlite3.Connection) -> bool:

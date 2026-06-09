@@ -1,4 +1,3 @@
-# HALF — FOSS Observability & Security Stack
 # Usage: docker compose -f docker/docker-compose.foss.yml up -d
 # WARNING: Change all default passwords before production use!
 
