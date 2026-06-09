@@ -76,6 +76,7 @@ class ArtifactManager:
         """
         phase_dir = self.ensure_phase_dir(phase)
         filepath = phase_dir / filename
+        filepath.parent.mkdir(parents=True, exist_ok=True)
         filepath.write_text(content)
         logger.info("Written artifact: %s", filepath)
         return filepath
