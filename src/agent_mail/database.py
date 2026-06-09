@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -333,12 +334,15 @@ class AgentMailDatabase:
             return None  # File is already leased
 
         lease_id = str(uuid.uuid4())[:12]
-        now = now_iso()
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(hours=expiry_hours)
+        now_str = now.isoformat()
+        expires_str = expires_at.isoformat()
 
         self._conn.execute(
             "INSERT INTO file_leases (id, file_path, agent_email, status, acquired_at, expires_at, reason) "
             "VALUES (?, ?, ?, 'active', ?, ?, ?)",
-            (lease_id, file_path, agent_email, now, now, reason),
+            (lease_id, file_path, agent_email, now_str, expires_str, reason),
         )
         self._conn.commit()
 
@@ -351,8 +355,8 @@ class AgentMailDatabase:
             file_path=file_path,
             agent_email=agent_email,
             status=LeaseStatus.ACTIVE,
-            acquired_at=now,
-            expires_at=now,
+            acquired_at=now_str,
+            expires_at=expires_str,
             reason=reason,
         )
 

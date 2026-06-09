@@ -8,7 +8,7 @@ for decentralized multi-agent coordination.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 
@@ -91,8 +91,15 @@ def now_iso() -> str:
 
 
 def default_expiry(hours: int = 2) -> str:
-    """Get a default lease expiry timestamp."""
-    return datetime.now(tz=UTC).isoformat()
+    """Get a default lease expiry timestamp.
+
+    Args:
+        hours: Hours from now until expiry.
+
+    Returns:
+        ISO-format expiry timestamp.
+    """
+    return (datetime.now(tz=UTC) + timedelta(hours=hours)).isoformat()
 
 
 def make_email(agent_name: str) -> str:
