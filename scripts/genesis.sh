@@ -314,6 +314,7 @@ echo -e "${BLUE}  PROMPT 4: Scaffold Command Center${NC}"
 echo -e "${BLUE}══════════════════════════════════════════════════════════════${NC}"
 
 echo -e "  ${YELLOW}[1/2]${NC} Creating MentorScript (replaces .cursorrules)..."
+mkdir -p .harness
 cat > .harness/agents.md << AGENTSMDF
 # ${PROJECT_NAME} — Agent Context
 

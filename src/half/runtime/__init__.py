@@ -11,13 +11,13 @@ Complete SDLC state machine with:
 
 from __future__ import annotations
 
-from src.runtime.checkpointer import create_secure_checkpointer, get_checkpoint_paths
-from src.runtime.graph import build_half_graph, create_half_executor
-from src.runtime.nodes import (
+from half.runtime.checkpointer import create_secure_checkpointer, get_checkpoint_paths
+from half.runtime.graph import build_half_graph, create_half_executor
+from half.runtime.nodes import (
     route_from_finality_gate,
     route_from_gate,
 )
-from src.runtime.state import HalfState, initial_state, is_gate_passed
+from half.runtime.state import HalfState, initial_state, is_gate_passed
 
 __all__ = [
     "HalfState",

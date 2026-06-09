@@ -1,0 +1,14 @@
+# HALF Runtime Configuration
+version: "1.0"
+project: test-half
+mode: full
+fail_safe:
+  enabled: true
+  max_retries: 3
+  escalation_path:
+    step_retry: {max_attempts: 3, cooldown_seconds: 30}
+    phase_retry: {trigger: "3 consecutive step failures", max_attempts: 2}
+    human_escalation: {trigger: "phase retry fails OR critical gate failure"}
+error_budget:
+  window_days: 30
+  total_points: 100

@@ -5,9 +5,9 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from src.runtime.checkpointer import create_secure_checkpointer, get_checkpoint_paths
-from src.runtime.nodes import route_from_finality_gate, route_from_gate
-from src.runtime.state import initial_state, is_gate_passed
+from half.runtime.checkpointer import create_secure_checkpointer, get_checkpoint_paths
+from half.runtime.nodes import route_from_finality_gate, route_from_gate
+from half.runtime.state import initial_state, is_gate_passed
 
 
 class TestInitialState:

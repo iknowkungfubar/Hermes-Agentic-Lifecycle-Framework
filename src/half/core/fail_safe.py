@@ -8,6 +8,7 @@ Implements the 3-level escalation path:
 """
 
 from __future__ import annotations
+from half import config
 
 import logging
 import time
@@ -38,7 +39,7 @@ class FailSafeConfig:
     max_step_retries: int = 3
     max_phase_retries: int = 2
     step_cooldown_seconds: int = 30
-    log_path: Path = Path(".hale/logs/retries.log")
+    log_path: Path = Path(config.RETRIES_LOG)
 
 
 @dataclass

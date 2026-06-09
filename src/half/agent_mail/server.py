@@ -15,8 +15,9 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from src.agent_mail.database import AgentMailDatabase
-from src.agent_mail.models import MessageType
+from half.agent_mail.database import AgentMailDatabase
+from half.agent_mail.models import MessageType
+from half import config
 
 logger = logging.getLogger("half.agent_mail.server")
 
@@ -37,7 +38,7 @@ def get_db() -> AgentMailDatabase:
     """Get or create the database singleton."""
     global _db
     if _db is None:
-        db_path = Path(".hale/agent-mail/mail.db")
+        db_path = Path(config.AGENT_MAIL_DB)
         _db = AgentMailDatabase(db_path)
     return _db
 

@@ -7,6 +7,7 @@ When the budget is exhausted, automation pauses.
 """
 
 from __future__ import annotations
+from half import config
 
 import json
 import logging
@@ -32,7 +33,7 @@ class ErrorBudgetTracker:
     ):
         self.total_points = total_points
         self.window_days = window_days
-        self.state_dir = state_dir or Path(".hale/metrics")
+        self.state_dir = state_dir or Path(config.METRICS_DIR)
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self._events: list[dict[str, Any]] = []
         self._load()

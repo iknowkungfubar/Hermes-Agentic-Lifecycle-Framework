@@ -17,7 +17,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from src.state import StateMachineContext
+from half.state import StateMachineContext
 
 logger = logging.getLogger("half.orchestrator")
 

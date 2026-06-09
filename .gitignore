@@ -37,3 +37,6 @@ src-tauri/gen/
 # Config with secrets
 .env
 *.secret
+
+# Test artifacts
+test/

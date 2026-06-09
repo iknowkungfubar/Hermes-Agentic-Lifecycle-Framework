@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from src.agent_mail.database import AgentMailDatabase
-from src.agent_mail.models import MessageType
+from half.agent_mail.database import AgentMailDatabase
+from half.agent_mail.models import MessageType
 
 
 @pytest.fixture

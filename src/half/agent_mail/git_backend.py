@@ -8,6 +8,7 @@ full audit trail and decentralized backup.
 """
 
 from __future__ import annotations
+from half import config
 
 import contextlib
 import logging
@@ -28,7 +29,7 @@ class GitMailBackend:
     alongside the SQLite database.
     """
 
-    def __init__(self, mail_dir: str | Path = ".hale/agent-mail"):
+    def __init__(self, mail_dir: str | Path = config.AGENT_MAIL_DIR):
         self.mail_dir = Path(mail_dir)
         self.mail_dir.mkdir(parents=True, exist_ok=True)
         self._init_repo()
