@@ -442,3 +442,26 @@ class AgentMailDatabase:
     def close(self) -> None:
         """Close the database connection."""
         self._conn.close()
+
+
+# ─── MCP Server Database Singleton ────────────────────────────────────────────
+
+
+_db: AgentMailDatabase | None = None
+
+
+def get_db() -> AgentMailDatabase:
+    """Get or create the database singleton."""
+    global _db
+    if _db is None:
+        db_path = Path(config.AGENT_MAIL_DB)
+        _db = AgentMailDatabase(db_path)
+    return _db
+
+
+def cleanup_db() -> None:
+    """Close and clear the database singleton."""
+    global _db
+    if _db is not None:
+        _db.close()
+        _db = None

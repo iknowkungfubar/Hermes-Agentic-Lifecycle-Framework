@@ -15,7 +15,7 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from half.agent_mail.database import AgentMailDatabase
+from half.agent_mail.database import AgentMailDatabase, cleanup_db, get_db
 from half.agent_mail.models import MessageType
 from half import config
 
@@ -29,18 +29,6 @@ mcp = FastMCP(
 
 
 # ─── Database Singleton ───────────────────────────────────────────────────────
-
-
-_db: AgentMailDatabase | None = None
-
-
-def get_db() -> AgentMailDatabase:
-    """Get or create the database singleton."""
-    global _db
-    if _db is None:
-        db_path = Path(config.AGENT_MAIL_DB)
-        _db = AgentMailDatabase(db_path)
-    return _db
 
 
 # ─── Agent Tools ──────────────────────────────────────────────────────────────

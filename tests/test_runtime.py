@@ -136,11 +136,14 @@ class TestCheckpointer:
 
     def test_create_checkpointer(self):
         """Creating a checkpointer should initialize DB with WAL."""
+        from half.runtime.checkpointer import close_checkpointer
+
         with tempfile.TemporaryDirectory() as tmp:
             db_path = str(Path(tmp) / "checkpoints.db")
             cp = create_secure_checkpointer(db_path)
             assert cp is not None
             assert Path(db_path).exists()
+            close_checkpointer(cp)
 
     def test_checkpoint_paths(self):
         """Checkpoint paths should include db, wal, shm."""
