@@ -1,0 +1,28 @@
+# Goal Orchestration Configuration — HALF Blueprint Spec
+# https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework
+#
+# Copy to .goal/config.yaml
+
+default_provider: lmstudio
+
+budgets:
+  per_goal_usd: 5.0
+  per_ticket_usd: 0.5
+  hard_stop: true
+
+limits:
+  coder_max_iterations: 10
+  recursion_limit: 200
+  shell_command_denylist:
+    - "rm -rf /"
+    - "dd if="
+    - "mkfs"
+    - "format"
+
+roles:
+  planner:
+    model: opencode/gpt-5.1-codex
+  coder:
+    model: qwen2.5-coder:7b
+  reviewer:
+    model: deepseek/deepseek-v4-pro

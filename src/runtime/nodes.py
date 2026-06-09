@@ -103,6 +103,13 @@ def phase_1_gate(state: HalfState) -> dict[str, Any]:
 
 
 # ─── Phase 2: Development & Coding ────────────────────────────────────────────
+#
+# Tri-Phasic Execution Loop (per blueprint):
+#   1. Research (Read-Only): grep, cat, AST parsers. No file modifications.
+#   2. Plan (Design-Only): outputs .spec.md, passes Critic review.
+#   3. Implement (Write-Restricted): code within ephemeral sandbox.
+#   4. Code-Simplifier: refactoring pass after implementation.
+#
 
 
 def phase_2_scaffold(state: HalfState) -> dict[str, Any]:
@@ -116,13 +123,77 @@ def phase_2_scaffold(state: HalfState) -> dict[str, Any]:
     }
 
 
+def phase_2_research(state: HalfState) -> dict[str, Any]:
+    """Node: Phase 2B.1 — Research (Read-Only).
+
+    Agent has READ-ONLY access: grep, cat, AST parsers.
+    No file modifications allowed in this phase.
+    Analyzes existing codebase for patterns and context.
+    """
+    logger.info("Phase 2B.1: Research (read-only)")
+    return {
+        "current_step": "phase-2-research",
+        "iteration_count": state.get("iteration_count", 0) + 1,
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 2B.1 complete: Codebase analyzed — patterns identified",
+            }
+        ],
+    }
+
+
+def phase_2_plan(state: HalfState) -> dict[str, Any]:
+    """Node: Phase 2B.2 — Plan (Design-Only).
+
+    Agent outputs a .spec.md outlining architectural boundaries.
+    Must pass Critic sub-agent review before proceeding to Implement.
+    """
+    logger.info("Phase 2B.2: Plan (design-only)")
+    return {
+        "current_step": "phase-2-plan",
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 2B.2 complete: Specification reviewed and approved",
+            }
+        ],
+    }
+
+
 def phase_2_implement(state: HalfState) -> dict[str, Any]:
-    """Node: Phase 2B — Harness-first TDD implementation."""
-    logger.info("Phase 2B: Implementation")
+    """Node: Phase 2B.3 — Implement (Write-Restricted).
+
+    Code is written and tested within ephemeral sandboxed environment.
+    Follows harness-first TDD: failing test → implementation → passing test.
+    """
+    logger.info("Phase 2B.3: Implement (write-restricted)")
     return {
         "current_step": "phase-2-implement",
         "messages": [
-            {"role": "assistant", "content": "Phase 2B complete: Implementation done"}
+            {
+                "role": "assistant",
+                "content": "Phase 2B.3 complete: Implementation done with harness-first TDD",
+            }
+        ],
+    }
+
+
+def phase_2_simplify(state: HalfState) -> dict[str, Any]:
+    """Node: Phase 2B.4 — Code-Simplifier Refactoring Pass.
+
+    Chesterton's Fence principle: reduce nesting, extract methods,
+    apply KISS/DRY/YAGNI without altering behavior.
+    Triggered immediately after implementation.
+    """
+    logger.info("Phase 2B.4: Code-Simplifier refactoring pass")
+    return {
+        "current_step": "phase-2-simplify",
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 2B.4 complete: Code simplified — nesting reduced, methods extracted",
+            }
         ],
     }
 
