@@ -377,7 +377,7 @@ This project uses the **Hermes Agentic Lifecycle Framework (HALF)** for autonomo
 - Workspace: .hale/
 - Checkpoints: .hale/state/checkpoints/
 
-## Comands
+## Commands
 - \`skill_view(name="half")\` — Load the HALF framework
 - \`./scripts/genesis.sh\` — Re-run this bootstrapper
 EOFA

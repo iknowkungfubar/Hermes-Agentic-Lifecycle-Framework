@@ -126,8 +126,18 @@ def _route_command(args: argparse.Namespace) -> dict[str, object] | None:
         return None
 
     if args.command == "init":
-        from src.half_sidecar import cmd_status
-        return cmd_status()
+        project = args.project
+        mode = args.mode
+        target_dir = args.dir or project
+        msg = (
+            f"To initialize a HALF project, run:\n"
+            f"  ./scripts/genesis.sh --project {project} --mode {mode} --dir {target_dir}\n"
+            f"Or use the Hermes skill:\n"
+            f"  skill_view(name=\"half\")\n"
+            f"  Then follow Phase 1: Discovery & Strategy"
+        )
+        print(msg)
+        return None
 
     if args.command == "status":
         from src.half_sidecar import cmd_status

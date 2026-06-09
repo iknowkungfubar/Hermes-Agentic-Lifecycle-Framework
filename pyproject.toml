@@ -40,7 +40,7 @@ dependencies = [
 "Issues" = "https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/issues"
 
 [project.scripts]
-half = "src.half.__main__:main"
+half = "half.__main__:main"
 
 [dependency-groups]
 dev = [

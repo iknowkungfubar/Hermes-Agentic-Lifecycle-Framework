@@ -48,6 +48,7 @@ class GateCheck:
                 "details": details,
             }
         except Exception as e:
+            logger.exception("Gate %s evaluation failed: %s", self.gate_id, e)
             return {
                 "gate_id": self.gate_id,
                 "description": self.description,

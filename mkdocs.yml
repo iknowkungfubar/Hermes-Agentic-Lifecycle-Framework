@@ -34,8 +34,8 @@ nav:
     - Configuration: reference/configuration.md
     - Agent Mail: reference/agent-mail.md
     - Voice Engine: reference/voice.md
-  - Contributing: contributing.md
-  - Changelog: changelog.md
+  - Contributing: CONTRIBUTING.md
+  - Changelog: CHANGELOG.md
 
 markdown_extensions:
   - admonition
