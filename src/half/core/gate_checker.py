@@ -68,6 +68,7 @@ class Phase1Gates:
         self.artifacts_dir = artifacts_dir / "phase-1"
 
     def get_all(self) -> list[GateCheck]:
+        """Get all Phase 1 gate checks."""
         return [
             GateCheck("G1.1", "All core capabilities have FR-IDs", self._check_g1_1),
             GateCheck("G1.2", "Each FR has acceptance criteria", self._check_g1_2),
@@ -160,6 +161,7 @@ class Phase3Gates:
         self.artifacts_dir = artifacts_dir / "phase-3"
 
     def get_all(self) -> list[GateCheck]:
+        """Get all Phase 3 gate checks."""
         return [
             GateCheck(
                 "G3.3",
@@ -198,17 +200,21 @@ class GateChecker:
         self.artifacts_dir = artifacts_dir
 
     def check_phase_1(self) -> list[dict[str, Any]]:
+        """Run all Phase 1 gate checks."""
         gates = Phase1Gates(self.artifacts_dir)
         return [g.run() for g in gates.get_all()]
 
     def check_phase_3(self) -> list[dict[str, Any]]:
+        """Run all Phase 3 gate checks."""
         gates = Phase3Gates(self.artifacts_dir)
         return [g.run() for g in gates.get_all()]
 
     def has_blocking_failures(self, results: list[dict[str, Any]]) -> bool:
+        """Check if any blocking gate checks failed."""
         return any(r["blocking"] and not r["passed"] for r in results)
 
     def summary(self, results: list[dict[str, Any]]) -> str:
+        """Return a summary string of gate check results."""
         total = len(results)
         passed = sum(1 for r in results if r["passed"])
         failed = total - passed
