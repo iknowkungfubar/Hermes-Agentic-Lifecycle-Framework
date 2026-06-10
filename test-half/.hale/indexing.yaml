@@ -1,8 +1,0 @@
-# Repository Indexing Configuration
-engine: hierarchical-summary
-max_depth: 4
-skip_dirs:
-  - .git
-  - .venv
-  - node_modules
-  - __pycache__

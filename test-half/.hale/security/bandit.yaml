@@ -1,2 +1,0 @@
-# Bandit security configuration
-skips: ['B101', 'B311']
