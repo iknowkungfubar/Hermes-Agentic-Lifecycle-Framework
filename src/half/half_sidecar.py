@@ -21,6 +21,7 @@ Commands:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import sys
@@ -233,8 +234,8 @@ def main() -> None:
 
 def _run_http_server(host: str = "127.0.0.1", port: int = 9722) -> None:
     """Run an HTTP server for browser-mode GUI."""
-    from http.server import HTTPServer, BaseHTTPRequestHandler
     import json as json_mod
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
     class HalfAPIHandler(BaseHTTPRequestHandler):
         def do_POST(self) -> None:
@@ -245,10 +246,10 @@ def _run_http_server(host: str = "127.0.0.1", port: int = 9722) -> None:
 
             def _handle() -> dict[str, object]:
                 h = {
-                    "get_pipeline_status": lambda: cmd_status(),
+                    "get_pipeline_status": cmd_status,
                     "get_finality_gate_status": lambda: {"locked": True, "mrp_ready": False, "deployment_approved": False},
                     "approve_deployment": lambda: {"status": "approved", "signature": args.get("signature", "")},
-                    "status": lambda: cmd_status(),
+                    "status": cmd_status,
                     "run-phase": lambda: cmd_run_phase(args.get("phase", "phase-1")),
                 }
                 return h.get(path, lambda: {"error": f"Unknown endpoint: {path}"})()  # type: ignore[no-untyped-call]
@@ -275,13 +276,8 @@ def _run_http_server(host: str = "127.0.0.1", port: int = 9722) -> None:
             logger.info("HTTP %s", format % args)
 
     server = HTTPServer((host, port), HalfAPIHandler)
-    print(f"HALF GUI server running at http://{host}:{port}")
-    print("Open dist/index.html in your browser and it will connect here.")
-    print("Press Ctrl+C to stop.")
-    try:
+    with contextlib.suppress(KeyboardInterrupt):
         server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nServer stopped.")
 
 
 if __name__ == "__main__":

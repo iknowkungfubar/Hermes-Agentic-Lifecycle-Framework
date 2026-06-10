@@ -572,10 +572,12 @@ class TestPhase5GateWithMonitoring:
 
     def test_phase_5_gate_passes_with_monitoring(self):
         """Phase 5 gate should return passed=True when monitoring config is present."""
+        import os
+        import tempfile
+        from pathlib import Path
+
         from half.runtime.nodes import phase_5_gate
         from half.runtime.state import initial_state
-        import tempfile, os
-        from pathlib import Path
 
         with tempfile.TemporaryDirectory() as tmp:
             # Create monitoring config where phase_5_gate expects it
@@ -597,9 +599,11 @@ class TestPhase5GateWithMonitoring:
 
     def test_phase_5_gate_fails_without_monitoring(self):
         """Phase 5 gate should return passed=False when monitoring config is missing."""
+        import os
+        import tempfile
+
         from half.runtime.nodes import phase_5_gate
         from half.runtime.state import initial_state
-        import tempfile, os
 
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()

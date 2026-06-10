@@ -5,6 +5,7 @@ Receives GitHub webhooks, verifies signatures, and dispatches actions.
 
 from __future__ import annotations
 
+import contextlib
 import hmac
 import json
 import logging
@@ -103,16 +104,8 @@ class WebhookServer:
 
     def start(self) -> None:
         server = HTTPServer((self.host, self.port), self._make_request_handler(self.handler))
-        print(f"HALF webhook server listening on http://{self.host}:{self.port}")
-        print("Configure your GitHub repo webhook to point here:")
-        print(f"  Payload URL: http://your-server:{self.port}/webhook")
-        print(f"  Secret: {self.handler.secret or '(not set)'}")
-        print("  Events: Push, Pull requests, Issues")
-        print("Press Ctrl+C to stop.")
-        try:
+        with contextlib.suppress(KeyboardInterrupt):
             server.serve_forever()
-        except KeyboardInterrupt:
-            print("\nServer stopped.")
 
     @staticmethod
     def _make_request_handler(handler: WebhookHandler) -> type[BaseHTTPRequestHandler]:

@@ -59,11 +59,11 @@ class TestVoiceEngineDetailed:
 
     def test_download_model_whisper(self):
         """Download model should return False when file doesn't exist (no network)."""
-        from half.half_voice import VoiceEngine
-        from unittest.mock import patch
-
         import subprocess
         import tempfile
+        from unittest.mock import patch
+
+        from half.half_voice import VoiceEngine
         with tempfile.TemporaryDirectory() as tmp:
             engine = VoiceEngine(models_dir=tmp)
             # Mock subprocess to simulate curl failure

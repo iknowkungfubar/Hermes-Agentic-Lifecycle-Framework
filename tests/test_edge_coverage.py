@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-import json
 import os
 import sys
 import tempfile
 from pathlib import Path
-
-import pytest
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # half_sidecar.py — uncovered lines 79-81, 143, 155, 181-188, 200-230
@@ -62,8 +58,9 @@ class TestCLIRouting:
 
     def test_route_unknown_command(self):
         """Unknown command should return error dict."""
-        from half.__main__ import _route_command
         import argparse
+
+        from half.__main__ import _route_command
         args = argparse.Namespace(command="nonexistent_cmd", fb_cmd="")
         result = _route_command(args)
         assert isinstance(result, dict)
@@ -71,25 +68,28 @@ class TestCLIRouting:
 
     def test_route_voice_without_subcommand(self):
         """Voice command without subcommand should return error."""
-        from half.__main__ import _route_command
         import argparse
+
+        from half.__main__ import _route_command
         args = argparse.Namespace(command="voice", voice_cmd=None, fb_cmd="")
         result = _route_command(args)
-        assert isinstance(result, dict) and "error" in result or result is None
+        assert (isinstance(result, dict) and "error" in result) or result is None
 
     def test_route_focalboard_without_subcommand(self):
         """Focalboard without subcommand should return error."""
-        from half.__main__ import _route_command
         import argparse
+
+        from half.__main__ import _route_command
         args = argparse.Namespace(command="focalboard", fb_cmd=None)
         result = _route_command(args)
-        assert isinstance(result, dict) and "error" in result or result is None
+        assert (isinstance(result, dict) and "error" in result) or result is None
 
     def test_version_command_routes(self):
         """Version command should call _show_version."""
-        from half.__main__ import _route_command
         import argparse
         import io
+
+        from half.__main__ import _route_command
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
@@ -103,8 +103,9 @@ class TestCLIRouting:
 
     def test_init_command_routes(self):
         """Init command should return a dict with project info."""
-        from half.__main__ import _cmd_init
         import argparse
+
+        from half.__main__ import _cmd_init
         args = argparse.Namespace(command="init", project="test-cli", mode="full", dir="/tmp/test-init-cli")
         result = _cmd_init(args)
         assert isinstance(result, dict)
@@ -130,9 +131,10 @@ class TestImplementAgentCoverage:
 
     def test_verify_harness_first_true(self):
         """Verify harness-first should check all conditions."""
-        from half.agents.implement import ImplementAgent
-        import tempfile, os
+        import tempfile
         from pathlib import Path
+
+        from half.agents.implement import ImplementAgent
 
         with tempfile.TemporaryDirectory() as tmp:
             # Write a test that FAILS (RED phase)
@@ -157,9 +159,10 @@ class TestImplementAgentCoverage:
 
     def test_verify_harness_first_false(self):
         """Verify harness-first should return False if conditions not met."""
-        from half.agents.implement import ImplementAgent
-        import tempfile, os
+        import tempfile
         from pathlib import Path
+
+        from half.agents.implement import ImplementAgent
 
         with tempfile.TemporaryDirectory() as tmp:
             test_file = Path(tmp) / "test_dummy.py"
@@ -168,7 +171,7 @@ class TestImplementAgentCoverage:
             os.chdir(tmp)
             try:
                 agent = ImplementAgent()
-                harness = agent.create_test_harness("T-001", "FR-001", str(test_file), "assert True")
+                agent.create_test_harness("T-001", "FR-001", str(test_file), "assert True")
                 # created_before_implementation defaults to False — should fail
                 result = agent.verify_harness_first("T-001")
                 assert result is False
@@ -205,7 +208,7 @@ class TestGitBackendEdgeCases:
 
         with tempfile.TemporaryDirectory() as tmp:
             mail_dir = Path(tmp) / "agent-mail"
-            git = GitMailBackend(mail_dir)
+            GitMailBackend(mail_dir)
             assert (mail_dir / ".git").exists()
 
     def test_get_log_empty(self):
