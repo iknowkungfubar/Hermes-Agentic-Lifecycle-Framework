@@ -10,12 +10,13 @@ checkpoint loading to prevent malicious object reconstruction.
 """
 
 from __future__ import annotations
-from half import config
 
 import hashlib
 import json
 from pathlib import Path
 from typing import Any
+
+from half import config
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 

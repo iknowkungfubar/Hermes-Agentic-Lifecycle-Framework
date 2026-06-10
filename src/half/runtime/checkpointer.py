@@ -9,7 +9,6 @@ Wraps LangGraph's SQLite checkpointer with:
 """
 
 from __future__ import annotations
-from half import config
 
 import logging
 import sqlite3
@@ -18,6 +17,7 @@ from typing import Any
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
+from half import config
 from half.state import (
     validate_metadata_write,
 )

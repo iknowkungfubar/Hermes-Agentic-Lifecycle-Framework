@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import sqlite3
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from half import config
 from half.agent_mail.git_backend import GitMailBackend
 from half.agent_mail.models import (
     Agent,
@@ -21,7 +22,6 @@ from half.agent_mail.models import (
     MessageType,
     now_iso,
 )
-from half import config
 
 
 class AgentMailDatabase:
@@ -335,7 +335,7 @@ class AgentMailDatabase:
             return None  # File is already leased
 
         lease_id = str(uuid.uuid4())[:12]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires_at = now + timedelta(hours=expiry_hours)
         now_str = now.isoformat()
         expires_str = expires_at.isoformat()

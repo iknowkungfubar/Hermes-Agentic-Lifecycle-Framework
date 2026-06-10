@@ -5,8 +5,6 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import pytest
-
 
 class TestDiscoveryAgent:
     """Test the HALF-Discovery agent."""
@@ -306,21 +304,21 @@ class TestIterateAgent:
 
     def test_classify_bug(self):
         """Bug titles should be classified as BUG."""
-        from half.agents.iterate import classify_input, IssueType
+        from half.agents.iterate import IssueType, classify_input
 
         result = classify_input("Fix crash on login", "Error when user logs in")
         assert result == IssueType.BUG
 
     def test_classify_feature(self):
         """Feature titles should be classified as FEATURE."""
-        from half.agents.iterate import classify_input, IssueType
+        from half.agents.iterate import IssueType, classify_input
 
         result = classify_input("Add export feature", "Could we support CSV export?")
         assert result == IssueType.FEATURE
 
     def test_create_issue(self):
         """Creating an issue should assign an ID."""
-        from half.agents.iterate import IterateAgent, IssueType
+        from half.agents.iterate import IssueType, IterateAgent
 
         agent = IterateAgent()
         issue = agent.create_issue("Bug: login broken", "Users cannot log in")

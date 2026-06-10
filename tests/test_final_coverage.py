@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-import json
-import os
-import subprocess
-import sys
+import contextlib
 import tempfile
 from pathlib import Path
 
 import pytest
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # half_voice/engine.py (37% → 80%+)
@@ -62,22 +58,24 @@ class TestVoiceEngineDetailed:
                     engine.speak("Hello", output_path=out_path)
 
     def test_download_model_whisper(self):
-        """Download model should return False when model exists or curl unavailable."""
+        """Download model should return False when file doesn't exist (no network)."""
         from half.half_voice import VoiceEngine
+        from unittest.mock import patch
 
+        import subprocess
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:
             engine = VoiceEngine(models_dir=tmp)
-            # Model doesn't exist, curl may or may not be available
-            result = engine.download_model("whisper")
-            # Either False (curl failed) or True (download succeeded or model exists)
-            assert isinstance(result, bool)
+            # Mock subprocess to simulate curl failure
+            with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, ["curl"])):
+                result = engine.download_model("whisper")
+            assert result is False
 
     def test_download_model_piper(self):
         """Download piper model should return bool."""
-        from half.half_voice import VoiceEngine
-
         import tempfile
+
+        from half.half_voice import VoiceEngine
         with tempfile.TemporaryDirectory() as tmp:
             engine = VoiceEngine(models_dir=tmp)
             result = engine.download_model("piper")
@@ -98,10 +96,8 @@ class TestVoiceEngineDetailed:
         engine = VoiceEngine()
         # speak_async spawns a daemon thread that dies silently if TTS unavailable
         # This is expected behavior — the thread will raise internally
-        try:
+        with contextlib.suppress(Exception):
             engine.speak_async("Hello world")
-        except Exception:
-            pass
         assert True  # Reached here without blocking
 
     def test_is_available_returns_dict(self):
@@ -726,7 +722,7 @@ class TestAgentCodifyCorrections:
 
     def test_analyze_correction_targets_agents_md(self):
         """Agent context corrections should target AGENTS_MD."""
-        from half.agents.codify import analyze_correction, CodificationTarget
+        from half.agents.codify import CodificationTarget, analyze_correction
 
         corr = analyze_correction(
             "C-001",
@@ -739,7 +735,7 @@ class TestAgentCodifyCorrections:
 
     def test_analyze_correction_targets_workflow(self):
         """Process corrections should target HALF_WORKFLOW."""
-        from half.agents.codify import analyze_correction, CodificationTarget
+        from half.agents.codify import CodificationTarget, analyze_correction
 
         corr = analyze_correction(
             "C-002", "Wrong review process",
@@ -751,7 +747,7 @@ class TestAgentCodifyCorrections:
 
     def test_analyze_correction_targets_test(self):
         """Test-related corrections should target TEST_CASE."""
-        from half.agents.codify import analyze_correction, CodificationTarget
+        from half.agents.codify import CodificationTarget, analyze_correction
 
         corr = analyze_correction(
             "C-003", "Missing assertion",
@@ -786,7 +782,7 @@ class TestAgentCodifyCorrections:
 
     def test_codification_rate(self):
         """Codification rate should calculate percentage."""
-        from half.agents.codify import CodifyAgent, analyze_correction
+        from half.agents.codify import CodifyAgent
 
         agent = CodifyAgent()
         # With no corrections, rate should be 100% (vacuously)
@@ -798,21 +794,21 @@ class TestAgentIterateDetailed:
 
     def test_classify_technical_debt(self):
         """Technical debt titles should be classified correctly."""
-        from half.agents.iterate import classify_input, IssueType
+        from half.agents.iterate import IssueType, classify_input
 
         result = classify_input("Refactor auth module", "Clean up legacy code")
         assert result == IssueType.TECHNICAL_DEBT
 
     def test_classify_incident(self):
         """Incident titles should be classified correctly."""
-        from half.agents.iterate import classify_input, IssueType
+        from half.agents.iterate import IssueType, classify_input
 
         result = classify_input("Site down", "Production outage detected")
         assert result == IssueType.INCIDENT
 
     def test_create_bug_issue(self):
         """Creating a bug issue should set correct type."""
-        from half.agents.iterate import IterateAgent, IssueType
+        from half.agents.iterate import IssueType, IterateAgent
 
         agent = IterateAgent()
         issue = agent.create_issue("Bug: error on login", "500 error when logging in")
@@ -820,7 +816,7 @@ class TestAgentIterateDetailed:
 
     def test_create_feature_issue(self):
         """Creating a feature issue should set correct type."""
-        from half.agents.iterate import IterateAgent, IssueType
+        from half.agents.iterate import IssueType, IterateAgent
 
         agent = IterateAgent()
         issue = agent.create_issue("Add export feature", "Would be nice to export data")
@@ -897,7 +893,7 @@ class TestAgentInfrastructureConfig:
             agent = InfrastructureAgent("k8s-app")
             manifests = agent.generate_kubernetes_manifests(Path(tmp))
             assert len(manifests) >= 1
-            for path_str, content in manifests.items():
+            for content in manifests.values():
                 assert "Deployment" in content or "Service" in content
 
 
@@ -965,7 +961,7 @@ class TestAgentDiscoveryExpand:
 
     def test_find_ambiguities(self):
         """Low confidence items should generate questions."""
-        from half.agents.discovery import DiscoveryAgent, Capability
+        from half.agents.discovery import Capability, DiscoveryAgent
 
         agent = DiscoveryAgent("test")
         agent.requirements.capabilities.append(

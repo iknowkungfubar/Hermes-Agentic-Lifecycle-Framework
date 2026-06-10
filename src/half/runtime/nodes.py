@@ -11,10 +11,10 @@ import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from half import config
-from half.runtime.state import HalfState, phase_artifacts_dir
+from half.runtime.state import HalfState
 
 logger = logging.getLogger("half.runtime.nodes")
 
@@ -75,7 +75,7 @@ def phase_1_discovery(state: HalfState) -> dict[str, Any]:
     _write_artifact("phase-1", "01-REQUIREMENTS.md", content)
     return {
         "current_step": "phase-1-discovery",
-        "artifacts": state.get("artifacts", []) + [{"name": "01-REQUIREMENTS.md", "phase": "phase-1"}],
+        "artifacts": [*state.get("artifacts", []), {"name": "01-REQUIREMENTS.md", "phase": "phase-1"}],
         "messages": [{"role": "assistant", "content": "Phase 1A: REQUIREMENTS.md generated"}],
     }
 
@@ -165,7 +165,7 @@ graph TB
 """
     _write_artifact("phase-1", "04-ARCHITECTURE.md", arch)
 
-    adrs = f"""# Architecture Decision Records
+    adrs = """# Architecture Decision Records
 
 ## ADR-001: Database
 **Context:** Need persistent storage
@@ -237,7 +237,7 @@ def phase_2_research(state: HalfState) -> dict[str, Any]:
     # Count files, detect patterns
     src_dir = Path.cwd() / "src"
     py_files = list(src_dir.rglob("*.py")) if src_dir.exists() else []
-    analysis = {
+    {
         "project": project,
         "python_files": len(py_files),
         "patterns_detected": [],

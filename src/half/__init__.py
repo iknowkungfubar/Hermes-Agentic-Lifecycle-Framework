@@ -15,9 +15,3 @@ __description__ = "Hermes Agentic Lifecycle Framework — transform concepts int
 import sys as _sys
 
 # Check Python version
-if _sys.version_info < (3, 13):
-    msg = (
-        f"HALF requires Python 3.13+. "
-        f"You are running Python {_sys.version_info.major}.{_sys.version_info.minor}."
-    )
-    raise RuntimeError(msg)
