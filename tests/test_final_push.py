@@ -565,3 +565,50 @@ class TestAgentMailServer:
                 assert conflict["status"] == "conflict"
             finally:
                 os2.chdir(orig)
+
+
+class TestPhase5GateWithMonitoring:
+    """TDD: Phase 5 gate should pass when monitoring config exists."""
+
+    def test_phase_5_gate_passes_with_monitoring(self):
+        """Phase 5 gate should return passed=True when monitoring config is present."""
+        from half.runtime.nodes import phase_5_gate
+        from half.runtime.state import initial_state
+        import tempfile, os
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as tmp:
+            # Create monitoring config where phase_5_gate expects it
+            halve = Path(tmp) / ".hale"
+            phase5_dir = halve / "artifacts" / "phase-5"
+            phase5_dir.mkdir(parents=True)
+            (phase5_dir / "monitoring-config.yaml").write_text("monitoring:\n  enabled: true\n")
+
+            orig = os.getcwd()
+            os.chdir(tmp)
+            try:
+                state = initial_state("test")
+                result = phase_5_gate(state)
+                gate = result["gate_results"][0]
+                assert gate["passed"] is True, \
+                    f"Phase 5 gate should pass with monitoring config, got: {gate}"
+            finally:
+                os.chdir(orig)
+
+    def test_phase_5_gate_fails_without_monitoring(self):
+        """Phase 5 gate should return passed=False when monitoring config is missing."""
+        from half.runtime.nodes import phase_5_gate
+        from half.runtime.state import initial_state
+        import tempfile, os
+
+        with tempfile.TemporaryDirectory() as tmp:
+            orig = os.getcwd()
+            os.chdir(tmp)
+            try:
+                state = initial_state("test")
+                result = phase_5_gate(state)
+                gate = result["gate_results"][0]
+                assert gate["passed"] is False, \
+                    f"Phase 5 gate should fail without monitoring config, got: {gate}"
+            finally:
+                os.chdir(orig)
