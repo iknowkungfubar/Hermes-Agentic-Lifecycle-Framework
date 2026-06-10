@@ -45,10 +45,10 @@ def _cleanup_db_after_test() -> None:
     except ImportError:
         pass
     try:
-        from half.runtime.checkpointer import close_checkpointer
         # Close any open checkpointers — stored in module state
         import half.runtime.graph as graph_mod
-        if hasattr(graph_mod, '_checkpointers'):
+        from half.runtime.checkpointer import close_checkpointer
+        if hasattr(graph_mod, "_checkpointers"):
             for cp in graph_mod._checkpointers:
                 close_checkpointer(cp)
             graph_mod._checkpointers = []

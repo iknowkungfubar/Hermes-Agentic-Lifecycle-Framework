@@ -6,13 +6,11 @@ and resolve missing technical constraints during Discovery & Strategy.
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 import urllib.error
 import urllib.parse
 import urllib.request
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("half.browser_use")
@@ -110,7 +108,7 @@ class BrowserResearchAgent:
             "recommendation": "",
         }
         for opt in options:
-            comparison["matrix"][opt] = {c: "TBD" for c in criteria}
+            comparison["matrix"][opt] = dict.fromkeys(criteria, "TBD")
             # Try to fetch info about each option
             result = self.fetch_url(f"https://duckduckgo.com/html/?q={urllib.parse.quote(opt + ' documentation')}")
             if result.get("success"):
@@ -124,7 +122,7 @@ class BrowserResearchAgent:
         lines = [
             f"# ADR: {title}",
             "",
-            f"## Context",
+            "## Context",
             context,
             "",
             "## Options Considered",
@@ -133,7 +131,7 @@ class BrowserResearchAgent:
             lines.append(f"{i}. {opt}")
         lines.extend([
             "",
-            f"## Decision",
+            "## Decision",
             decision,
             "",
             "## Status",

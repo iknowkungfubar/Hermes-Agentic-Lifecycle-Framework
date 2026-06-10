@@ -61,7 +61,8 @@ class ExecutionSandbox:
             RuntimeError: If no runtime is available.
         """
         if not self.runtime:
-            raise RuntimeError("No container runtime available")
+            msg = "No container runtime available"
+            raise RuntimeError(msg)
 
         cmd = [
             self.runtime, "run", "--rm", "-d",
@@ -87,7 +88,8 @@ class ExecutionSandbox:
             logger.info("Sandbox started: %s", self._container_id)
             return self._container_id
         except subprocess.TimeoutExpired as e:
-            raise RuntimeError(f"Failed to start sandbox: {e}")
+            msg = f"Failed to start sandbox: {e}"
+            raise RuntimeError(msg)
 
     def exec_in_sandbox(self, code: str) -> dict[str, Any]:
         """Execute code inside the sandbox container.
@@ -99,7 +101,8 @@ class ExecutionSandbox:
             Dict with stdout, stderr, exit_code.
         """
         if not self._container_id:
-            raise RuntimeError("Sandbox not started")
+            msg = "Sandbox not started"
+            raise RuntimeError(msg)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(code)

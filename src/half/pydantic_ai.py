@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -79,7 +79,8 @@ class SpecificationDocument(BaseModel):
     def check_unique_fr_ids(cls, v: list[FunctionRequirement]) -> list[FunctionRequirement]:
         ids = [fr.id for fr in v]
         if len(ids) != len(set(ids)):
-            raise ValueError("Duplicate FR-IDs found")
+            msg = "Duplicate FR-IDs found"
+            raise ValueError(msg)
         return v
 
     @field_validator("api_contracts")
@@ -87,7 +88,8 @@ class SpecificationDocument(BaseModel):
     def check_unique_paths(cls, v: list[APIContractModel]) -> list[APIContractModel]:
         paths = [(c.method, c.path) for c in v]
         if len(paths) != len(set(paths)):
-            raise ValueError("Duplicate API endpoints found")
+            msg = "Duplicate API endpoints found"
+            raise ValueError(msg)
         return v
 
 
@@ -113,8 +115,7 @@ class SchemaGenerator:
                 priority=cap.get("priority", "P1"),
                 confidence=cap.get("confidence", "MEDIUM"),
             ))
-        doc = RequirementDocument(project_name=project, elevator_pitch="", capabilities=caps)
-        return doc
+        return RequirementDocument(project_name=project, elevator_pitch="", capabilities=caps)
 
     @staticmethod
     def generate_specification(project: str, frs: list[dict[str, Any]]) -> SpecificationDocument:

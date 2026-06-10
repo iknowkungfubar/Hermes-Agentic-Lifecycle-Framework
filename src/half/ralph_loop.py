@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +35,7 @@ class RalphLoop:
         Returns:
             Dict with all audit results.
         """
-        timestamp = datetime.now(tz=timezone.utc).isoformat()
+        timestamp = datetime.now(tz=UTC).isoformat()
         results: dict[str, Any] = {
             "timestamp": timestamp,
             "typing_audit": self._audit_typing(),
@@ -59,9 +59,7 @@ class RalphLoop:
             lines = content.split("\n")
             for i, line in enumerate(lines, 1):
                 stripped = line.strip()
-                if stripped.startswith("def ") and "->" not in stripped:
-                    missing.append(f"{f.relative_to(self.repo_root)}:{i}")
-                elif stripped.startswith("def __init__") and "->" not in stripped:
+                if (stripped.startswith("def ") and "->" not in stripped) or (stripped.startswith("def __init__") and "->" not in stripped):
                     missing.append(f"{f.relative_to(self.repo_root)}:{i}")
         return {
             "files_checked": len(list(self.repo_root.rglob("*.py"))),
@@ -131,7 +129,7 @@ class RalphLoop:
         from datetime import datetime
         try:
             branch_name = f"audit/ralph-loop-{datetime.now().strftime('%Y%m%d')}"
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
 
             # Create branch, add audit report, commit, push, create PR
             subprocess.run(["git", "checkout", "-b", branch_name],
@@ -169,5 +167,5 @@ class RalphLoop:
             logger.info("Audit PR created: %s", pr_result.stdout.strip() if pr_result.returncode == 0 else "push only")
             return True
         except subprocess.TimeoutExpired as e:
-            logger.error("Audit branch creation failed: %s", e)
+            logger.exception("Audit branch creation failed: %s", e)
             return False
