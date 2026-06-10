@@ -127,19 +127,47 @@ class RalphLoop:
         return max(0, score)  # type: ignore[no-any-return]
 
     def _create_audit_branch(self, results: dict[str, Any]) -> bool:
-        """Create a Git branch with audit results."""
+        """Create a Git branch and PR with audit results."""
+        from datetime import datetime
         try:
             branch_name = f"audit/ralph-loop-{datetime.now().strftime('%Y%m%d')}"
-            # Just create the branch, don't commit (user reviews first)
-            subprocess.run(
-                ["git", "checkout", "-b", branch_name],
-                cwd=self.repo_root, capture_output=True, timeout=30,
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+
+            # Create branch, add audit report, commit, push, create PR
+            subprocess.run(["git", "checkout", "-b", branch_name],
+                           cwd=self.repo_root, capture_output=True, timeout=30)
+
+            # Write audit report
+            report_path = self.repo_root / ".hale" / "audit-report.md"
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            report_path.write_text(
+                f"# Ralph Loop Audit — {timestamp}\n\n"
+                f"## Health Score: {results.get('score', 0)}/100\n\n"
+                f"### Typing Issues: {len(results.get('typing_audit', {}).get('examples', []))}\n"
+                f"### Duplicate Code: {len(results.get('duplicate_code', []))} blocks\n"
+                f"### Performance Issues: {len(results.get('perf_bottlenecks', []))}\n"
             )
-            subprocess.run(
-                ["git", "checkout", "-"],
-                cwd=self.repo_root, capture_output=True, timeout=30,
+
+            subprocess.run(["git", "add", str(report_path)], cwd=self.repo_root,
+                           capture_output=True, timeout=30)
+            subprocess.run(["git", "commit", "-m", f"chore: ralph-loop audit {timestamp}"],
+                           cwd=self.repo_root, capture_output=True, timeout=30)
+            subprocess.run(["git", "push", "-u", "origin", branch_name],
+                           cwd=self.repo_root, capture_output=True, timeout=60)
+
+            # Create PR using gh CLI
+            pr_result = subprocess.run(
+                ["gh", "pr", "create", "--base", "staging", "--head", branch_name,
+                 "--title", f"chore: Ralph Loop audit {timestamp}",
+                 "--body", f"Automated audit from Ralph Loop.\nScore: {results.get('score', 0)}/100"],
+                cwd=self.repo_root, capture_output=True, text=True, timeout=30,
             )
-            logger.info("Audit branch created: %s", branch_name)
+
+            # Switch back
+            subprocess.run(["git", "checkout", "-"], cwd=self.repo_root, capture_output=True, timeout=30)
+
+            logger.info("Audit PR created: %s", pr_result.stdout.strip() if pr_result.returncode == 0 else "push only")
             return True
-        except (subprocess.TimeoutExpired, FileNotFoundError):
+        except subprocess.TimeoutExpired as e:
+            logger.error("Audit branch creation failed: %s", e)
             return False

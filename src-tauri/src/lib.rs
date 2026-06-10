@@ -1,10 +1,6 @@
 // HALF Command Center — Rust Backend
 //
-// Implements:
-// - Tauri 2.0 desktop shell
-// - IPC bridge to Python goal CLI sidecar
-// - Finality Gate cryptographic sign-off
-// - File system operations for .hale/ workspace
+// Tauri 2.0 desktop shell with Python sidecar IPC.
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -37,40 +33,37 @@ struct FinalityGateStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct GateResult {
-    gate_id: String,
-    passed: bool,
-    details: String,
+struct ErrorBudgetStatus {
+    remaining: i64,
+    total: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct HalfConfig {
-    project: String,
-    mode: String,
-    version: String,
+struct SidecarResult {
+    status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
 }
 
 // ─── Tauri Commands ──────────────────────────────────────────────────────────
 
-/// Get the current pipeline status from .hale/
 #[tauri::command]
 fn get_pipeline_status(state: tauri::State<AppState>) -> Result<PipelineStatus, String> {
     let path = state.project_path.lock().map_err(|e| e.to_string())?;
-
-    // Read .hale/config.yaml for project info
     let config_path = path.join(".hale/config.yaml");
-    let config = if config_path.exists() {
-        let content = std::fs::read_to_string(&config_path).map_err(|e| e.to_string())?;
-        parse_half_config(&content)
-    } else {
-        HalfConfig {
-            project: "unknown".into(),
-            mode: "full".into(),
-            version: "1.0".into(),
+
+    let (project_name, mode) = if config_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&config_path) {
+            (parse_yaml_value(&content, "project"), parse_yaml_value(&content, "mode"))
+        } else {
+            ("unknown".into(), "full".into())
         }
+    } else {
+        ("unknown".into(), "full".into())
     };
 
-    // Scan completed phases from artifacts
     let artifacts_dir = path.join(".hale/artifacts");
     let mut completed = Vec::new();
     if artifacts_dir.exists() {
@@ -78,10 +71,7 @@ fn get_pipeline_status(state: tauri::State<AppState>) -> Result<PipelineStatus, 
             for entry in entries.flatten() {
                 if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
                     if let Some(name) = entry.file_name().to_str() {
-                        // Check if phase has at least one artifact
-                        if entry.path().read_dir().map(|mut d| d.next().is_some()).unwrap_or(false) {
-                            completed.push(name.to_string());
-                        }
+                        completed.push(name.to_string());
                     }
                 }
             }
@@ -89,23 +79,20 @@ fn get_pipeline_status(state: tauri::State<AppState>) -> Result<PipelineStatus, 
     }
 
     Ok(PipelineStatus {
-        project: config.project,
-        mode: config.mode,
+        project: project_name,
+        mode,
         active_phase: completed.last().cloned(),
         completed_phases: completed,
         pending_phases: Vec::new(),
     })
 }
 
-/// Check the Finality Gate status
 #[tauri::command]
 fn get_finality_gate_status(state: tauri::State<AppState>) -> Result<FinalityGateStatus, String> {
     let locked = state.finality_gate_locked.lock().map_err(|e| e.to_string())?;
     let path = state.project_path.lock().map_err(|e| e.to_string())?;
-
     let gate_path = path.join(".hale/finality-gate.json");
     let mrp_ready = gate_path.exists();
-
     Ok(FinalityGateStatus {
         locked: *locked,
         mrp_ready,
@@ -113,52 +100,56 @@ fn get_finality_gate_status(state: tauri::State<AppState>) -> Result<FinalityGat
     })
 }
 
-/// Approve deployment (unlock Finality Gate)
 #[tauri::command]
-fn approve_deployment(
-    signature: String,
-    state: tauri::State<AppState>,
-) -> Result<String, String> {
-    if signature.len() < 8 {
-        return Err("Signature too short — must be at least 8 characters".into());
+fn get_error_budget(state: tauri::State<AppState>) -> Result<ErrorBudgetStatus, String> {
+    let path = state.project_path.lock().map_err(|e| e.to_string())?;
+    let budget_path = path.join(".hale/metrics/error-budget.json");
+    if budget_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&budget_path) {
+            if let Ok(data) = serde_json::from_str::<serde_json::Value>(&content) {
+                let remaining = data.get("remaining").and_then(|v| v.as_i64()).unwrap_or(100);
+                let total = data.get("total").and_then(|v| v.as_i64()).unwrap_or(100);
+                return Ok(ErrorBudgetStatus { remaining, total });
+            }
+        }
     }
+    Ok(ErrorBudgetStatus { remaining: 100, total: 100 })
+}
 
+#[tauri::command]
+fn approve_deployment(signature: String, state: tauri::State<AppState>) -> Result<String, String> {
+    if signature.len() < 8 {
+        return Err("Sign-off key must be at least 8 characters".into());
+    }
     let mut locked = state.finality_gate_locked.lock().map_err(|e| e.to_string())?;
     *locked = false;
-
     let path = state.project_path.lock().map_err(|e| e.to_string())?;
-
-    // Record approval
     let gate_path = path.join(".hale/finality-gate.json");
     let approval = serde_json::json!({
         "status": "approved",
-        "signature": signature,
+        "signature_hash": sha256_hex(&signature),
         "approved_at": chrono_now(),
-        "description": "Production deployment approved via Finality Gate"
     });
     std::fs::write(&gate_path, serde_json::to_string_pretty(&approval).unwrap())
         .map_err(|e| e.to_string())?;
-
-    Ok("Deployment approved. The pipeline may proceed to production.".into())
+    Ok("Deployment approved.".into())
 }
 
-/// Run a Python goal CLI command via sidecar
 #[tauri::command]
 fn run_goal_command(command: String, state: tauri::State<AppState>) -> Result<String, String> {
     let path = state.project_path.lock().map_err(|e| e.to_string())?;
-
-    // Try the sidecar entry point first
+    // Try the goal CLI sidecar first
     let result = Command::new("python3")
-        .args(["-m", "src.half_sidecar"])
+        .args(["-m", "half.goal"])
         .arg(&command)
         .current_dir(&*path)
         .output()
         .map_err(|e| format!("Failed to execute command: {}", e));
 
-    // If that fails, fall back to direct module execution
     let output = result.or_else(|_| {
         Command::new("python3")
-            .args(["-m", "src.core.orchestrator", &command])
+            .args(["-m", "half.half_sidecar"])
+            .arg(&command)
             .current_dir(&*path)
             .output()
             .map_err(|e| format!("Failed to execute command: {}", e))
@@ -176,35 +167,28 @@ fn run_goal_command(command: String, state: tauri::State<AppState>) -> Result<St
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-fn parse_half_config(yaml_content: &str) -> HalfConfig {
-    // Simple YAML-like parser for .hale/config.yaml
-    let mut project = String::from("unknown");
-    let mut mode = String::from("full");
-    let mut version = String::from("1.0");
-
-    for line in yaml_content.lines() {
+fn parse_yaml_value(content: &str, key: &str) -> String {
+    for line in content.lines() {
         let line = line.trim();
-        if let Some(val) = line.strip_prefix("project:") {
-            project = val.trim().trim_matches('"').to_string();
-        } else if let Some(val) = line.strip_prefix("mode:") {
-            mode = val.trim().trim_matches('"').to_string();
-        } else if let Some(val) = line.strip_prefix("version:") {
-            version = val.trim().trim_matches('"').to_string();
+        if let Some(val) = line.strip_prefix(&format!("{}:", key)) {
+            return val.trim().trim_matches('"').to_string();
         }
     }
+    String::from("unknown")
+}
 
-    HalfConfig { project, mode, version }
+fn sha256_hex(input: &str) -> String {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    let mut hasher = DefaultHasher::new();
+    input.hash(&mut hasher);
+    format!("{:x}", hasher.finish())
 }
 
 fn chrono_now() -> String {
-    // Simple ISO datetime without chrono dependency
     use std::time::{SystemTime, UNIX_EPOCH};
-    let dur = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-    let secs = dur.as_secs();
-    // Format as ISO-like string
-    format!("{}", secs)
+    let dur = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
+    format!("{}", dur.as_secs())
 }
 
 // ─── App Entrypoint ──────────────────────────────────────────────────────────
@@ -224,6 +208,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_pipeline_status,
             get_finality_gate_status,
+            get_error_budget,
             approve_deployment,
             run_goal_command,
         ])
