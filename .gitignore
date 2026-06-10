@@ -41,3 +41,6 @@ src-tauri/gen/
 # Test artifacts
 test/
 testp/
+test/
+test-half/
+testp/
