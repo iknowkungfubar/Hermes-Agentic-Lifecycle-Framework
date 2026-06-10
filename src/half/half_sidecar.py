@@ -223,11 +223,65 @@ def main() -> None:
                 cmd_focalboard_create()
             else:
                 {"status": "error", "message": f"Unknown focalboard subcommand: {sys.argv[2]}"}
-
+        elif command == "serve":
+            _run_http_server()
 
     except Exception:
         logger.exception("Command failed")
         sys.exit(1)
+
+
+def _run_http_server(host: str = "127.0.0.1", port: int = 9722) -> None:
+    """Run an HTTP server for browser-mode GUI."""
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    import json as json_mod
+
+    class HalfAPIHandler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            path = self.path.replace("/api/", "")
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length).decode("utf-8") if length else "{}"
+            args = json_mod.loads(body) if body else {}
+
+            def _handle() -> dict[str, object]:
+                h = {
+                    "get_pipeline_status": lambda: cmd_status(),
+                    "get_finality_gate_status": lambda: {"locked": True, "mrp_ready": False, "deployment_approved": False},
+                    "approve_deployment": lambda: {"status": "approved", "signature": args.get("signature", "")},
+                    "status": lambda: cmd_status(),
+                    "run-phase": lambda: cmd_run_phase(args.get("phase", "phase-1")),
+                }
+                return h.get(path, lambda: {"error": f"Unknown endpoint: {path}"})()  # type: ignore[no-untyped-call]
+
+            try:
+                result = _handle()
+            except Exception as e:
+                result = {"error": str(e)}
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json_mod.dumps(result).encode("utf-8"))
+
+        def do_OPTIONS(self) -> None:
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.end_headers()
+
+        def log_message(self, format: str, *args: object) -> None:
+            logger.info("HTTP %s", format % args)
+
+    server = HTTPServer((host, port), HalfAPIHandler)
+    print(f"HALF GUI server running at http://{host}:{port}")
+    print("Open dist/index.html in your browser and it will connect here.")
+    print("Press Ctrl+C to stop.")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nServer stopped.")
 
 
 if __name__ == "__main__":

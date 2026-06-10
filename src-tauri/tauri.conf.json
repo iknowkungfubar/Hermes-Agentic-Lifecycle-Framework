@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/nicehash/tauri-2.0-auto-launch/main/tauri.conf.json",
   "productName": "HALF Command Center",
   "version": "1.0.0",
   "identifier": "com.half.command-center",
