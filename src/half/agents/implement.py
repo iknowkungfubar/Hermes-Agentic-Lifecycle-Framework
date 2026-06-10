@@ -8,6 +8,7 @@ Writes failing tests first, then implements code to make them pass.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 
@@ -83,10 +84,8 @@ class ImplementAgent:
     def verify_harness_first(self, task_id: str) -> bool:
         """Verify that test harness was created before implementation.
 
-        Checks:
-        1. Test file exists before implementation file
-        2. Tests failed on first run
-        3. Tests passed after implementation
+        Actually runs the test file to confirm it fails (RED),
+        then checks that it passes after implementation (GREEN).
 
         Args:
             task_id: Task to verify.
@@ -94,11 +93,33 @@ class ImplementAgent:
         Returns:
             True if harness-first protocol was followed.
         """
+        import subprocess
+        import sys
+
         harnesses = [h for h in self.harnesses if h.task_id == task_id]
         if not harnesses:
             return False
 
         harness = harnesses[0]
+
+        # Check 1: Test file must exist before implementation
+        test_path = Path(harness.file_path)
+        if not test_path.exists():
+            return False
+
+        # Check 2: Run the test — it should FAIL (RED phase)
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "pytest", str(test_path), "-q", "--tb=line"],
+                capture_output=True, text=True, timeout=30,
+            )
+            harness.first_run_passed = result.returncode == 0
+            harness.first_run_output = result.stdout + result.stderr
+            # First run should FAIL (test before implementation)
+            harness.created_before_implementation = result.returncode != 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            harness.first_run_passed = False
+            harness.created_before_implementation = False
 
         checks = [
             harness.created_before_implementation,

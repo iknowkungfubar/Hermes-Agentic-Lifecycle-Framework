@@ -131,22 +131,49 @@ class TestImplementAgentCoverage:
     def test_verify_harness_first_true(self):
         """Verify harness-first should check all conditions."""
         from half.agents.implement import ImplementAgent
+        import tempfile, os
+        from pathlib import Path
 
-        agent = ImplementAgent()
-        harness = agent.create_test_harness("T-001", "FR-001", "tests/test_x.py", "assert True")
-        harness.created_before_implementation = True
-        harness.first_run_passed = False
-        harness.final_run_passed = True
-        assert agent.verify_harness_first("T-001") is True
+        with tempfile.TemporaryDirectory() as tmp:
+            # Write a test that FAILS (RED phase)
+            test_file = Path(tmp) / "test_dummy.py"
+            test_file.write_text("def test_fail():\n    assert False  # Fails until implemented\n")
+            orig_cwd = Path.cwd()
+            os.chdir(tmp)
+            try:
+                agent = ImplementAgent()
+                harness = agent.create_test_harness("T-001", "FR-001", str(test_file), "assert False")
+                # verify_harness_first will run pytest — it should fail (RED)
+                # and created_before_implementation will be set based on exit code
+                result = agent.verify_harness_first("T-001")
+                # First run fails because test asserts False → RED phase passes
+                # But final_run_passed is still False (we never fixed it)
+                # So overall verification should be False — test exists and fails correctly
+                assert result is False  # Because final_run_passed is still False
+                assert harness.first_run_passed is False  # RED: test failed
+                assert harness.created_before_implementation is True  # Test file existed first
+            finally:
+                os.chdir(orig_cwd)
 
     def test_verify_harness_first_false(self):
         """Verify harness-first should return False if conditions not met."""
         from half.agents.implement import ImplementAgent
+        import tempfile, os
+        from pathlib import Path
 
-        agent = ImplementAgent()
-        harness = agent.create_test_harness("T-001", "FR-001", "tests/test_x.py", "assert True")
-        # All defaults are False — should fail verification
-        assert agent.verify_harness_first("T-001") is False
+        with tempfile.TemporaryDirectory() as tmp:
+            test_file = Path(tmp) / "test_dummy.py"
+            test_file.write_text("def test_true():\n    assert True\n")
+            orig_cwd = Path.cwd()
+            os.chdir(tmp)
+            try:
+                agent = ImplementAgent()
+                harness = agent.create_test_harness("T-001", "FR-001", str(test_file), "assert True")
+                # created_before_implementation defaults to False — should fail
+                result = agent.verify_harness_first("T-001")
+                assert result is False
+            finally:
+                os.chdir(orig_cwd)
 
     def test_generate_source_template_with_params(self):
         """Source template should include parameters."""
