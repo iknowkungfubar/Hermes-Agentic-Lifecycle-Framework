@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+import contextlib
 import io
 import json
-import os
 import sys
 import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -30,18 +29,18 @@ class TestCLIMainAllPaths:
 
     def test_main_with_version_flag(self):
         """main() with --version should print version."""
-        from half.__main__ import main
         # Capture stdout
-        import io, sys
+        import io
+        import sys
+
+        from half.__main__ import main
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
         try:
             sys.argv = ["half", "--version"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             assert "HALF v1.0.0" in output
         finally:
@@ -55,10 +54,8 @@ class TestCLIMainAllPaths:
         sys.stdout = captured
         try:
             sys.argv = ["half"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             assert "usage:" in output.lower()
         finally:
@@ -72,10 +69,8 @@ class TestCLIMainAllPaths:
         sys.stdout = captured
         try:
             sys.argv = ["half", "status"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             data = json.loads(output)
             assert "status" in data
@@ -90,10 +85,8 @@ class TestCLIMainAllPaths:
         sys.stdout = captured
         try:
             sys.argv = ["half", "version"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             assert "HALF v1.0.0" in output
         finally:
@@ -107,10 +100,8 @@ class TestCLIMainAllPaths:
         sys.stdout = captured
         try:
             sys.argv = ["half", "init", "--project", "testp", "--mode", "full", "--dir", "/tmp/half-test-init"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             # Should produce JSON output with project info
             assert "testp" in output or "project" in output or "status" in output
@@ -125,10 +116,8 @@ class TestCLIMainAllPaths:
         sys.stdout = captured
         try:
             sys.argv = ["half", "run-phase", "phase-1"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             data = json.loads(output)
             assert data["status"] == "started"
@@ -143,10 +132,8 @@ class TestCLIMainAllPaths:
         sys.stdout = captured
         try:
             sys.argv = ["half", "gate-check", "phase-1"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             data = json.loads(output)
             assert "status" in data
@@ -161,10 +148,8 @@ class TestCLIMainAllPaths:
         sys.stdout = captured
         try:
             sys.argv = ["half", "generate-mrp"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             data = json.loads(output)
             assert "checks" in data
@@ -179,10 +164,8 @@ class TestCLIMainAllPaths:
         sys.stdout = captured
         try:
             sys.argv = ["half", "focalboard", "create"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             output = captured.getvalue()
             data = json.loads(output)
             assert "status" in data
@@ -200,10 +183,8 @@ class TestCLIMainAllPaths:
         sys.stderr = captured_err
         try:
             sys.argv = ["half", "nonexistent_cmd_xyz123"]
-            try:
+            with contextlib.suppress(SystemExit):
                 main()
-            except SystemExit:
-                pass
             err_output = captured_err.getvalue()
             assert "Error" in err_output or "error" in err_output
         finally:
@@ -464,7 +445,7 @@ class TestAgentMailServer:
 
     def test_send_and_get_messages(self):
         """Send then get messages should return them."""
-        from half.agent_mail.server import register_agent, send_message, get_messages
+        from half.agent_mail.server import get_messages, register_agent, send_message
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
@@ -488,7 +469,12 @@ class TestAgentMailServer:
 
     def test_mark_read_tool(self):
         """Mark read tool should work."""
-        from half.agent_mail.server import register_agent, send_message, mark_read, get_messages
+        from half.agent_mail.server import (
+            get_messages,
+            mark_read,
+            register_agent,
+            send_message,
+        )
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
@@ -506,7 +492,7 @@ class TestAgentMailServer:
 
     def test_get_thread_tool(self):
         """Get thread tool should return messages."""
-        from half.agent_mail.server import register_agent, send_message, get_thread
+        from half.agent_mail.server import get_thread, register_agent, send_message
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
@@ -527,7 +513,7 @@ class TestAgentMailServer:
 
     def test_acquire_and_release_lease_tool(self):
         """Acquire and release lease through tools."""
-        from half.agent_mail.server import register_agent, acquire_lease, release_lease
+        from half.agent_mail.server import acquire_lease, register_agent, release_lease
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
@@ -544,7 +530,11 @@ class TestAgentMailServer:
 
     def test_get_active_leases_tool(self):
         """Get active leases through tools."""
-        from half.agent_mail.server import register_agent, acquire_lease, get_active_leases
+        from half.agent_mail.server import (
+            acquire_lease,
+            get_active_leases,
+            register_agent,
+        )
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
@@ -561,7 +551,7 @@ class TestAgentMailServer:
 
     def test_lease_conflict_tool(self):
         """Lease conflict should return conflict status."""
-        from half.agent_mail.server import register_agent, acquire_lease
+        from half.agent_mail.server import acquire_lease, register_agent
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2

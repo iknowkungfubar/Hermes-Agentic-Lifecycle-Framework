@@ -8,13 +8,10 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
 import pytest
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # fail_safe.py
@@ -40,7 +37,7 @@ class TestFailSafeExecutor:
 
     def test_init(self):
         """Executor should initialize with default state."""
-        from half.core.fail_safe import FailSafeExecutor, EscalationLevel
+        from half.core.fail_safe import EscalationLevel, FailSafeExecutor
 
         executor = FailSafeExecutor()
         assert executor.state.level == EscalationLevel.NONE
@@ -85,7 +82,7 @@ class TestFailSafeExecutor:
 
     def test_escalate_to_human(self):
         """Human escalation should set level to HUMAN_ESCALATION."""
-        from half.core.fail_safe import FailSafeExecutor, EscalationLevel
+        from half.core.fail_safe import EscalationLevel, FailSafeExecutor
 
         executor = FailSafeExecutor()
         executor.escalate_to_human()
@@ -102,11 +99,11 @@ class TestFailSafeExecutor:
 
     def test_disabled_fail_safe(self):
         """Disabled fail-safe should pass through immediately."""
-        from half.core.fail_safe import FailSafeExecutor, FailSafeConfig
+        from half.core.fail_safe import FailSafeConfig, FailSafeExecutor
 
         cfg = FailSafeConfig(enabled=False)
         executor = FailSafeExecutor(cfg)
-        success, gap = executor.execute_with_retry(
+        success, _gap = executor.execute_with_retry(
             lambda: (True, "ok"), "test", "G-test"
         )
         assert success is True
@@ -142,7 +139,8 @@ class TestGateCheck:
         from half.core.gate_checker import GateCheck
 
         def broken():
-            raise ValueError("oops")
+            msg = "oops"
+            raise ValueError(msg)
 
         check = GateCheck("G-test", "Broken gate", broken)
         result = check.run()
@@ -412,7 +410,10 @@ class TestCheckpointer:
 
     def test_create_checkpointer(self):
         """Creating the checkpointer should initialize SQLite with WAL."""
-        from half.runtime.checkpointer import create_secure_checkpointer, close_checkpointer
+        from half.runtime.checkpointer import (
+            close_checkpointer,
+            create_secure_checkpointer,
+        )
 
         with tempfile.TemporaryDirectory() as tmp:
             db_path = str(Path(tmp) / "test.db")
@@ -827,7 +828,6 @@ class TestLangGraphSecurity:
     def test_save_and_load_checkpoint(self):
         """Save then load should return same state."""
         from half.state import StateMachineContext
-        import half.config
 
         with tempfile.TemporaryDirectory() as tmp:
             os.environ["HALF_HOME"] = tmp

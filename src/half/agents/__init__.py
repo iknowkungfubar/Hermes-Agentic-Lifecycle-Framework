@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from half.agents.architect import ArchitectAgent
 from half.agents.cicd import CICDAgent
+from half.agents.code_simplifier import CodeSimplifier
 from half.agents.codify import CodifyAgent
 from half.agents.discovery import DiscoveryAgent
 from half.agents.implement import ImplementAgent
@@ -19,8 +20,6 @@ from half.agents.scaffold import ScaffoldAgent
 from half.agents.security import SecurityAgent
 from half.agents.specification import SpecificationAgent
 from half.agents.testing import TestingAgent
-
-from half.agents.code_simplifier import CodeSimplifier
 
 __all__ = [
     "ArchitectAgent",

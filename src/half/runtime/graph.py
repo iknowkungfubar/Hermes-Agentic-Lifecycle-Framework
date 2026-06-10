@@ -15,6 +15,7 @@ from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 
+from half import config
 from half.runtime.checkpointer import create_secure_checkpointer
 from half.runtime.nodes import (
     phase_1_architecture,
@@ -43,7 +44,6 @@ from half.runtime.nodes import (
     route_from_gate,
 )
 from half.runtime.state import HalfState, initial_state
-from half import config
 
 logger = logging.getLogger("half.runtime.graph")
 

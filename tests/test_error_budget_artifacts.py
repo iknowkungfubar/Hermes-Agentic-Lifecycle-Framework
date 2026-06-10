@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import json
-import os
 import tempfile
+from datetime import UTC
 from pathlib import Path
 
 import pytest
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # error_budget.py
@@ -177,13 +175,14 @@ class TestErrorBudgetTracker:
 
     def test_prune_old_events(self):
         """Events outside the window should be pruned."""
+        from datetime import datetime, timedelta
+
         from half.core.error_budget import ErrorBudgetTracker
-        from datetime import datetime, timedelta, timezone
 
         with tempfile.TemporaryDirectory() as tmp:
             budget = ErrorBudgetTracker(total_points=100, window_days=30, state_dir=Path(tmp))
             # Manually add an old event
-            old_time = (datetime.now(tz=timezone.utc) - timedelta(days=60)).isoformat()
+            old_time = (datetime.now(tz=UTC) - timedelta(days=60)).isoformat()
             budget._events.append({
                 "event_type": "phase_1_gate_fail",
                 "deduction": 5,

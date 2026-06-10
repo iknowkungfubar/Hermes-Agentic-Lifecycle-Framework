@@ -6,8 +6,6 @@ import os
 import tempfile
 from pathlib import Path
 
-import pytest
-
 
 class TestHalfConfig:
     """Test the central configuration module."""
@@ -130,8 +128,9 @@ class TestProviderRouter:
 
     def test_custom_provider_config(self):
         """Loading from a custom config file should work."""
-        from half.providers import ProviderRouter
         import json
+
+        from half.providers import ProviderRouter
 
         with tempfile.TemporaryDirectory() as tmp:
             config_file = Path(tmp) / "providers.json"
@@ -162,6 +161,7 @@ class TestHalfCLI:
     def test_route_init_command(self):
         """init command should be routable."""
         import argparse
+
         from half.__main__ import _route_command
 
         args = argparse.Namespace(command="init", project="test", mode="full", dir="/tmp/test-half-cli")
@@ -173,6 +173,7 @@ class TestHalfCLI:
     def test_route_unknown_command(self):
         """Unknown commands should return error dict."""
         import argparse
+
         from half.__main__ import _route_command
 
         args = argparse.Namespace(command="nonexistent", fb_cmd="")
@@ -196,6 +197,5 @@ class TestHalfInit:
 
     def test_python_version_check(self):
         """Python version check should pass on 3.13+."""
-        import half
         import sys
         assert sys.version_info >= (3, 13)

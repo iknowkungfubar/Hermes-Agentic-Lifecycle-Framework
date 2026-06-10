@@ -17,9 +17,8 @@ from __future__ import annotations
 import json
 import logging
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.providers")
 
@@ -112,7 +111,7 @@ class ProviderRouter:
                 self._mappings = mappings
                 logger.info("Loaded %d model mappings from %s", len(mappings), config_file)
         except (json.JSONDecodeError, KeyError) as e:
-            logger.error("Failed to load provider config: %s", e)
+            logger.exception("Failed to load provider config: %s", e)
             self._mappings = list(DEFAULT_CONFIGS.get(self.provider, DEFAULT_CONFIGS["openrouter"]))
 
     def get_model(self, role: str = "coder") -> ModelMapping:
@@ -135,7 +134,8 @@ class ProviderRouter:
             logger.warning("No mapping for role '%s', using first available: %s/%s",
                           role, self._mappings[0].provider, self._mappings[0].model)
             return self._mappings[0]
-        raise ValueError(f"No model mappings configured for provider '{self.provider}'")
+        msg = f"No model mappings configured for provider '{self.provider}'"
+        raise ValueError(msg)
 
     def get_api_key(self, role: str = "coder") -> str:
         """Get the API key for a given role, resolving from env vars.

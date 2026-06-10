@@ -8,7 +8,6 @@ Implements the 3-level escalation path:
 """
 
 from __future__ import annotations
-from half import config
 
 import logging
 import time
@@ -16,6 +15,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+from half import config
 
 if TYPE_CHECKING:
     from collections.abc import Callable

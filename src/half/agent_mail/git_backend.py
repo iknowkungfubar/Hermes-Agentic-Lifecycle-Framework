@@ -8,13 +8,14 @@ full audit trail and decentralized backup.
 """
 
 from __future__ import annotations
-from half import config
 
 import contextlib
 import logging
 import os
 import subprocess
 from pathlib import Path
+
+from half import config
 
 logger = logging.getLogger("half.agent_mail.git")
 

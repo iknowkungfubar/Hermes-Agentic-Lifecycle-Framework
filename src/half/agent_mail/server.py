@@ -10,14 +10,12 @@ Exposes Agent Mail as MCP tools for agent coordination:
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from half.agent_mail.database import AgentMailDatabase, cleanup_db, get_db
+from half.agent_mail.database import get_db
 from half.agent_mail.models import MessageType
-from half import config
 
 logger = logging.getLogger("half.agent_mail.server")
 

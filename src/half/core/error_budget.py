@@ -7,13 +7,14 @@ When the budget is exhausted, automation pauses.
 """
 
 from __future__ import annotations
-from half import config
 
 import json
 import logging
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+
+from half import config
 
 logger = logging.getLogger("half.error_budget")
 

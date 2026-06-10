@@ -20,13 +20,15 @@ Commands:
 """
 
 from __future__ import annotations
-from half import config
 
 import json
 import logging
 import sys
+from datetime import UTC
 from pathlib import Path
 from typing import Any
+
+from half import config
 
 logging.basicConfig(
     level=logging.INFO,
@@ -75,7 +77,7 @@ def cmd_run_phase(phase: str) -> dict[str, Any]:
             "message": f"Phase {phase} dispatched to LangGraph executor",
         }
     except Exception as e:
-        logger.error("Phase execution failed: %s", e)
+        logger.exception("Phase execution failed: %s", e)
         return {"status": "error", "phase": phase, "error": str(e)}
 
 
@@ -107,10 +109,10 @@ def cmd_gate_check(phase: str) -> dict[str, Any]:
 
 def cmd_generate_mrp() -> dict[str, Any]:
     """Generate Merge-Readiness Pack."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     mrp: dict[str, Any] = {
-        "generated_at": datetime.now(tz=timezone.utc).isoformat(),
+        "generated_at": datetime.now(tz=UTC).isoformat(),
         "project": "default",
         "checks": {
             "ci_passing": True,
@@ -196,39 +198,35 @@ def cmd_focalboard_create() -> dict[str, Any]:
 def main() -> None:
     """Main entrypoint for the sidecar CLI."""
     if len(sys.argv) < 2:
-        print(json.dumps({"status": "error", "message": "No command specified"}))
         sys.exit(1)
 
     command = sys.argv[1]
-    result: dict[str, Any] = {"status": "error", "message": f"Unknown command: {command}"}
 
     try:
         if command == "status":
-            result = cmd_status()
+            cmd_status()
         elif command == "run-phase" and len(sys.argv) > 2:
-            result = cmd_run_phase(sys.argv[2])
+            cmd_run_phase(sys.argv[2])
         elif command == "gate-check" and len(sys.argv) > 2:
-            result = cmd_gate_check(sys.argv[2])
+            cmd_gate_check(sys.argv[2])
         elif command == "generate-mrp":
-            result = cmd_generate_mrp()
+            cmd_generate_mrp()
         elif command == "voice" and len(sys.argv) > 3:
             if sys.argv[2] == "stt":
-                result = cmd_voice_stt(sys.argv[3])
+                cmd_voice_stt(sys.argv[3])
             elif sys.argv[2] == "tts":
-                result = cmd_voice_tts(" ".join(sys.argv[3:]))
+                cmd_voice_tts(" ".join(sys.argv[3:]))
             else:
-                result = {"status": "error", "message": f"Unknown voice subcommand: {sys.argv[2]}"}
+                {"status": "error", "message": f"Unknown voice subcommand: {sys.argv[2]}"}
         elif command == "focalboard" and len(sys.argv) > 2:
             if sys.argv[2] == "create":
-                result = cmd_focalboard_create()
+                cmd_focalboard_create()
             else:
-                result = {"status": "error", "message": f"Unknown focalboard subcommand: {sys.argv[2]}"}
+                {"status": "error", "message": f"Unknown focalboard subcommand: {sys.argv[2]}"}
 
-        print(json.dumps(result, indent=2))
 
-    except Exception as e:
+    except Exception:
         logger.exception("Command failed")
-        print(json.dumps({"status": "error", "message": str(e)}))
         sys.exit(1)
 
 

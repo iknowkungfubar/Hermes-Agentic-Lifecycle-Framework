@@ -6,9 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # half/__main__.py — CLI coverage (currently 31%)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -66,7 +63,8 @@ class TestCLIMainCoverage:
             assert "project" in data
         except json.JSONDecodeError:
             # Status might be an error dict, check it's valid JSON
-            assert False, f"Status output not valid JSON: {result.stdout[:200]}"
+            msg = f"Status output not valid JSON: {result.stdout[:200]}"
+            raise AssertionError(msg)
 
     def test_no_args_shows_help(self):
         """No args should show help."""
@@ -152,10 +150,11 @@ class TestPhaseNodesCoverage:
 
     def test_phase_2_implement_creates_test(self):
         """Phase 2 implement should create test harness."""
+        import os
+        import tempfile
+
         from half.runtime.nodes import phase_2_implement
         from half.runtime.state import initial_state
-
-        import tempfile, os
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -171,10 +170,11 @@ class TestPhaseNodesCoverage:
 
     def test_phase_3_security_runs(self):
         """Phase 3 security should execute successfully."""
+        import os
+        import tempfile
+
         from half.runtime.nodes import phase_3_security
         from half.runtime.state import initial_state
-
-        import tempfile, os
         with tempfile.TemporaryDirectory() as tmp:
             # Create a dummy src directory so bandit doesn't error
             src_dir = Path(tmp) / "src"
@@ -191,10 +191,11 @@ class TestPhaseNodesCoverage:
 
     def test_phase_4_cicd_generates_yaml(self):
         """Phase 4 CI/CD should generate pipeline config."""
+        import os
+        import tempfile
+
         from half.runtime.nodes import phase_4_cicd
         from half.runtime.state import initial_state
-
-        import tempfile, os
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -207,10 +208,11 @@ class TestPhaseNodesCoverage:
 
     def test_phase_5_iterate_creates_playbook(self):
         """Phase 5 iterate should create triage playbook."""
+        import os
+        import tempfile
+
         from half.runtime.nodes import phase_5_iterate
         from half.runtime.state import initial_state
-
-        import tempfile, os
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -223,10 +225,11 @@ class TestPhaseNodesCoverage:
 
     def test_phase_5_codify_creates_log(self):
         """Phase 5 codify should create codification log."""
+        import os
+        import tempfile
+
         from half.runtime.nodes import phase_5_codify
         from half.runtime.state import initial_state
-
-        import tempfile, os
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -239,10 +242,11 @@ class TestPhaseNodesCoverage:
 
     def test_phase_5_gate_without_monitoring(self):
         """Phase 5 gate should fail without monitoring config."""
+        import os
+        import tempfile
+
         from half.runtime.nodes import phase_5_gate
         from half.runtime.state import initial_state
-
-        import tempfile, os
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -277,10 +281,11 @@ class TestPhaseNodesCoverage:
 
     def test_phase_2_simplify_runs(self):
         """Phase 2 simplify should run CodeSimplifier."""
+        import os
+        import tempfile
+
         from half.runtime.nodes import phase_2_simplify
         from half.runtime.state import initial_state
-
-        import tempfile, os
         with tempfile.TemporaryDirectory() as tmp:
             # Create a Python file for the simplifier to analyze
             src_dir = Path(tmp) / "src"
