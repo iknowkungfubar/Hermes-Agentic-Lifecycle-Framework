@@ -127,13 +127,30 @@ def _route_command(args: argparse.Namespace) -> dict[str, object] | None:
 
 def _cmd_init(args: argparse.Namespace) -> dict[str, object]:
     """Run genesis.sh to bootstrap a project."""
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    genesis = repo_root / "scripts" / "genesis.sh"
+    # Search for genesis.sh in multiple possible locations
+    candidate_paths = [
+        Path(__file__).resolve().parent.parent.parent / "scripts" / "genesis.sh",  # editable install
+        Path(__file__).resolve().parent.parent / "scripts" / "genesis.sh",  # regular install (half/scripts/)
+        Path("/home/turin/Hermes-Agentic-Lifecycle-Framework") / "scripts" / "genesis.sh",  # default dev repo
+        Path.cwd().parent / "Hermes-Agentic-Lifecycle-Framework" / "scripts" / "genesis.sh",  # sibling dir
+    ]
 
-    if not genesis.exists():
+    genesis = None
+    for p in candidate_paths:
+        if p.exists():
+            genesis = p
+            break
+
+    if genesis is None:
         return {
             "status": "error",
-            "message": f"genesis.sh not found at {genesis}. Is HALF installed correctly?",
+            "message": (
+                "genesis.sh not found. Install HALF from the dev repo:\n"
+                "  git clone https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework.git\n"
+                "  cd Hermes-Agentic-Lifecycle-Framework\n"
+                "  pip install -e .\n"
+                "Then run 'half init' from the repo root."
+            ),
         }
 
     target_dir = args.dir or args.project
