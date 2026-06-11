@@ -76,7 +76,7 @@ class SpecificationDocument(BaseModel):
 
     @field_validator("functional_requirements")
     @classmethod
-    def check_unique_fr_ids(cls, v: list[FunctionRequirement]) -> list[FunctionRequirement]:
+    def check_unique_fr_ids(cls, v: list[FunctionRequirement]) -> list[FunctionRequirement]:  # noqa: ARG001
         ids = [fr.id for fr in v]
         if len(ids) != len(set(ids)):
             msg = "Duplicate FR-IDs found"
@@ -85,7 +85,7 @@ class SpecificationDocument(BaseModel):
 
     @field_validator("api_contracts")
     @classmethod
-    def check_unique_paths(cls, v: list[APIContractModel]) -> list[APIContractModel]:
+    def check_unique_paths(cls, v: list[APIContractModel]) -> list[APIContractModel]:  # noqa: ARG001
         paths = [(c.method, c.path) for c in v]
         if len(paths) != len(set(paths)):
             msg = "Duplicate API endpoints found"
