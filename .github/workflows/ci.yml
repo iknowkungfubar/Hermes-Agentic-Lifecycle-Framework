@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [master, main]
+  push:
+    branches: [master, main]
 
 jobs:
   lint:
@@ -10,8 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
+        with: { python-version: "3.13" }
       - run: pip install ruff
       - run: ruff check src/ tests/
 
@@ -20,31 +21,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
+        with: { python-version: "3.13" }
       - run: pip install mypy
       - run: mypy src/
 
   test:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: half_test
-          POSTGRES_USER: half
-          POSTGRES_PASSWORD: test
-        ports:
-          - 5432:5432
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
+        with: { python-version: "3.13" }
       - run: pip install uv && uv sync --group dev
       - run: pytest --cov=src/ --cov-fail-under=10 --asyncio-mode=auto
 
@@ -53,14 +39,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
+        with: { python-version: "3.13" }
       - run: pip install bandit semgrep
       - run: bandit -r src/ -ll
       - run: semgrep --config=auto --error src/
 
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with: { languages: python }
+      - uses: github/codeql-action/analyze@v3
+
   build:
-    needs: [lint, type-check, test, security]
+    needs: [lint, type-check, test, security, secrets-scan]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
