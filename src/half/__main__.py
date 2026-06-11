@@ -131,8 +131,7 @@ def _cmd_init(args: argparse.Namespace) -> dict[str, object]:
     candidate_paths = [
         Path(__file__).resolve().parent.parent.parent / "scripts" / "genesis.sh",  # editable install
         Path(__file__).resolve().parent.parent / "scripts" / "genesis.sh",  # regular install (half/scripts/)
-        Path("/home/turin/Hermes-Agentic-Lifecycle-Framework") / "scripts" / "genesis.sh",  # default dev repo
-        Path.cwd().parent / "Hermes-Agentic-Lifecycle-Framework" / "scripts" / "genesis.sh",  # sibling dir
+        Path.cwd() / "scripts" / "genesis.sh",  # running from repo root
     ]
 
     genesis = None
@@ -153,6 +152,7 @@ def _cmd_init(args: argparse.Namespace) -> dict[str, object]:
             ),
         }
 
+    repo_root = genesis.parent.parent  # scripts/genesis.sh -> scripts/ -> repo root
     target_dir = args.dir or args.project
     cmd = [
         "bash", str(genesis),
