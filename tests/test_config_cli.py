@@ -164,11 +164,12 @@ class TestHalfCLI:
 
         from half.__main__ import _route_command
 
-        args = argparse.Namespace(command="init", project="test", mode="full", dir="/tmp/test-half-cli")
+        args = argparse.Namespace(command="init", project="test-half", mode="full", dir="/tmp/test-half-install")
         result = _route_command(args)
         assert result is not None
         assert isinstance(result, dict)
         assert "project" in result
+        assert result["project"] == "test-half"
 
     def test_route_unknown_command(self):
         """Unknown commands should return error dict."""
