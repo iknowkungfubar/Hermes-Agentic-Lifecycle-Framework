@@ -226,10 +226,38 @@ def main() -> None:
                 {"status": "error", "message": f"Unknown focalboard subcommand: {sys.argv[2]}"}
         elif command == "serve":
             _run_http_server()
+        elif command == "doctor":
+            from half.doctor import run_doctor
+            report = run_doctor()
+            print(_format_doctor_report(report))
+        elif command == "ai-declaration":
+            from half.ai_declaration import AIDeclarationGenerator
+            gen = AIDeclarationGenerator()
+            content = gen.generate(declaration_level="auto", project_name=sys.argv[2] if len(sys.argv) > 2 else "default")
+            path = gen.write(content)
+            print(json.dumps({"status": "ok", "path": str(path)}))
+        elif command == "route":
+            if len(sys.argv) > 2:
+                from half.routing import TaskRouter
+                router = TaskRouter()
+                decision = router.route(" ".join(sys.argv[2:]))
+                print(json.dumps({
+                    "domain": decision.domain.value,
+                    "workflow": decision.workflow.value,
+                    "confidence": decision.confidence,
+                    "requires_psm": decision.requires_psm,
+                    "psm_hints": decision.psm_hints,
+                }, indent=2))
 
     except Exception:
         logger.exception("Command failed")
         sys.exit(1)
+
+
+def _format_doctor_report(report: Any) -> str:
+    """Format a doctor report as JSON string."""
+    import json as json_mod
+    return json_mod.dumps(report.to_dict(), indent=2)
 
 
 def _run_http_server(host: str = "127.0.0.1", port: int = 9722) -> None:
