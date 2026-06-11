@@ -36,6 +36,11 @@ src-tauri/gen/
 
 # Config with secrets
 .env
+*.env
+*.pem
+*.key
+secrets/
+credentials/
 *.secret
 
 # Test artifacts
