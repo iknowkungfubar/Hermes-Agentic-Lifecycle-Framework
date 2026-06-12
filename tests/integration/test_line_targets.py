@@ -17,7 +17,8 @@ class TestHalfSidecarLineRanges:
         from half.half_sidecar import cmd_run_phase
         # Pass an invalid phase that causes GateChecker to throw
         r = cmd_run_phase("phase-99")
-        assert isinstance(r, dict) and "status" in r
+        assert isinstance(r, dict)
+        assert "status" in r
 
     def test_line159_160_voice_tts(self):
         """Hit lines 159-160: cmd_voice_tts error path."""

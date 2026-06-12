@@ -23,7 +23,8 @@ class TestHalfSidecarFull:
     def test_status(self):
         from half.half_sidecar import cmd_status
         r = cmd_status()
-        assert isinstance(r, dict) and "status" in r
+        assert isinstance(r, dict)
+        assert "status" in r
 
     def test_run_phase(self):
         from half.half_sidecar import cmd_run_phase

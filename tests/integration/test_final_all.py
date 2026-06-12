@@ -105,7 +105,8 @@ class TestHalfSidecarAll:
         d = Doctor()
         report = d.run_full_diagnostics()
         formatted = _format_doctor_report(report)
-        assert isinstance(formatted, str) and len(formatted) > 0
+        assert isinstance(formatted, str)
+        assert len(formatted) > 0
 
     def test_main_routes(self):
         import argparse
