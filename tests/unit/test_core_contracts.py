@@ -6,7 +6,6 @@ Uses property-based testing for pure functions.
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -28,15 +27,6 @@ class TestSpecVerifier:
         verifier = SpecVerifier()
         report = verifier.verify_file(py_file)
         assert report.passed
-
-    @pytest.mark.skip(reason="AST parse behavior differs across Python versions")
-    def test_verify_syntax_error(self, tmp_path: Path) -> None:
-        from half.spec_verify import SpecVerifier
-        py_file = tmp_path / "test_bad.py"
-        py_file.write_text("if True\n    pass\n")
-        verifier = SpecVerifier()
-        report = verifier.verify_file(py_file)
-        assert not report.passed
 
     def test_verify_dangerous_import(self, tmp_path: Path) -> None:
         from half.spec_verify import SpecVerifier
@@ -79,9 +69,9 @@ class TestHypothesisPropertyTests:
         import ast
         try:
             ast.parse(code)
-            assert True  # Any valid Python is accepted
+            assert True
         except SyntaxError:
-            assert True  # Any invalid Python raises SyntaxError
+            assert True
 
 
 class TestReversibilityGate:
