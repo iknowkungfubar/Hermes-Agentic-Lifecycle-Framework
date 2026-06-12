@@ -1,0 +1,47 @@
+name: Integration Tests
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Weekly Monday 6AM UTC
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: half_test
+          POSTGRES_PASSWORD: test_secret
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv sync --group dev
+      - name: Build native engines
+        run: |
+          bash scripts/setup.sh --no-docker --no-ebpf --no-pglite
+      - name: Start HTTP sidecar
+        run: |
+          PYTHONPATH=. .venv/bin/python -m half.http_sidecar &
+          sleep 3
+          curl -sf http://127.0.0.1:9721/api/status || echo "Sidecar failed"
+      - name: Run integration tests
+        run: |
+          PYTHONPATH=. .venv/bin/pytest tests/integration/ -v --tb=short
+      - name: Run full suite with coverage
+        run: |
+          PYTHONPATH=. .venv/bin/pytest tests/ -q --tb=no --cov=src/half --cov-report=term-missing
+      - name: Cleanup
+        run: |
+          pkill -f "half.http_sidecar" || true
