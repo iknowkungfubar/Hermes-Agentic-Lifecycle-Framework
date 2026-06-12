@@ -710,8 +710,9 @@ class TestVoiceEngine:
 
     def test_transcribe_microphone_raises_without_arecord(self):
         """Microphone transcription requires arecord."""
-        from half.half_voice import VoiceEngine
         import subprocess
+
+        from half.half_voice import VoiceEngine
         engine = VoiceEngine()
         try:
             subprocess.run(["arecord", "--version"], capture_output=True, timeout=5)

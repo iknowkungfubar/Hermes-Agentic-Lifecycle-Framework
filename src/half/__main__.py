@@ -89,7 +89,7 @@ def main() -> None:
 
 def _show_version() -> None:
     """Print HALF version."""
-    from half import __version__, __description__, __license__
+    from half import __description__, __license__, __version__
     print(f"HALF v{__version__}")
     print(__description__)
     print(f"License: {__license__}")
