@@ -1,28 +1,27 @@
-# Multi-stage Docker build for HALF framework
-FROM python:3.13-slim AS builder
+# HALF — Production Docker Image
+FROM python:3.13-slim
 
 WORKDIR /app
 
-COPY pyproject.toml .
-RUN pip install --no-cache-dir uv && \
-    uv sync --no-dev --no-install-project 2>/dev/null || true
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY src/ src/
-COPY pyproject.toml .
+# Copy and install Python package
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+COPY config/ ./config/
 
-FROM python:3.13-slim AS production
+RUN pip install --no-cache-dir -e .
 
-WORKDIR /app
+# Expose API ports
+EXPOSE 9721 9722 31337
 
-COPY --from=builder /root/.local /root/.local
-COPY --from=builder /app /app
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9721/api/health', timeout=5)" || exit 1
 
-ENV PATH=/root/.local/bin:$PATH
-ENV PYTHONPATH=/app
-
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)" || exit 1
-
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default: run the HTTP sidecar
+CMD ["python3", "-m", "half.http_sidecar"]
