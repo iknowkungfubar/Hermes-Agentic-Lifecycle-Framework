@@ -333,8 +333,17 @@ class VoiceEngine:
         logger.info("Downloading %s from %s...", model_type, url)
         try:
             subprocess.run(
-                ["curl", "-L", "--connect-timeout", "5", "--max-time", "30",
-                 "-o", str(target), url],
+                [
+                    "curl",
+                    "-L",
+                    "--connect-timeout",
+                    "5",
+                    "--max-time",
+                    "30",
+                    "-o",
+                    str(target),
+                    url,
+                ],
                 check=True,
                 timeout=60,
             )

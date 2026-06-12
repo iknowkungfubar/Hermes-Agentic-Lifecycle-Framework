@@ -46,9 +46,18 @@ class RepoIndexer:
     ) -> dict[str, Any]:
         """Recursively index a directory."""
         if current_depth > max_depth:
-            return {"__type__": "depth_limit", "__files__": len(list(directory.iterdir())) if directory.exists() else 0}
+            return {
+                "__type__": "depth_limit",
+                "__files__": len(list(directory.iterdir()))
+                if directory.exists()
+                else 0,
+            }
 
-        result: dict[str, Any] = {"__type__": "directory", "__files__": [], "__dirs__": {}}
+        result: dict[str, Any] = {
+            "__type__": "directory",
+            "__files__": [],
+            "__dirs__": {},
+        }
         if not directory.exists():
             return result
 
@@ -69,7 +78,11 @@ class RepoIndexer:
         try:
             source = filepath.read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
-            return {"name": filepath.name, "type": "error", "summary": "Cannot read file"}
+            return {
+                "name": filepath.name,
+                "type": "error",
+                "summary": "Cannot read file",
+            }
 
         tree = ast.parse(source)
         classes = []
@@ -87,11 +100,16 @@ class RepoIndexer:
                     imports.extend(alias.name for alias in node.names)
                 else:
                     module = node.module or ""
-                    imports.extend(f"{module}.{alias.name}" if module else alias.name for alias in node.names)
+                    imports.extend(
+                        f"{module}.{alias.name}" if module else alias.name
+                        for alias in node.names
+                    )
 
         return {
             "name": filepath.name,
-            "path": str(filepath.relative_to(self.root)) if filepath != self.root else filepath.name,
+            "path": str(filepath.relative_to(self.root))
+            if filepath != self.root
+            else filepath.name,
             "type": "python",
             "lines": len(source.split("\n")),
             "classes": classes,
@@ -117,7 +135,10 @@ class RepoIndexer:
 
         def _search(node: dict[str, Any], path: str = "") -> None:
             for f in node.get("__files__", []):
-                if query_lower in f.get("name", "").lower() or query_lower in f.get("docstring", "").lower():
+                if (
+                    query_lower in f.get("name", "").lower()
+                    or query_lower in f.get("docstring", "").lower()
+                ):
                     results.append(f)
                 for func in f.get("functions", []):
                     if query_lower in func.lower():

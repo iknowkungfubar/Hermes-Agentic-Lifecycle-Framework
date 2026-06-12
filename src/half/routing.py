@@ -14,8 +14,6 @@ import enum
 import json
 import logging
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.routing")
 
@@ -46,40 +44,100 @@ class WorkflowType(enum.Enum):
 # ─── Intent Classification Keywords ──────────────────────────────────────────
 
 CODE_KEYWORDS = [
-    "build", "implement", "code", "develop", "program", "script",
-    "api", "function", "class", "module", "library", "framework",
-    "refactor", "debug", "test", "deploy", "migrate",
+    "build",
+    "implement",
+    "code",
+    "develop",
+    "program",
+    "script",
+    "api",
+    "function",
+    "class",
+    "module",
+    "library",
+    "framework",
+    "refactor",
+    "debug",
+    "test",
+    "deploy",
+    "migrate",
 ]
 
 RESEARCH_KEYWORDS = [
-    "research", "analyze", "investigate", "study", "survey",
-    "literature review", "market", "competitor", "industry",
+    "research",
+    "analyze",
+    "investigate",
+    "study",
+    "survey",
+    "literature review",
+    "market",
+    "competitor",
+    "industry",
 ]
 
 DATA_KEYWORDS = [
-    "data", "statistics", "analyze dataset", "visualize",
-    "extract", "transform", "load", "etl", "pipeline",
-    "csv", "excel", "spreadsheet", "database query",
+    "data",
+    "statistics",
+    "analyze dataset",
+    "visualize",
+    "extract",
+    "transform",
+    "load",
+    "etl",
+    "pipeline",
+    "csv",
+    "excel",
+    "spreadsheet",
+    "database query",
 ]
 
 CONTENT_KEYWORDS = [
-    "write", "draft", "document", "blog", "article", "report",
-    "documentation", "readme", "guide", "tutorial",
+    "write",
+    "draft",
+    "document",
+    "blog",
+    "article",
+    "report",
+    "documentation",
+    "readme",
+    "guide",
+    "tutorial",
 ]
 
 FINANCIAL_KEYWORDS = [
-    "financial", "revenue", "cost", "budget", "forecast",
-    "valuation", "investment", "roi", "profit",
+    "financial",
+    "revenue",
+    "cost",
+    "budget",
+    "forecast",
+    "valuation",
+    "investment",
+    "roi",
+    "profit",
 ]
 
 MEDIA_KEYWORDS = [
-    "image", "video", "audio", "render", "animation",
-    "3d", "model", "texture", "visual",
+    "image",
+    "video",
+    "audio",
+    "render",
+    "animation",
+    "3d",
+    "model",
+    "texture",
+    "visual",
 ]
 
 LEGAL_KEYWORDS = [
-    "legal", "contract", "agreement", "compliance", "regulation",
-    "license", "terms", "policy", "nda",
+    "legal",
+    "contract",
+    "agreement",
+    "compliance",
+    "regulation",
+    "license",
+    "terms",
+    "policy",
+    "nda",
 ]
 
 
@@ -129,13 +187,38 @@ class TaskRouter:
 
     def __init__(self) -> None:
         self._keyword_map: list[tuple[list[str], TaskDomain, WorkflowType, float]] = [
-            (CODE_KEYWORDS, TaskDomain.SOFTWARE_ENGINEERING, WorkflowType.TRI_PHASIC, 0.9),
-            (RESEARCH_KEYWORDS, TaskDomain.MARKET_RESEARCH, WorkflowType.RESEARCH_ONLY, 0.8),
+            (
+                CODE_KEYWORDS,
+                TaskDomain.SOFTWARE_ENGINEERING,
+                WorkflowType.TRI_PHASIC,
+                0.9,
+            ),
+            (
+                RESEARCH_KEYWORDS,
+                TaskDomain.MARKET_RESEARCH,
+                WorkflowType.RESEARCH_ONLY,
+                0.8,
+            ),
             (DATA_KEYWORDS, TaskDomain.DATA_ANALYSIS, WorkflowType.DATA_PIPELINE, 0.8),
-            (CONTENT_KEYWORDS, TaskDomain.CONTENT_WRITING, WorkflowType.CONTENT_GENERATION, 0.8),
-            (FINANCIAL_KEYWORDS, TaskDomain.FINANCIAL_ANALYSIS, WorkflowType.DATA_PIPELINE, 0.7),
+            (
+                CONTENT_KEYWORDS,
+                TaskDomain.CONTENT_WRITING,
+                WorkflowType.CONTENT_GENERATION,
+                0.8,
+            ),
+            (
+                FINANCIAL_KEYWORDS,
+                TaskDomain.FINANCIAL_ANALYSIS,
+                WorkflowType.DATA_PIPELINE,
+                0.7,
+            ),
             (MEDIA_KEYWORDS, TaskDomain.MEDIA_SYNTHESIS, WorkflowType.CUSTOM_DAG, 0.7),
-            (LEGAL_KEYWORDS, TaskDomain.LEGAL_DOCUMENT, WorkflowType.CONTENT_GENERATION, 0.7),
+            (
+                LEGAL_KEYWORDS,
+                TaskDomain.LEGAL_DOCUMENT,
+                WorkflowType.CONTENT_GENERATION,
+                0.7,
+            ),
         ]
 
     def route(self, task_description: str) -> RoutingDecision:
@@ -150,7 +233,10 @@ class TaskRouter:
         text = task_description.lower()
 
         best_match: tuple[TaskDomain, WorkflowType, float, str] = (
-            TaskDomain.GENERAL, WorkflowType.CUSTOM_DAG, 0.3, "No specific keywords matched"
+            TaskDomain.GENERAL,
+            WorkflowType.CUSTOM_DAG,
+            0.3,
+            "No specific keywords matched",
         )
 
         for keywords, domain, workflow, base_conf in self._keyword_map:
@@ -158,8 +244,12 @@ class TaskRouter:
             if matches > 0:
                 confidence = min(1.0, base_conf + (matches * 0.05))
                 if confidence > best_match[2]:
-                    best_match = (domain, workflow, confidence,
-                                  f"{matches} keyword matches for {domain.value}")
+                    best_match = (
+                        domain,
+                        workflow,
+                        confidence,
+                        f"{matches} keyword matches for {domain.value}",
+                    )
 
         domain, workflow, confidence, reasoning = best_match
         psm_hints = self._infer_psm_hints(domain, text)
@@ -200,26 +290,48 @@ class TaskRouter:
         """
         if decision.workflow == WorkflowType.TRI_PHASIC:
             return self._build_tri_phasic(decision)
-        elif decision.workflow == WorkflowType.RESEARCH_ONLY:
+        if decision.workflow == WorkflowType.RESEARCH_ONLY:
             return self._build_research(decision)
-        elif decision.workflow == WorkflowType.DATA_PIPELINE:
+        if decision.workflow == WorkflowType.DATA_PIPELINE:
             return self._build_data_pipeline(decision)
-        elif decision.workflow == WorkflowType.CONTENT_GENERATION:
+        if decision.workflow == WorkflowType.CONTENT_GENERATION:
             return self._build_content(decision)
-        else:
-            return self._build_custom_dag(decision)
+        return self._build_custom_dag(decision)
 
     def _build_tri_phasic(self, decision: RoutingDecision) -> LoopScript:
         return LoopScript(
             phases=[
-                LoopScriptTask("research", "Codebase Analysis", "HALF-Research", "read-only",
-                               outputs=["codebase-analysis.md"]),
-                LoopScriptTask("plan", "Implementation Plan", "HALF-Plan", "design-only",
-                               inputs=["codebase-analysis.md"], outputs=["implementation-spec.md"]),
-                LoopScriptTask("implement", "Implementation", "HALF-Implement", "write-restricted",
-                               inputs=["implementation-spec.md"], outputs=["implemented-code"]),
-                LoopScriptTask("simplify", "Code Simplification", "HALF-CodeSimplifier", "write-restricted",
-                               inputs=["implemented-code"], outputs=["simplified-code"]),
+                LoopScriptTask(
+                    "research",
+                    "Codebase Analysis",
+                    "HALF-Research",
+                    "read-only",
+                    outputs=["codebase-analysis.md"],
+                ),
+                LoopScriptTask(
+                    "plan",
+                    "Implementation Plan",
+                    "HALF-Plan",
+                    "design-only",
+                    inputs=["codebase-analysis.md"],
+                    outputs=["implementation-spec.md"],
+                ),
+                LoopScriptTask(
+                    "implement",
+                    "Implementation",
+                    "HALF-Implement",
+                    "write-restricted",
+                    inputs=["implementation-spec.md"],
+                    outputs=["implemented-code"],
+                ),
+                LoopScriptTask(
+                    "simplify",
+                    "Code Simplification",
+                    "HALF-CodeSimplifier",
+                    "write-restricted",
+                    inputs=["implemented-code"],
+                    outputs=["simplified-code"],
+                ),
             ],
             chain=["research", "plan", "implement", "simplify"],
             tri_phasic=["research", "plan", "implement"],
@@ -228,10 +340,21 @@ class TaskRouter:
     def _build_research(self, decision: RoutingDecision) -> LoopScript:
         return LoopScript(
             phases=[
-                LoopScriptTask("collect", "Data Collection", "HALF-Research", "read-only",
-                               outputs=["raw-data.md"]),
-                LoopScriptTask("synthesize", "Synthesis", "HALF-Discovery", "design-only",
-                               inputs=["raw-data.md"], outputs=["analysis-report.md"]),
+                LoopScriptTask(
+                    "collect",
+                    "Data Collection",
+                    "HALF-Research",
+                    "read-only",
+                    outputs=["raw-data.md"],
+                ),
+                LoopScriptTask(
+                    "synthesize",
+                    "Synthesis",
+                    "HALF-Discovery",
+                    "design-only",
+                    inputs=["raw-data.md"],
+                    outputs=["analysis-report.md"],
+                ),
             ],
             chain=["collect", "synthesize"],
         )
@@ -239,12 +362,29 @@ class TaskRouter:
     def _build_data_pipeline(self, decision: RoutingDecision) -> LoopScript:
         return LoopScript(
             phases=[
-                LoopScriptTask("extract", "Data Extraction", "HALF-Research", "read-only",
-                               outputs=["extracted-data"]),
-                LoopScriptTask("transform", "Data Transformation", "HALF-Implement", "write-restricted",
-                               inputs=["extracted-data"], outputs=["transformed-data"]),
-                LoopScriptTask("analyze", "Analysis", "HALF-Research", "design-only",
-                               inputs=["transformed-data"], outputs=["analysis-report.md"]),
+                LoopScriptTask(
+                    "extract",
+                    "Data Extraction",
+                    "HALF-Research",
+                    "read-only",
+                    outputs=["extracted-data"],
+                ),
+                LoopScriptTask(
+                    "transform",
+                    "Data Transformation",
+                    "HALF-Implement",
+                    "write-restricted",
+                    inputs=["extracted-data"],
+                    outputs=["transformed-data"],
+                ),
+                LoopScriptTask(
+                    "analyze",
+                    "Analysis",
+                    "HALF-Research",
+                    "design-only",
+                    inputs=["transformed-data"],
+                    outputs=["analysis-report.md"],
+                ),
             ],
             chain=["extract", "transform", "analyze"],
         )
@@ -252,12 +392,29 @@ class TaskRouter:
     def _build_content(self, decision: RoutingDecision) -> LoopScript:
         return LoopScript(
             phases=[
-                LoopScriptTask("outline", "Content Outline", "HALF-Discovery", "read-only",
-                               outputs=["outline.md"]),
-                LoopScriptTask("draft", "First Draft", "HALF-Implement", "write-restricted",
-                               inputs=["outline.md"], outputs=["draft.md"]),
-                LoopScriptTask("review", "Quality Review", "HALF-Testing", "design-only",
-                               inputs=["draft.md"], outputs=["final-content.md"]),
+                LoopScriptTask(
+                    "outline",
+                    "Content Outline",
+                    "HALF-Discovery",
+                    "read-only",
+                    outputs=["outline.md"],
+                ),
+                LoopScriptTask(
+                    "draft",
+                    "First Draft",
+                    "HALF-Implement",
+                    "write-restricted",
+                    inputs=["outline.md"],
+                    outputs=["draft.md"],
+                ),
+                LoopScriptTask(
+                    "review",
+                    "Quality Review",
+                    "HALF-Testing",
+                    "design-only",
+                    inputs=["draft.md"],
+                    outputs=["final-content.md"],
+                ),
             ],
             chain=["outline", "draft", "review"],
         )
@@ -265,12 +422,29 @@ class TaskRouter:
     def _build_custom_dag(self, decision: RoutingDecision) -> LoopScript:
         return LoopScript(
             phases=[
-                LoopScriptTask("define", "Problem Definition", "HALF-Discovery", "read-only",
-                               outputs=["problem-statement.md"]),
-                LoopScriptTask("execute", "Execution", "HALF-Implement", "write-restricted",
-                               inputs=["problem-statement.md"], outputs=["results"]),
-                LoopScriptTask("verify", "Verification", "HALF-Testing", "design-only",
-                               inputs=["results"], outputs=["verification-report.md"]),
+                LoopScriptTask(
+                    "define",
+                    "Problem Definition",
+                    "HALF-Discovery",
+                    "read-only",
+                    outputs=["problem-statement.md"],
+                ),
+                LoopScriptTask(
+                    "execute",
+                    "Execution",
+                    "HALF-Implement",
+                    "write-restricted",
+                    inputs=["problem-statement.md"],
+                    outputs=["results"],
+                ),
+                LoopScriptTask(
+                    "verify",
+                    "Verification",
+                    "HALF-Testing",
+                    "design-only",
+                    inputs=["results"],
+                    outputs=["verification-report.md"],
+                ),
             ],
             chain=["define", "execute", "verify"],
         )
@@ -279,16 +453,18 @@ class TaskRouter:
         """Serialize a LoopScript to YAML-like format."""
         lines = [
             "# LoopScript — Declarative DAG SOP",
-            f"# Generated by HALF Task-to-Workflow Router",
-            f"version: \"{script.version}\"",
+            "# Generated by HALF Task-to-Workflow Router",
+            f'version: "{script.version}"',
             "phases:",
         ]
         for phase in script.phases:
-            lines.extend([
-                f"  - id: {phase.id}",
-                f"    agent: {phase.agent}",
-                f"    mode: {phase.mode}",
-            ])
+            lines.extend(
+                [
+                    f"  - id: {phase.id}",
+                    f"    agent: {phase.agent}",
+                    f"    mode: {phase.mode}",
+                ]
+            )
             if phase.inputs:
                 lines.append(f"    inputs: {json.dumps(phase.inputs)}")
             if phase.outputs:

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
 
 logger = logging.getLogger("half.meta_reasoning")
 
@@ -50,15 +49,22 @@ class MetaReasoningEngine:
         return trace
 
     def add_step(
-        self, parent_id: str, action: str, observation: str, success_metric: float,
+        self,
+        parent_id: str,
+        action: str,
+        observation: str,
+        success_metric: float,
     ) -> ReasoningTrace:
         step_id = f"step-{len(self._traces)}"
         parent = self._traces.get(parent_id)
         if parent:
             parent.branches.append(step_id)
         trace = ReasoningTrace(
-            step_id=step_id, parent_id=parent_id, action=action,
-            observation=observation, success_metric=success_metric,
+            step_id=step_id,
+            parent_id=parent_id,
+            action=action,
+            observation=observation,
+            success_metric=success_metric,
         )
         self._traces[step_id] = trace
         self._iteration += 1
@@ -72,7 +78,11 @@ class MetaReasoningEngine:
             return False
         if self._iteration > 1:
             parent = self._traces.get(trace.parent_id) if trace.parent_id else None
-            if parent and trace.success_metric <= parent.success_metric + self.stagnation_threshold:
+            if (
+                parent
+                and trace.success_metric
+                <= parent.success_metric + self.stagnation_threshold
+            ):
                 if self._iteration >= 2:
                     return True
         return False
@@ -82,13 +92,12 @@ class MetaReasoningEngine:
         if not trace:
             return None
         trace.terminated = True
-        new_trace = self.add_step(
+        return self.add_step(
             parent_id=trace.parent_id or "root",
             action=f"ALTERNATIVE: {trace.action}",
             observation="Prior branch terminated — new approach",
             success_metric=0.0,
         )
-        return new_trace
 
     def get_best_path(self) -> list[ReasoningTrace]:
         all_ids = set(self._traces.keys())
@@ -120,7 +129,7 @@ class MetaReasoningEngine:
             "",
             "## Reasoning Tree",
         ]
-        for tid, trace in self._traces.items():
+        for trace in self._traces.values():
             indent = "  " if trace.parent_id else ""
             status = "✓" if not trace.terminated else "✗"
             lines.append(

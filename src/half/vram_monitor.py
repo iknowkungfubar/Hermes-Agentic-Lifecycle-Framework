@@ -73,7 +73,9 @@ class VRAMMonitor:
             # Try rocminfo
             result = subprocess.run(
                 ["rocminfo"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             if result.returncode == 0:
                 for line in result.stdout.split("\n"):
@@ -90,6 +92,7 @@ class VRAMMonitor:
         # Try reading from /sys/class/drm/ for AMD GPU
         try:
             import glob
+
             drm_paths = glob.glob("/sys/class/drm/card*/device/mem_info_vram_total")
             if drm_paths:
                 total_path = drm_paths[0]
@@ -109,9 +112,14 @@ class VRAMMonitor:
         if info.vram_total_mb == 0:
             try:
                 result = subprocess.run(
-                    ["nvidia-smi", "--query-gpu=memory.total,memory.free,name",
-                     "--format=csv,noheader,nounits"],
-                    capture_output=True, text=True, timeout=10,
+                    [
+                        "nvidia-smi",
+                        "--query-gpu=memory.total,memory.free,name",
+                        "--format=csv,noheader,nounits",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 if result.returncode == 0:
                     parts = result.stdout.strip().split(",")
@@ -168,12 +176,19 @@ class VRAMMonitor:
 
         # Throttle if more agents requested than available
         if num_agents > max_coders:
-            alloc.throttled_agents = [f"coder-{i}" for i in range(max_coders, num_agents)]
+            alloc.throttled_agents = [
+                f"coder-{i}" for i in range(max_coders, num_agents)
+            ]
             alloc.should_offload = num_agents > max_coders * 2
-            logger.info("VRAM: Throttling %d agents, offload=%s",
-                        len(alloc.throttled_agents), alloc.should_offload)
+            logger.info(
+                "VRAM: Throttling %d agents, offload=%s",
+                len(alloc.throttled_agents),
+                alloc.should_offload,
+            )
 
-        alloc.priority_queue = ["voice"] + [f"coder-{i}" for i in range(min(num_agents, max_coders))]
+        alloc.priority_queue = ["voice"] + [
+            f"coder-{i}" for i in range(min(num_agents, max_coders))
+        ]
         return alloc
 
     def to_dict(self) -> dict[str, Any]:
@@ -188,6 +203,8 @@ class VRAMMonitor:
             "vram_total_mb": gpu.vram_total_mb,
             "vram_used_mb": gpu.vram_used_mb,
             "vram_free_mb": gpu.vram_free_mb,
-            "usage_percent": round(gpu.vram_used_mb / max(1, gpu.vram_total_mb) * 100, 1),
+            "usage_percent": round(
+                gpu.vram_used_mb / max(1, gpu.vram_total_mb) * 100, 1
+            ),
             "driver": gpu.driver_version or "not detected",
         }

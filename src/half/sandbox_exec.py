@@ -9,14 +9,10 @@ Based on the HALF 1.5 doctrine's 'Sandboxed Test Execution' spec.
 
 from __future__ import annotations
 
-import json
 import logging
 import subprocess
-import sys
-import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.sandbox")
 
@@ -65,8 +61,11 @@ class SandboxExecutor:
         logger.warning("Sandbox: No container runtime found — running tests on host")
         return ""
 
-    def run_tests(self, command: str = "python3 -m pytest tests/ -q --tb=short",
-                  workdir: str | Path = ".") -> SandboxResult:
+    def run_tests(
+        self,
+        command: str = "python3 -m pytest tests/ -q --tb=short",
+        workdir: str | Path = ".",
+    ) -> SandboxResult:
         """Run a test command inside a sandboxed container.
 
         Args:
@@ -77,6 +76,7 @@ class SandboxExecutor:
             SandboxResult with stdout, stderr, and pass/fail.
         """
         import time
+
         start = time.time()
         result = SandboxResult(commands_run=[command])
 
@@ -87,20 +87,31 @@ class SandboxExecutor:
         try:
             # Create ephemeral container
             create_cmd = [
-                self.runtime, "run", "--rm",
-                "--network", "none",  # Network-isolated
+                self.runtime,
+                "run",
+                "--rm",
+                "--network",
+                "none",  # Network-isolated
                 "--read-only",  # Read-only rootfs
-                "-v", f"{Path(workdir).resolve()}:/workspace:ro",  # Source read-only
-                "-v", f"{Path(workdir).resolve()}/.hale:/workspace/.hale:rw",  # Logs writable
-                "--security-opt", "no-new-privileges",
-                "--cap-drop", "ALL",
+                "-v",
+                f"{Path(workdir).resolve()}:/workspace:ro",  # Source read-only
+                "-v",
+                f"{Path(workdir).resolve()}/.hale:/workspace/.hale:rw",  # Logs writable
+                "--security-opt",
+                "no-new-privileges",
+                "--cap-drop",
+                "ALL",
                 self.image,
-                "sh", "-c",
+                "sh",
+                "-c",
                 f"cd /workspace && {command}",
             ]
 
             proc = subprocess.run(
-                create_cmd, capture_output=True, text=True, timeout=300,
+                create_cmd,
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
             result.stdout = proc.stdout
             result.stderr = proc.stderr
@@ -110,7 +121,9 @@ class SandboxExecutor:
         except subprocess.TimeoutExpired:
             result.stderr = "Sandbox execution timed out (300s)"
         except FileNotFoundError:
-            logger.warning("Sandbox: %s not found — falling back to direct execution", self.runtime)
+            logger.warning(
+                "Sandbox: %s not found — falling back to direct execution", self.runtime
+            )
             return self._run_direct(command, workdir)
         except Exception as e:
             result.stderr = str(e)
@@ -123,7 +136,11 @@ class SandboxExecutor:
         logger.info("Sandbox: Running directly on host (no container runtime)")
         try:
             proc = subprocess.run(
-                command, shell=True, capture_output=True, text=True, timeout=300,
+                command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=300,
                 cwd=str(workdir),
             )
             return SandboxResult(
@@ -170,7 +187,9 @@ class SandboxExecutor:
         combined.exit_code = 0
         return combined
 
-    def get_stderr_for_patching(self, result: SandboxResult, max_chars: int = 4000) -> str:
+    def get_stderr_for_patching(
+        self, result: SandboxResult, max_chars: int = 4000
+    ) -> str:
         """Extract stderr for injection into model context.
 
         Args:

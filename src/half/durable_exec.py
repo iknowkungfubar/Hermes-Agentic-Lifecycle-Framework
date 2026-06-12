@@ -10,7 +10,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -51,8 +51,10 @@ class DurableExecutor:
         self.state_dir = Path(state_dir)
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
-    def start_execution(self, name: str, metadata: dict[str, Any] | None = None) -> ExecutionContext:
-        now = datetime.now(tz=timezone.utc).isoformat()
+    def start_execution(
+        self, name: str, metadata: dict[str, Any] | None = None
+    ) -> ExecutionContext:
+        now = datetime.now(tz=UTC).isoformat()
         ctx = ExecutionContext(
             execution_id=f"exec-{uuid.uuid4().hex[:8]}",
             created_at=now,
@@ -64,14 +66,25 @@ class DurableExecutor:
 
     def durable_step(self, ctx: ExecutionContext, step_name: str) -> Any:
         """Decorator that wraps a function as a durable step."""
+
         def decorator(func: Any) -> Any:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
-                return self._execute_with_checkpoint(ctx, step_name, func, *args, **kwargs)
+                return self._execute_with_checkpoint(
+                    ctx, step_name, func, *args, **kwargs
+                )
+
             return wrapper
+
         return decorator
 
-    def _execute_with_checkpoint(self, ctx: ExecutionContext, step_name: str,
-                                  func: Any, *args: Any, **kwargs: Any) -> Any:
+    def _execute_with_checkpoint(
+        self,
+        ctx: ExecutionContext,
+        step_name: str,
+        func: Any,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
         existing = ctx.steps.get(step_name)
         if existing and existing.status == "completed":
             logger.info("Durable: Step '%s' already completed — resuming", step_name)
@@ -79,8 +92,9 @@ class DurableExecutor:
 
         step = ExecutionStep(
             step_id=f"{ctx.execution_id}:{step_name}",
-            name=step_name, status="running",
-            started_at=datetime.now(tz=timezone.utc).isoformat(),
+            name=step_name,
+            status="running",
+            started_at=datetime.now(tz=UTC).isoformat(),
         )
         ctx.steps[step_name] = step
         self._save_checkpoint(ctx)
@@ -89,7 +103,7 @@ class DurableExecutor:
             result = func(*args, **kwargs)
             step.status = "completed"
             step.result = result if isinstance(result, dict) else {"value": result}
-            step.completed_at = datetime.now(tz=timezone.utc).isoformat()
+            step.completed_at = datetime.now(tz=UTC).isoformat()
             self._save_checkpoint(ctx)
             return result
         except Exception as e:
@@ -98,7 +112,9 @@ class DurableExecutor:
             step.result = {"error": str(e)}
             self._save_checkpoint(ctx)
             if step.retry_count < step.max_retries:
-                return self._execute_with_checkpoint(ctx, step_name, func, *args, **kwargs)
+                return self._execute_with_checkpoint(
+                    ctx, step_name, func, *args, **kwargs
+                )
             raise
 
     def recover(self, execution_id: str) -> ExecutionContext | None:
@@ -112,7 +128,7 @@ class DurableExecutor:
                 ctx.steps[sn] = ExecutionStep(**sd)
             return ctx
         except (json.JSONDecodeError, KeyError) as e:
-            logger.error("Durable: Failed to load %s: %s", execution_id, e)
+            logger.exception("Durable: Failed to load %s: %s", execution_id, e)
             return None
 
     def _save_checkpoint(self, ctx: ExecutionContext) -> None:
@@ -121,6 +137,8 @@ class DurableExecutor:
             "created_at": ctx.created_at,
             "status": ctx.status,
             "metadata": ctx.metadata,
-            "steps": {n: {k: v for k, v in s.__dict__.items()} for n, s in ctx.steps.items()},
+            "steps": {n: dict(s.__dict__.items()) for n, s in ctx.steps.items()},
         }
-        (self.state_dir / f"{ctx.execution_id}.json").write_text(json.dumps(data, indent=2))
+        (self.state_dir / f"{ctx.execution_id}.json").write_text(
+            json.dumps(data, indent=2)
+        )

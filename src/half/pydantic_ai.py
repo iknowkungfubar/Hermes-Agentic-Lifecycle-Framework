@@ -76,7 +76,9 @@ class SpecificationDocument(BaseModel):
 
     @field_validator("functional_requirements")
     @classmethod
-    def check_unique_fr_ids(cls, v: list[FunctionRequirement]) -> list[FunctionRequirement]:  # noqa: ARG001
+    def check_unique_fr_ids(
+        cls, v: list[FunctionRequirement]
+    ) -> list[FunctionRequirement]:
         ids = [fr.id for fr in v]
         if len(ids) != len(set(ids)):
             msg = "Duplicate FR-IDs found"
@@ -85,7 +87,7 @@ class SpecificationDocument(BaseModel):
 
     @field_validator("api_contracts")
     @classmethod
-    def check_unique_paths(cls, v: list[APIContractModel]) -> list[APIContractModel]:  # noqa: ARG001
+    def check_unique_paths(cls, v: list[APIContractModel]) -> list[APIContractModel]:
         paths = [(c.method, c.path) for c in v]
         if len(paths) != len(set(paths)):
             msg = "Duplicate API endpoints found"
@@ -97,7 +99,9 @@ class SchemaGenerator:
     """Generate type-safe pydantic schemas for HALF documents."""
 
     @staticmethod
-    def generate_requirements_schema(project: str, capabilities: list[dict[str, str]]) -> RequirementDocument:
+    def generate_requirements_schema(
+        project: str, capabilities: list[dict[str, str]]
+    ) -> RequirementDocument:
         """Generate a validated requirements document.
 
         Args:
@@ -109,16 +113,22 @@ class SchemaGenerator:
         """
         caps = []
         for i, cap in enumerate(capabilities):
-            caps.append(Capability(
-                id=f"C-{i+1:03d}",
-                description=cap.get("description", ""),
-                priority=cap.get("priority", "P1"),
-                confidence=cap.get("confidence", "MEDIUM"),
-            ))
-        return RequirementDocument(project_name=project, elevator_pitch="", capabilities=caps)
+            caps.append(
+                Capability(
+                    id=f"C-{i + 1:03d}",
+                    description=cap.get("description", ""),
+                    priority=cap.get("priority", "P1"),
+                    confidence=cap.get("confidence", "MEDIUM"),
+                )
+            )
+        return RequirementDocument(
+            project_name=project, elevator_pitch="", capabilities=caps
+        )
 
     @staticmethod
-    def generate_specification(project: str, frs: list[dict[str, Any]]) -> SpecificationDocument:
+    def generate_specification(
+        project: str, frs: list[dict[str, Any]]
+    ) -> SpecificationDocument:
         """Generate a validated specification document.
 
         Args:
@@ -130,11 +140,13 @@ class SchemaGenerator:
         """
         reqs = []
         for i, fr in enumerate(frs):
-            reqs.append(FunctionRequirement(
-                id=f"FR-{i+1:03d}",
-                name=fr.get("name", ""),
-                priority=fr.get("priority", "P1"),
-                description=fr.get("description", ""),
-                acceptance_criteria=fr.get("acceptance_criteria", []),
-            ))
+            reqs.append(
+                FunctionRequirement(
+                    id=f"FR-{i + 1:03d}",
+                    name=fr.get("name", ""),
+                    priority=fr.get("priority", "P1"),
+                    description=fr.get("description", ""),
+                    acceptance_criteria=fr.get("acceptance_criteria", []),
+                )
+            )
         return SpecificationDocument(project_name=project, functional_requirements=reqs)

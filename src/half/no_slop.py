@@ -10,11 +10,11 @@ Based on the HALF doctrine's 'No-Slop Architecture' specification.
 from __future__ import annotations
 
 import ast
+import contextlib
 import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.no_slop")
 
@@ -83,10 +83,8 @@ class NoSlopIndexer:
             file_tokens = self._parse_file(py_file)
             tokens.extend(file_tokens)
             summary.file_count += 1
-            try:
+            with contextlib.suppress(Exception):
                 summary.total_lines += len(py_file.read_text().split("\n"))
-            except Exception:
-                pass
 
         # Generate human-readable summary
         funcs = [t for t in tokens if t.type == "function"]
@@ -119,29 +117,35 @@ class NoSlopIndexer:
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 doc = ast.get_docstring(node) or ""
-                tokens.append(SemanticToken(
-                    type="function",
-                    name=node.name,
-                    line=node.lineno,
-                    docstring=doc[:100],
-                    complexity=self._compute_complexity(node),
-                ))
+                tokens.append(
+                    SemanticToken(
+                        type="function",
+                        name=node.name,
+                        line=node.lineno,
+                        docstring=doc[:100],
+                        complexity=self._compute_complexity(node),
+                    )
+                )
             elif isinstance(node, ast.ClassDef):
                 doc = ast.get_docstring(node) or ""
                 methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
-                tokens.append(SemanticToken(
-                    type="class",
-                    name=node.name,
-                    line=node.lineno,
-                    docstring=f"{doc[:80]} ({len(methods)} methods)",
-                ))
+                tokens.append(
+                    SemanticToken(
+                        type="class",
+                        name=node.name,
+                        line=node.lineno,
+                        docstring=f"{doc[:80]} ({len(methods)} methods)",
+                    )
+                )
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
                 for alias in node.names:
-                    tokens.append(SemanticToken(
-                        type="import",
-                        name=alias.name,
-                        line=node.lineno,
-                    ))
+                    tokens.append(
+                        SemanticToken(
+                            type="import",
+                            name=alias.name,
+                            line=node.lineno,
+                        )
+                    )
 
         return tokens
 
@@ -150,8 +154,18 @@ class NoSlopIndexer:
         """Compute cyclomatic complexity of a function."""
         complexity = 1
         for child in ast.walk(node):
-            if isinstance(child, (ast.If, ast.While, ast.For, ast.ExceptHandler,
-                                  ast.AsyncFor, ast.With, ast.AsyncWith)):
+            if isinstance(
+                child,
+                (
+                    ast.If,
+                    ast.While,
+                    ast.For,
+                    ast.ExceptHandler,
+                    ast.AsyncFor,
+                    ast.With,
+                    ast.AsyncWith,
+                ),
+            ):
                 complexity += 1
             elif isinstance(child, ast.BoolOp):
                 complexity += len(child.values) - 1

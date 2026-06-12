@@ -46,13 +46,30 @@ class LMStudioManager:
     """
 
     PROVIDERS = {
-        "lmstudio": InferenceProvider("lmstudio", "http://127.0.0.1:1234/v1", "", priority=0, max_concurrent=2),
-        "openrouter": InferenceProvider("openrouter", "https://openrouter.ai/api/v1", "OPENROUTER_API_KEY",
-                                        ["openai/gpt-5.1", "anthropic/claude-sonnet-4"], priority=1),
-        "opencode": InferenceProvider("opencode", "https://api.opencode.ai/v1", "OPENEAI_API_KEY",
-                                      ["gpt-5.1-codex"], priority=1),
-        "deepseek": InferenceProvider("deepseek", "https://api.deepseek.com/v1", "DEEPSEEK_API_KEY",
-                                      ["deepseek-reasoner", "deepseek-chat"], priority=2),
+        "lmstudio": InferenceProvider(
+            "lmstudio", "http://127.0.0.1:1234/v1", "", priority=0, max_concurrent=2
+        ),
+        "openrouter": InferenceProvider(
+            "openrouter",
+            "https://openrouter.ai/api/v1",
+            "OPENROUTER_API_KEY",
+            ["openai/gpt-5.1", "anthropic/claude-sonnet-4"],
+            priority=1,
+        ),
+        "opencode": InferenceProvider(
+            "opencode",
+            "https://api.opencode.ai/v1",
+            "OPENEAI_API_KEY",
+            ["gpt-5.1-codex"],
+            priority=1,
+        ),
+        "deepseek": InferenceProvider(
+            "deepseek",
+            "https://api.deepseek.com/v1",
+            "DEEPSEEK_API_KEY",
+            ["deepseek-reasoner", "deepseek-chat"],
+            priority=2,
+        ),
     }
 
     def __init__(self) -> None:
@@ -88,9 +105,12 @@ class LMStudioManager:
         try:
             result = subprocess.run(
                 ["rocm-smi", "--showmeminfo", "vram", "--json"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             import json
+
             data = json.loads(result.stdout) if result.stdout else {}
             return {
                 "available": True,

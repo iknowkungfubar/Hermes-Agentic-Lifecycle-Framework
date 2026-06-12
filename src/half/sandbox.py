@@ -65,14 +65,23 @@ class ExecutionSandbox:
             raise RuntimeError(msg)
 
         cmd = [
-            self.runtime, "run", "--rm", "-d",
-            "--network", "none",  # No network
-            "--security-opt", "no-new-privileges",
-            "--cap-drop", "ALL",
+            self.runtime,
+            "run",
+            "--rm",
+            "-d",
+            "--network",
+            "none",  # No network
+            "--security-opt",
+            "no-new-privileges",
+            "--cap-drop",
+            "ALL",
             "--read-only",  # Read-only rootfs
-            "--memory", "512m",
-            "--cpus", "1",
-            "--tmpfs", "/tmp:rw,size=100m",  # Writable temp
+            "--memory",
+            "512m",
+            "--cpus",
+            "1",
+            "--tmpfs",
+            "/tmp:rw,size=100m",  # Writable temp
         ]
 
         # Mount vault as read-only
@@ -110,15 +119,28 @@ class ExecutionSandbox:
 
         try:
             result = subprocess.run(
-                [self.runtime, "cp", script_path, f"{self._container_id}:/tmp/script.py"],
-                capture_output=True, text=True, timeout=30,
+                [
+                    self.runtime,
+                    "cp",
+                    script_path,
+                    f"{self._container_id}:/tmp/script.py",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             if result.returncode != 0:
-                return {"stdout": "", "stderr": f"Failed to copy script: {result.stderr}", "exit_code": -1}
+                return {
+                    "stdout": "",
+                    "stderr": f"Failed to copy script: {result.stderr}",
+                    "exit_code": -1,
+                }
 
             result = subprocess.run(
                 [self.runtime, "exec", self._container_id, "python3", "/tmp/script.py"],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
             return {
                 "stdout": result.stdout,
@@ -136,7 +158,8 @@ class ExecutionSandbox:
             try:
                 subprocess.run(
                     [self.runtime, "stop", self._container_id],
-                    capture_output=True, timeout=30,
+                    capture_output=True,
+                    timeout=30,
                 )
                 logger.info("Sandbox stopped: %s", self._container_id)
             except subprocess.TimeoutExpired:
@@ -155,10 +178,14 @@ class ExecutionSandbox:
             try:
                 result = subprocess.run(
                     [self.runtime, "inspect", self._container_id],
-                    capture_output=True, text=True, timeout=30,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
                 data = json.loads(result.stdout)
-                host_config = data[0].get("HostConfig", {}) if isinstance(data, list) else {}
+                host_config = (
+                    data[0].get("HostConfig", {}) if isinstance(data, list) else {}
+                )
                 checks["network_disabled"] = host_config.get("NetworkMode") == "none"
                 checks["memory_limited"] = host_config.get("Memory", 0) > 0
             except (json.JSONDecodeError, subprocess.TimeoutExpired):

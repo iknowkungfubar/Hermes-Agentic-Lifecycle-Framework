@@ -14,7 +14,7 @@ import json
 import logging
 import sqlite3
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -177,46 +177,54 @@ class PGliteRegistry:
 
         # Index module docstring
         module_doc = ast.get_docstring(tree) or ""
-        entities.append(CodeEntity(
-            entity_type="module",
-            name=path.stem,
-            file_path=file_path,
-            docstring=module_doc[:200],
-        ))
+        entities.append(
+            CodeEntity(
+                entity_type="module",
+                name=path.stem,
+                file_path=file_path,
+                docstring=module_doc[:200],
+            )
+        )
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 doc = ast.get_docstring(node) or ""
                 methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
-                entities.append(CodeEntity(
-                    entity_type="class",
-                    name=node.name,
-                    file_path=file_path,
-                    line_start=node.lineno,
-                    line_end=getattr(node, "end_lineno", node.lineno),
-                    docstring=doc[:200],
-                    dependencies=methods,
-                ))
+                entities.append(
+                    CodeEntity(
+                        entity_type="class",
+                        name=node.name,
+                        file_path=file_path,
+                        line_start=node.lineno,
+                        line_end=getattr(node, "end_lineno", node.lineno),
+                        docstring=doc[:200],
+                        dependencies=methods,
+                    )
+                )
 
             elif isinstance(node, ast.FunctionDef):
                 doc = ast.get_docstring(node) or ""
-                entities.append(CodeEntity(
-                    entity_type="function",
-                    name=node.name,
-                    file_path=file_path,
-                    line_start=node.lineno,
-                    line_end=getattr(node, "end_lineno", node.lineno),
-                    docstring=doc[:200],
-                ))
+                entities.append(
+                    CodeEntity(
+                        entity_type="function",
+                        name=node.name,
+                        file_path=file_path,
+                        line_start=node.lineno,
+                        line_end=getattr(node, "end_lineno", node.lineno),
+                        docstring=doc[:200],
+                    )
+                )
 
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
                 for alias in node.names:
-                    entities.append(CodeEntity(
-                        entity_type="import",
-                        name=alias.name,
-                        file_path=file_path,
-                        line_start=node.lineno,
-                    ))
+                    entities.append(
+                        CodeEntity(
+                            entity_type="import",
+                            name=alias.name,
+                            file_path=file_path,
+                            line_start=node.lineno,
+                        )
+                    )
 
         # Persist to database
         for entity in entities:
@@ -225,9 +233,14 @@ class PGliteRegistry:
                 "(entity_type, name, file_path, line_start, line_end, docstring, dependencies, metadata) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    entity.entity_type, entity.name, entity.file_path,
-                    entity.line_start, entity.line_end, entity.docstring,
-                    json.dumps(entity.dependencies), json.dumps(entity.metadata),
+                    entity.entity_type,
+                    entity.name,
+                    entity.file_path,
+                    entity.line_start,
+                    entity.line_end,
+                    entity.docstring,
+                    json.dumps(entity.dependencies),
+                    json.dumps(entity.metadata),
                 ),
             )
 
@@ -254,7 +267,9 @@ class PGliteRegistry:
 
     # ─── View System ────────────────────────────────────────────────────
 
-    def get_view(self, agent_role: str = "coder", max_entities: int = 50) -> list[dict[str, Any]]:
+    def get_view(
+        self, agent_role: str = "coder", max_entities: int = 50
+    ) -> list[dict[str, Any]]:
         """Get a filtered view of the knowledge graph for an agent role.
 
         Args:
@@ -281,7 +296,9 @@ class PGliteRegistry:
 
         return [dict(r) for r in rows]
 
-    def search_entities(self, query: str, entity_type: str = "") -> list[dict[str, Any]]:
+    def search_entities(
+        self, query: str, entity_type: str = ""
+    ) -> list[dict[str, Any]]:
         """Search for entities by name or docstring.
 
         Args:
@@ -345,7 +362,7 @@ class PGliteRegistry:
         """
         self._conn.execute(
             "INSERT OR REPLACE INTO user_preferences (key, value, updated_at) VALUES (?, ?, ?)",
-            (key, value, datetime.now(tz=timezone.utc).isoformat()),
+            (key, value, datetime.now(tz=UTC).isoformat()),
         )
         self._conn.commit()
 

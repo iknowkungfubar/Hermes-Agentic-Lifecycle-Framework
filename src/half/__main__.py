@@ -17,7 +17,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import subprocess
 import sys
 from pathlib import Path
@@ -30,15 +29,24 @@ def main() -> None:
         description="Hermes Agentic Lifecycle Framework — Autonomous SDLC orchestration",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--version", action="store_true", help="Show HALF version and exit")
+    parser.add_argument(
+        "--version", action="store_true", help="Show HALF version and exit"
+    )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # init — actually calls genesis.sh
     init_p = subparsers.add_parser("init", help="Initialize a new HALF project")
     init_p.add_argument("--project", default="my-app", help="Project name")
-    init_p.add_argument("--mode", default="full", choices=["full", "prototype", "patch", "audit"], help="Pipeline mode")
-    init_p.add_argument("--dir", default="", help="Target directory (defaults to project name)")
+    init_p.add_argument(
+        "--mode",
+        default="full",
+        choices=["full", "prototype", "patch", "audit"],
+        help="Pipeline mode",
+    )
+    init_p.add_argument(
+        "--dir", default="", help="Target directory (defaults to project name)"
+    )
 
     subparsers.add_parser("status", help="Show pipeline status")
     rp = subparsers.add_parser("run-phase", help="Execute a pipeline phase")
@@ -68,21 +76,14 @@ def main() -> None:
 
     try:
         result = _route_command(args)
-        if isinstance(result, dict):
-            print(json.dumps(result, indent=2))
-        elif result is not None:
-            print(result)
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        if isinstance(result, dict) or result is not None:
+            pass
+    except Exception:
         sys.exit(1)
 
 
 def _show_version() -> None:
     """Print HALF version."""
-    from half import __version__, __description__, __license__
-    print(f"HALF v{__version__}")
-    print(__description__)
-    print(f"License: {__license__}")
 
 
 def _route_command(args: argparse.Namespace) -> dict[str, object] | None:
@@ -96,30 +97,37 @@ def _route_command(args: argparse.Namespace) -> dict[str, object] | None:
 
     if args.command == "status":
         from half.half_sidecar import cmd_status
+
         return cmd_status()
 
     if args.command == "run-phase":
         from half.half_sidecar import cmd_run_phase
+
         return cmd_run_phase(args.phase)
 
     if args.command == "gate-check":
         from half.half_sidecar import cmd_gate_check
+
         return cmd_gate_check(args.phase)
 
     if args.command == "generate-mrp":
         from half.half_sidecar import cmd_generate_mrp
+
         return cmd_generate_mrp()
 
     if args.command == "voice":
         if args.voice_cmd == "stt":
             from half.half_sidecar import cmd_voice_stt
+
             return cmd_voice_stt(args.file)
         if args.voice_cmd == "tts":
             from half.half_sidecar import cmd_voice_tts
+
             return cmd_voice_tts(args.text)
 
     if args.command == "focalboard" and getattr(args, "fb_cmd", None) == "create":
         from half.half_sidecar import cmd_focalboard_create
+
         return cmd_focalboard_create()
 
     return {"error": f"Unknown command: {args.command}"}
@@ -129,8 +137,12 @@ def _cmd_init(args: argparse.Namespace) -> dict[str, object]:
     """Run genesis.sh to bootstrap a project."""
     # Search for genesis.sh in multiple possible locations
     candidate_paths = [
-        Path(__file__).resolve().parent.parent.parent / "scripts" / "genesis.sh",  # editable install
-        Path(__file__).resolve().parent.parent / "scripts" / "genesis.sh",  # regular install (half/scripts/)
+        Path(__file__).resolve().parent.parent.parent
+        / "scripts"
+        / "genesis.sh",  # editable install
+        Path(__file__).resolve().parent.parent
+        / "scripts"
+        / "genesis.sh",  # regular install (half/scripts/)
         Path.cwd() / "scripts" / "genesis.sh",  # running from repo root
     ]
 
@@ -155,10 +167,14 @@ def _cmd_init(args: argparse.Namespace) -> dict[str, object]:
     repo_root = genesis.parent.parent  # scripts/genesis.sh -> scripts/ -> repo root
     target_dir = args.dir or args.project
     cmd = [
-        "bash", str(genesis),
-        "--project", args.project,
-        "--mode", args.mode,
-        "--dir", target_dir,
+        "bash",
+        str(genesis),
+        "--project",
+        args.project,
+        "--mode",
+        args.mode,
+        "--dir",
+        target_dir,
     ]
 
     try:
@@ -174,7 +190,10 @@ def _cmd_init(args: argparse.Namespace) -> dict[str, object]:
     except subprocess.TimeoutExpired:
         return {"status": "error", "message": "genesis.sh timed out after 120s"}
     except FileNotFoundError:
-        return {"status": "error", "message": "bash not found — required to run genesis.sh"}
+        return {
+            "status": "error",
+            "message": "bash not found — required to run genesis.sh",
+        }
 
 
 if __name__ == "__main__":

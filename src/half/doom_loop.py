@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -109,12 +109,16 @@ class DoomLoopDetector:
         """
         state = self._sessions.get(session_id)
         if not state:
-            return {"doom_loop_detected": False, "truncated": False,
-                    "recovery_summary": "Session not found", "retry_count": 0}
+            return {
+                "doom_loop_detected": False,
+                "truncated": False,
+                "recovery_summary": "Session not found",
+                "retry_count": 0,
+            }
 
         record = RetryRecord(
             attempt=len(state.retries) + 1,
-            timestamp=datetime.now(tz=timezone.utc).isoformat(),
+            timestamp=datetime.now(tz=UTC).isoformat(),
             error_type=error_type,
             error_summary=error_message[:200],
             traceback_length=len(traceback_text),
@@ -128,7 +132,8 @@ class DoomLoopDetector:
         if result["doom_loop_detected"]:
             logger.warning(
                 "Doom Loop DETECTED in session %s after %d retries. Truncating.",
-                session_id, len(state.retries),
+                session_id,
+                len(state.retries),
             )
             recovery = self._truncate(state)
             result["truncated"] = True
@@ -201,19 +206,24 @@ class DoomLoopDetector:
         for err_type, count in sorted(error_counts.items(), key=lambda x: -x[1]):
             summary_parts.append(f"- {err_type}: {count} occurrence(s)")
 
-        summary_parts.extend([
-            "",
-            "**Root cause analysis:**",
-            self._analyze_root_cause(state.retries),
-            "",
-            "**Restarting fresh with original spec:**",
-            f"```",
-            state.initial_spec[:500],
-            "```" if len(state.initial_spec) > 500 else "",
-        ])
+        summary_parts.extend(
+            [
+                "",
+                "**Root cause analysis:**",
+                self._analyze_root_cause(state.retries),
+                "",
+                "**Restarting fresh with original spec:**",
+                "```",
+                state.initial_spec[:500],
+                "```" if len(state.initial_spec) > 500 else "",
+            ]
+        )
 
         state.recovery_summary = "\n".join(summary_parts)
-        logger.info("Doom Loop: Session %s truncated — recovery summary generated", state.session_id)
+        logger.info(
+            "Doom Loop: Session %s truncated — recovery summary generated",
+            state.session_id,
+        )
         return state.recovery_summary
 
     @staticmethod
@@ -239,22 +249,32 @@ class DoomLoopDetector:
         if len(retries) >= 2:
             first_tb = retries[0].traceback_length
             last_tb = retries[-1].traceback_length
-            tb_growth = last_tb > first_tb * 2
+            last_tb > first_tb * 2
 
         issues = []
         if most_common == "test_failure":
-            issues.append("Tests are consistently failing — check test fixtures or implementation logic")
+            issues.append(
+                "Tests are consistently failing — check test fixtures or implementation logic"
+            )
         elif most_common == "compile_error":
             issues.append("Code is not compiling — check for syntax or import errors")
         elif most_common == "timeout":
-            issues.append("Operations are timing out — check for infinite loops or slow dependencies")
+            issues.append(
+                "Operations are timing out — check for infinite loops or slow dependencies"
+            )
 
         if len(retries) >= 3:
             similar_errors = len({r.error_summary[:80] for r in retries[-3:]}) == 1
             if similar_errors:
-                issues.append("Same error repeating — the fix applied is not addressing the root cause")
+                issues.append(
+                    "Same error repeating — the fix applied is not addressing the root cause"
+                )
 
-        return " ".join(issues) if issues else "No clear pattern detected — manual review recommended"
+        return (
+            " ".join(issues)
+            if issues
+            else "No clear pattern detected — manual review recommended"
+        )
 
     def get_session(self, session_id: str) -> SessionState | None:
         """Get a session state.

@@ -42,24 +42,41 @@ class WebhookHandler:
             if not passed:
                 pr_url = self._create_fix_pr(branch, commit)
                 results[-1]["pr_url"] = pr_url
-        return {"event": "push", "branch": branch, "commits_checked": len(commits), "results": results}
+        return {
+            "event": "push",
+            "branch": branch,
+            "commits_checked": len(commits),
+            "results": results,
+        }
 
     def handle_issues(self, payload: dict[str, Any]) -> dict[str, Any]:
         action = payload.get("action", "")
         issue = payload.get("issue", {})
-        return {"event": "issues", "action": action, "issue_number": issue.get("number"), "title": issue.get("title")}
+        return {
+            "event": "issues",
+            "action": action,
+            "issue_number": issue.get("number"),
+            "title": issue.get("title"),
+        }
 
     def handle_pull_request(self, payload: dict[str, Any]) -> dict[str, Any]:
         action = payload.get("action", "")
         pr = payload.get("pull_request", {})
-        return {"event": "pull_request", "action": action, "pr_number": pr.get("number"), "title": pr.get("title")}
+        return {
+            "event": "pull_request",
+            "action": action,
+            "pr_number": pr.get("number"),
+            "title": pr.get("title"),
+        }
 
     def _verify_commit(self, commit: dict[str, Any]) -> dict[str, Any]:
         message = commit.get("message", "").split("\n")[0]
         return {
             "sha": commit.get("id", "")[:8],
             "message": message,
-            "follows_convention": message.startswith(("feat:", "fix:", "refactor:", "test:", "docs:", "chore:")),
+            "follows_convention": message.startswith(
+                ("feat:", "fix:", "refactor:", "test:", "docs:", "chore:")
+            ),
             "passed": True,
         }
 
@@ -67,17 +84,49 @@ class WebhookHandler:
         """Create a GitHub PR from a fix branch using gh CLI."""
         branch_name = f"fix/auto-{commit.get('id', 'unknown')[:8]}"
         try:
-            subprocess.run(["git", "checkout", "-b", branch_name], cwd=self.repo_root,
-                           capture_output=True, timeout=30)
-            subprocess.run(["git", "commit", "--allow-empty", "-m", f"fix: auto-fix for {commit.get('id', '')[:8]}"],
-                           cwd=self.repo_root, capture_output=True, timeout=30)
-            result = subprocess.run(
-                ["gh", "pr", "create", "--base", base_branch, "--head", branch_name,
-                 "--title", f"fix: auto-remediation for {commit.get('id', '')[:8]}",
-                 "--body", "Automated fix branch created by HALF Ralph Loop."],
-                cwd=self.repo_root, capture_output=True, text=True, timeout=30,
+            subprocess.run(
+                ["git", "checkout", "-b", branch_name],
+                cwd=self.repo_root,
+                capture_output=True,
+                timeout=30,
             )
-            subprocess.run(["git", "checkout", base_branch], cwd=self.repo_root, capture_output=True, timeout=30)
+            subprocess.run(
+                [
+                    "git",
+                    "commit",
+                    "--allow-empty",
+                    "-m",
+                    f"fix: auto-fix for {commit.get('id', '')[:8]}",
+                ],
+                cwd=self.repo_root,
+                capture_output=True,
+                timeout=30,
+            )
+            result = subprocess.run(
+                [
+                    "gh",
+                    "pr",
+                    "create",
+                    "--base",
+                    base_branch,
+                    "--head",
+                    branch_name,
+                    "--title",
+                    f"fix: auto-remediation for {commit.get('id', '')[:8]}",
+                    "--body",
+                    "Automated fix branch created by HALF Ralph Loop.",
+                ],
+                cwd=self.repo_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            subprocess.run(
+                ["git", "checkout", base_branch],
+                cwd=self.repo_root,
+                capture_output=True,
+                timeout=30,
+            )
             return result.stdout.strip() if result.returncode == 0 else ""
         except subprocess.TimeoutExpired:
             return ""
@@ -97,13 +146,17 @@ class WebhookHandler:
 class WebhookServer:
     """HTTP server that receives GitHub webhooks."""
 
-    def __init__(self, handler: WebhookHandler, host: str = "127.0.0.1", port: int = 9725):
+    def __init__(
+        self, handler: WebhookHandler, host: str = "127.0.0.1", port: int = 9725
+    ):
         self.handler = handler
         self.host = host
         self.port = port
 
     def start(self) -> None:
-        server = HTTPServer((self.host, self.port), self._make_request_handler(self.handler))
+        server = HTTPServer(
+            (self.host, self.port), self._make_request_handler(self.handler)
+        )
         with contextlib.suppress(KeyboardInterrupt):
             server.serve_forever()
 

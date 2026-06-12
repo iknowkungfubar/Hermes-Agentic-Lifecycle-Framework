@@ -12,6 +12,7 @@ class TestDiscoveryAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.discovery import DiscoveryAgent
+
         assert DiscoveryAgent is not None
 
     def test_create_requirements(self):
@@ -36,6 +37,7 @@ class TestSpecificationAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.specification import SpecificationAgent
+
         assert SpecificationAgent is not None
 
     def test_add_functional_requirement(self):
@@ -44,7 +46,9 @@ class TestSpecificationAgent:
 
         agent = SpecificationAgent()
         fr = agent.add_functional_requirement(
-            "User Registration", "Users can register", "P0",
+            "User Registration",
+            "Users can register",
+            "P0",
             acceptance_criteria=["Returns 201"],
         )
         assert fr.id == "FR-001"
@@ -68,6 +72,7 @@ class TestArchitectAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.architect import ArchitectAgent
+
         assert ArchitectAgent is not None
 
     def test_add_adr(self):
@@ -100,6 +105,7 @@ class TestCodeSimplifier:
     def test_import(self):
         """Simplifier should be importable."""
         from half.agents.code_simplifier import CodeSimplifier
+
         assert CodeSimplifier is not None
 
     def test_analyze_clean_file(self):
@@ -173,15 +179,17 @@ class TestCodeSimplifier:
         from half.agents.code_simplifier import CodeSimplifier
 
         simplifier = CodeSimplifier()
-        issues = [{
-            "severity": "high",
-            "type": "nesting",
-            "file": "test.py",
-            "line": 5,
-            "function": "deep_func",
-            "message": "Deep nesting found",
-            "suggestion": "Extract inner logic",
-        }]
+        issues = [
+            {
+                "severity": "high",
+                "type": "nesting",
+                "file": "test.py",
+                "line": 5,
+                "function": "deep_func",
+                "message": "Deep nesting found",
+                "suggestion": "Extract inner logic",
+            }
+        ]
         report = simplifier.generate_report(issues)
         assert "deep_func" in report
 
@@ -192,6 +200,7 @@ class TestScaffoldAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.scaffold import ScaffoldAgent
+
         assert ScaffoldAgent is not None
 
     def test_scaffold_project(self):
@@ -204,7 +213,9 @@ class TestScaffoldAgent:
             assert len(files) > 0
             # Check that files dict has entries
             for path_str in files:
-                assert Path(path_str).parent.exists() or True  # parent might not exist yet
+                assert (
+                    Path(path_str).parent.exists() or True
+                )  # parent might not exist yet
 
 
 class TestTestingAgent:
@@ -213,6 +224,7 @@ class TestTestingAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.testing import TestingAgent
+
         assert TestingAgent is not None
 
     def test_add_fr(self):
@@ -238,6 +250,7 @@ class TestSecurityAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.security import SecurityAgent
+
         assert SecurityAgent is not None
 
     def test_add_finding(self):
@@ -246,8 +259,12 @@ class TestSecurityAgent:
 
         agent = SecurityAgent()
         finding = agent.add_finding(
-            "HIGH", "sast", "src/main.py", 42,
-            "SQL injection possible", "Use parameterized queries",
+            "HIGH",
+            "sast",
+            "src/main.py",
+            42,
+            "SQL injection possible",
+            "Use parameterized queries",
         )
         assert finding.id.startswith("SEC-")
         assert finding.severity == "HIGH"
@@ -257,7 +274,9 @@ class TestSecurityAgent:
         from half.agents.security import SecurityAgent
 
         agent = SecurityAgent()
-        agent.add_finding("CRITICAL", "red-team", "src/auth.py", 10, "Hardcoded key", "Use env var")
+        agent.add_finding(
+            "CRITICAL", "red-team", "src/auth.py", 10, "Hardcoded key", "Use env var"
+        )
         report = agent.get_report()
         assert report.critical_count == 1
 
@@ -268,6 +287,7 @@ class TestImplementAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.implement import ImplementAgent
+
         assert ImplementAgent is not None
 
     def test_generate_test_template(self):
@@ -275,9 +295,16 @@ class TestImplementAgent:
         from half.agents.implement import ImplementAgent
 
         template = ImplementAgent.generate_test_template(
-            "my_module", "my_function",
+            "my_module",
+            "my_function",
             {"key": "value"},
-            [{"input": {}, "description": "Error case", "expected_exception": "ValueError"}],
+            [
+                {
+                    "input": {},
+                    "description": "Error case",
+                    "expected_exception": "ValueError",
+                }
+            ],
         )
         assert "class TestMy_Function" in template
         assert "test_happy_path" in template
@@ -288,7 +315,10 @@ class TestImplementAgent:
         from half.agents.implement import ImplementAgent
 
         source = ImplementAgent.generate_source_template(
-            "my_module", "my_func", {"x": "int"}, "str",
+            "my_module",
+            "my_func",
+            {"x": "int"},
+            "str",
         )
         assert "def my_func" in source
         assert "NotImplementedError" in source
@@ -300,6 +330,7 @@ class TestIterateAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.iterate import IterateAgent
+
         assert IterateAgent is not None
 
     def test_classify_bug(self):
@@ -332,6 +363,7 @@ class TestObserveAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.observe import ObserveAgent
+
         assert ObserveAgent is not None
 
     def test_render_monitoring_config(self):
@@ -350,6 +382,7 @@ class TestLaunchAgent:
     def test_import(self):
         """Agent should be importable."""
         from half.agents.launch import LaunchAgent
+
         assert LaunchAgent is not None
 
     def test_readiness_checklist(self):

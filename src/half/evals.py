@@ -10,12 +10,10 @@ Based on the HALF 1.5 doctrine's 'Automated Evaluation' specification.
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.evals")
 
@@ -83,7 +81,7 @@ class AutomatedEvaluator:
         eval_result = AgentRunEvaluation(
             run_id=run_id,
             task_description=task_description,
-            timestamp=datetime.now(tz=timezone.utc).isoformat(),
+            timestamp=datetime.now(tz=UTC).isoformat(),
         )
 
         # 1. Semantic Consistency
@@ -91,7 +89,9 @@ class AutomatedEvaluator:
         eval_result.evaluations.append(semantic)
 
         # 2. Cost Efficiency
-        cost = self._evaluate_cost_efficiency(task_description, token_count, retry_count)
+        cost = self._evaluate_cost_efficiency(
+            task_description, token_count, retry_count
+        )
         eval_result.evaluations.append(cost)
 
         # 3. Relentless Proactivity
@@ -100,12 +100,16 @@ class AutomatedEvaluator:
 
         # Calculate overall score
         if eval_result.evaluations:
-            eval_result.overall_score = sum(e.score for e in eval_result.evaluations) / len(eval_result.evaluations)
+            eval_result.overall_score = sum(
+                e.score for e in eval_result.evaluations
+            ) / len(eval_result.evaluations)
             eval_result.passed = all(e.passed for e in eval_result.evaluations)
 
         logger.info(
             "Evaluator: Run %s — overall=%.2f, passed=%s",
-            run_id, eval_result.overall_score, eval_result.passed,
+            run_id,
+            eval_result.overall_score,
+            eval_result.passed,
         )
         return eval_result
 
@@ -132,10 +136,38 @@ class AutomatedEvaluator:
 
         # Check for key terms from the briefingscript in the implementation
         script_keywords = set(briefingscript.lower().split()) - {
-            "the", "a", "an", "is", "are", "was", "were", "will", "would",
-            "could", "should", "may", "might", "must", "shall", "to", "of",
-            "in", "for", "on", "with", "at", "by", "from", "as", "into",
-            "through", "during", "before", "after", "above", "below",
+            "the",
+            "a",
+            "an",
+            "is",
+            "are",
+            "was",
+            "were",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "must",
+            "shall",
+            "to",
+            "of",
+            "in",
+            "for",
+            "on",
+            "with",
+            "at",
+            "by",
+            "from",
+            "as",
+            "into",
+            "through",
+            "during",
+            "before",
+            "after",
+            "above",
+            "below",
         }
         impl_lower = implementation.lower()
         matched = sum(1 for kw in script_keywords if kw in impl_lower)
@@ -170,15 +202,17 @@ class AutomatedEvaluator:
         expected_tokens: float = task_words * 5  # Rough estimate
 
         # Adjust for complexity
-        complexity_factors = len([kw for kw in ["api", "database", "auth", "test", "deploy"]
-                                   if kw in task_description.lower()])
-        expected_tokens *= (1 + complexity_factors * 0.3)
+        complexity_factors = len(
+            [
+                kw
+                for kw in ["api", "database", "auth", "test", "deploy"]
+                if kw in task_description.lower()
+            ]
+        )
+        expected_tokens *= 1 + complexity_factors * 0.3
 
         # Calculate efficiency ratio
-        if token_count > 0:
-            efficiency = min(1.0, expected_tokens / token_count)
-        else:
-            efficiency = 1.0
+        efficiency = min(1.0, expected_tokens / token_count) if token_count > 0 else 1.0
 
         # Penalize excessive retries (doom loop detection)
         retry_penalty = min(0.5, retry_count * 0.1)
@@ -188,7 +222,9 @@ class AutomatedEvaluator:
 
         details_parts = []
         if token_count > 0:
-            details_parts.append(f"{token_count} tokens used (estimated {int(expected_tokens)})")
+            details_parts.append(
+                f"{token_count} tokens used (estimated {int(expected_tokens)})"
+            )
         if retry_count > 0:
             details_parts.append(f"{retry_count} retries")
             if retry_count >= 5:
@@ -234,9 +270,7 @@ class AutomatedEvaluator:
 
         passed = score >= 0.4
 
-        details = (
-            f"{retry_count} autonomous retries, {human_interventions} human interventions"
-        )
+        details = f"{retry_count} autonomous retries, {human_interventions} human interventions"
         if human_interventions == 0 and retry_count > 0:
             details += " — self-recovered without human help"
 
@@ -266,12 +300,13 @@ class AutomatedEvaluator:
             EvaluationResult.
         """
         import re
+
         log_path = Path(log_file)
         if not log_path.exists():
             return AgentRunEvaluation(
                 run_id=run_id,
                 task_description=task_description,
-                timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                timestamp=datetime.now(tz=UTC).isoformat(),
                 passed=False,
                 overall_score=0.0,
             )
@@ -279,8 +314,12 @@ class AutomatedEvaluator:
         content = log_path.read_text()
         token_matches = re.findall(r"(\d+)\s*tokens?", content, re.IGNORECASE)
         total_tokens = sum(int(m) for m in token_matches) if token_matches else 0
-        retry_count = len(re.findall(r"(retry|attempt|try again)", content, re.IGNORECASE))
-        human_count = len(re.findall(r"(human|assist|help|intervention)", content, re.IGNORECASE))
+        retry_count = len(
+            re.findall(r"(retry|attempt|try again)", content, re.IGNORECASE)
+        )
+        human_count = len(
+            re.findall(r"(human|assist|help|intervention)", content, re.IGNORECASE)
+        )
 
         impl_match = re.search(r"(?:```\w*\n)(.*?)(?:```)", content, re.DOTALL)
         implementation = impl_match.group(1) if impl_match else content[:1000]

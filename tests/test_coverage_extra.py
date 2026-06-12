@@ -18,7 +18,9 @@ class TestCLIMainCoverage:
         """--version should print version."""
         result = subprocess.run(
             [sys.executable, "-m", "half.__main__", "--version"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
         assert "HALF v1.0.0" in result.stdout
@@ -27,7 +29,9 @@ class TestCLIMainCoverage:
         """--help should print usage."""
         result = subprocess.run(
             [sys.executable, "-m", "half.__main__", "--help"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
         assert "Hermes Agentic Lifecycle Framework" in result.stdout
@@ -36,7 +40,9 @@ class TestCLIMainCoverage:
         """'version' command should print version."""
         result = subprocess.run(
             [sys.executable, "-m", "half.__main__", "version"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
         assert "HALF v1.0.0" in result.stdout
@@ -45,7 +51,9 @@ class TestCLIMainCoverage:
         """'status' command should return pipeline status."""
         result = subprocess.run(
             [sys.executable, "-m", "half.__main__", "status"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
         assert "pipeline_status" in result.stdout or "status" in result.stdout
@@ -53,9 +61,12 @@ class TestCLIMainCoverage:
     def test_status_is_json(self):
         """'status' output should be valid JSON."""
         import json
+
         result = subprocess.run(
             [sys.executable, "-m", "half.__main__", "status"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
         try:
@@ -70,7 +81,9 @@ class TestCLIMainCoverage:
         """No args should show help."""
         result = subprocess.run(
             [sys.executable, "-m", "half.__main__"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
         assert "usage:" in result.stdout.lower()
@@ -79,7 +92,9 @@ class TestCLIMainCoverage:
         """Unknown command should return error."""
         result = subprocess.run(
             [sys.executable, "-m", "half.__main__", "nonexistent_cmd_xyz"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
         assert "Error" in result.stdout or "error" in result.stderr.lower()
@@ -127,7 +142,14 @@ class TestSidecarCoverage:
         from half.half_sidecar import cmd_status
 
         result = cmd_status()
-        for key in ("status", "project", "mode", "completed_phases", "active_phase", "error_budget_remaining"):
+        for key in (
+            "status",
+            "project",
+            "mode",
+            "completed_phases",
+            "active_phase",
+            "error_budget_remaining",
+        ):
             assert key in result, f"Missing key: {key}"
 
 
@@ -146,7 +168,9 @@ class TestPhaseNodesCoverage:
 
         state = initial_state("test")
         result = phase_2_plan(state)
-        assert "files_to_create" in str(result) or result["current_step"] == "phase-2-plan"
+        assert (
+            "files_to_create" in str(result) or result["current_step"] == "phase-2-plan"
+        )
 
     def test_phase_2_implement_creates_test(self):
         """Phase 2 implement should create test harness."""
@@ -155,6 +179,7 @@ class TestPhaseNodesCoverage:
 
         from half.runtime.nodes import phase_2_implement
         from half.runtime.state import initial_state
+
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -175,6 +200,7 @@ class TestPhaseNodesCoverage:
 
         from half.runtime.nodes import phase_3_security
         from half.runtime.state import initial_state
+
         with tempfile.TemporaryDirectory() as tmp:
             # Create a dummy src directory so bandit doesn't error
             src_dir = Path(tmp) / "src"
@@ -196,6 +222,7 @@ class TestPhaseNodesCoverage:
 
         from half.runtime.nodes import phase_4_cicd
         from half.runtime.state import initial_state
+
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -213,6 +240,7 @@ class TestPhaseNodesCoverage:
 
         from half.runtime.nodes import phase_5_iterate
         from half.runtime.state import initial_state
+
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -230,6 +258,7 @@ class TestPhaseNodesCoverage:
 
         from half.runtime.nodes import phase_5_codify
         from half.runtime.state import initial_state
+
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -247,6 +276,7 @@ class TestPhaseNodesCoverage:
 
         from half.runtime.nodes import phase_5_gate
         from half.runtime.state import initial_state
+
         with tempfile.TemporaryDirectory() as tmp:
             orig = os.getcwd()
             os.chdir(tmp)
@@ -265,7 +295,9 @@ class TestPhaseNodesCoverage:
 
         state = initial_state()
         state["current_phase"] = "invalid-phase"
-        state["gate_results"] = [{"gate_id": "G1", "passed": True, "details": "", "timestamp": ""}]
+        state["gate_results"] = [
+            {"gate_id": "G1", "passed": True, "details": "", "timestamp": ""}
+        ]
         result = route_from_gate(state)
         assert result == "fail_safe_escalate"
 
@@ -286,11 +318,14 @@ class TestPhaseNodesCoverage:
 
         from half.runtime.nodes import phase_2_simplify
         from half.runtime.state import initial_state
+
         with tempfile.TemporaryDirectory() as tmp:
             # Create a Python file for the simplifier to analyze
             src_dir = Path(tmp) / "src"
             src_dir.mkdir(parents=True)
-            (src_dir / "dummy.py").write_text("def f(x: int) -> int:\n    return x + 1\n")
+            (src_dir / "dummy.py").write_text(
+                "def f(x: int) -> int:\n    return x + 1\n"
+            )
             orig = os.getcwd()
             os.chdir(tmp)
             try:

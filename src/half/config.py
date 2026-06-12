@@ -15,6 +15,7 @@ from pathlib import Path
 
 _HALF_HOME_ENV = "HALF_HOME"
 
+
 def get_half_home() -> Path:
     """Get the HALF home directory.
 
@@ -110,10 +111,23 @@ ROLLBACK_PLAN_FILE = f"{ARTIFACTS_DIR}/phase-4/rollback-plan.md"
 def ensure_dirs() -> None:
     """Create all required HALF directories."""
     dirs = [
-        ARTIFACTS_DIR, ARTIFACTS_PHASE_1, ARTIFACTS_PHASE_2, ARTIFACTS_PHASE_3,
-        ARTIFACTS_PHASE_4, ARTIFACTS_PHASE_5, GATES_DIR, LOGS_DIR, METRICS_DIR,
-        STATE_DIR, CHECKPOINTS_DIR, AGENT_MAIL_DIR, SECURITY_DIR, VOICE_MODELS_DIR,
-        TEMPLATES_DIR, FOSS_DIR, SCRIPTS_DIR,
+        ARTIFACTS_DIR,
+        ARTIFACTS_PHASE_1,
+        ARTIFACTS_PHASE_2,
+        ARTIFACTS_PHASE_3,
+        ARTIFACTS_PHASE_4,
+        ARTIFACTS_PHASE_5,
+        GATES_DIR,
+        LOGS_DIR,
+        METRICS_DIR,
+        STATE_DIR,
+        CHECKPOINTS_DIR,
+        AGENT_MAIL_DIR,
+        SECURITY_DIR,
+        VOICE_MODELS_DIR,
+        TEMPLATES_DIR,
+        FOSS_DIR,
+        SCRIPTS_DIR,
     ]
     for d in dirs:
         Path(d).mkdir(parents=True, exist_ok=True)

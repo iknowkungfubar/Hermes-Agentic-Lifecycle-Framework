@@ -9,9 +9,8 @@ Based on the HALF doctrine's Commander Agent PDA capabilities.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from half.doctor import Doctor
 from half.ralph_loop import RalphLoop
@@ -52,7 +51,7 @@ class PDADigest:
         mrp_ready = mrp_file.exists()
 
         # Build briefing
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         lines = [
             f"# HALF PDA Digest — {now.strftime('%A, %B %d, %Y')}",
             "",
@@ -78,7 +77,9 @@ class PDADigest:
             lines.append("")
 
         # Add any CRITICAL items
-        critical = [c for c in report.checks if c.severity == "critical" and not c.status]
+        critical = [
+            c for c in report.checks if c.severity == "critical" and not c.status
+        ]
         if critical:
             lines.append("## ⚠ Critical Issues")
             for c in critical:
@@ -104,18 +105,18 @@ class PDADigest:
 
         # Strip markdown for speech
         import re
+
         plain = re.sub(r"[#*_`\[\]]", "", text)
         plain = re.sub(r"\n+", ". ", plain)
 
         try:
             from half.half_voice import VoiceEngine
+
             engine = VoiceEngine()
             if engine._tts_available:
                 engine.speak(plain)
                 logger.info("PDA Digest: Briefing spoken aloud")
             else:
                 logger.info("PDA Digest: TTS not available — briefing printed instead")
-                print(plain[:500])
         except ImportError:
             logger.info("PDA Digest: Voice module not available")
-            print(plain[:500])

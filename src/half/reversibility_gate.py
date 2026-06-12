@@ -20,10 +20,12 @@ logger = logging.getLogger("half.reversibility_gate")
 class ReversibilityLevel(enum.Enum):
     """How reversible is a change? Higher = more dangerous."""
 
-    HIGH = "high"       # UI tweaks, docs, comments — merge with minimal review
-    MEDIUM = "medium"   # New features, refactoring — require standard review
-    LOW = "low"         # Auth, data migration, payments — require hard HitL approval
-    CRITICAL = "critical"  # Security patches, DB schema changes — require multi-party sign-off
+    HIGH = "high"  # UI tweaks, docs, comments — merge with minimal review
+    MEDIUM = "medium"  # New features, refactoring — require standard review
+    LOW = "low"  # Auth, data migration, payments — require hard HitL approval
+    CRITICAL = (
+        "critical"  # Security patches, DB schema changes — require multi-party sign-off
+    )
 
 
 GATE_THRESHOLDS = {
@@ -37,24 +39,78 @@ GATE_THRESHOLDS = {
 # Keywords that indicate reversibility level based on file paths and descriptions
 CLASSIFICATION_KEYWORDS = {
     ReversibilityLevel.HIGH: [
-        "readme", "docs", "comment", "typo", "format", "style", "css", "html",
-        "markdown", ".md", "rename", "cosmetic", "ui", "display", "label",
+        "readme",
+        "docs",
+        "comment",
+        "typo",
+        "format",
+        "style",
+        "css",
+        "html",
+        "markdown",
+        ".md",
+        "rename",
+        "cosmetic",
+        "ui",
+        "display",
+        "label",
     ],
     ReversibilityLevel.MEDIUM: [
-        "refactor", "feature", "add", "update", "improve", "optimize",
-        "test", "coverage", "logging", "metric", "endpoint",
+        "refactor",
+        "feature",
+        "add",
+        "update",
+        "improve",
+        "optimize",
+        "test",
+        "coverage",
+        "logging",
+        "metric",
+        "endpoint",
     ],
     ReversibilityLevel.LOW: [
-        "auth", "login", "password", "credential", "token", "session",
-        "migration", "database", "schema", "index", "constraint",
-        "api_key", "secret", "encrypt", "decrypt", "permission",
-        "role", "admin", "sudo", "root", "payment", "billing",
+        "auth",
+        "login",
+        "password",
+        "credential",
+        "token",
+        "session",
+        "migration",
+        "database",
+        "schema",
+        "index",
+        "constraint",
+        "api_key",
+        "secret",
+        "encrypt",
+        "decrypt",
+        "permission",
+        "role",
+        "admin",
+        "sudo",
+        "root",
+        "payment",
+        "billing",
     ],
     ReversibilityLevel.CRITICAL: [
-        "cve", "security", "vulnerability", "exploit", "backdoor",
-        "data_loss", "delete", "drop table", "truncate", "ssl",
-        "certificate", "firewall", "pci", "hipaa", "gdpr",
-        "rollback", "downgrade", "force",
+        "cve",
+        "security",
+        "vulnerability",
+        "exploit",
+        "backdoor",
+        "data_loss",
+        "delete",
+        "drop table",
+        "truncate",
+        "ssl",
+        "certificate",
+        "firewall",
+        "pci",
+        "hipaa",
+        "gdpr",
+        "rollback",
+        "downgrade",
+        "force",
     ],
 }
 
@@ -105,9 +161,7 @@ class ReversibilityGate:
         text = (description + " " + " ".join(affected_files or [])).lower()
 
         # Score each level
-        scores: dict[ReversibilityLevel, int] = {
-            level: 0 for level in ReversibilityLevel
-        }
+        scores: dict[ReversibilityLevel, int] = dict.fromkeys(ReversibilityLevel, 0)
         matched_keywords: dict[ReversibilityLevel, list[str]] = {
             level: [] for level in ReversibilityLevel
         }
@@ -142,7 +196,9 @@ class ReversibilityGate:
                 f"{', '.join(matched_keywords[level][:5])}"
             )
         if total_keywords == 0:
-            reasoning_parts.append("No specific keywords matched — defaulting to medium")
+            reasoning_parts.append(
+                "No specific keywords matched — defaulting to medium"
+            )
 
         decision = ReversibilityDecision(
             task_id=task_id,
@@ -157,7 +213,10 @@ class ReversibilityGate:
         self._decisions.append(decision)
         logger.info(
             "Reversibility Gate: %s → %s (human=%s, approvals=%d)",
-            task_id, level.value, decision.requires_human, decision.approvals_required,
+            task_id,
+            level.value,
+            decision.requires_human,
+            decision.approvals_required,
         )
         return decision
 

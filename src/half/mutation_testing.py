@@ -21,7 +21,6 @@ import subprocess
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.mutation_testing")
 
@@ -114,13 +113,15 @@ class SycophancyGuardrail:
             for node in ast.walk(tree):
                 if isinstance(node, ast.Assert):
                     if isinstance(node.test, ast.Constant) and node.test.value is True:
-                        self.report.findings.append(TestQualityFinding(
-                            file=str(test_file.relative_to(self.test_dir.parent)),
-                            line=node.lineno,
-                            issue_type="assert_true",
-                            description="Trivial assert True — test passes without verification",
-                            severity="critical",
-                        ))
+                        self.report.findings.append(
+                            TestQualityFinding(
+                                file=str(test_file.relative_to(self.test_dir.parent)),
+                                line=node.lineno,
+                                issue_type="assert_true",
+                                description="Trivial assert True — test passes without verification",
+                                severity="critical",
+                            )
+                        )
 
     def _check_empty_tests(self) -> None:
         """Find test functions with no assertions at all."""
@@ -134,17 +135,18 @@ class SycophancyGuardrail:
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
                     has_assert = any(
-                        isinstance(child, ast.Assert)
-                        for child in ast.walk(node)
+                        isinstance(child, ast.Assert) for child in ast.walk(node)
                     )
                     if not has_assert:
-                        self.report.findings.append(TestQualityFinding(
-                            file=str(test_file.relative_to(self.test_dir.parent)),
-                            line=node.lineno,
-                            issue_type="no_assert",
-                            description=f"Test '{node.name}' has no assertions — passes vacuously",
-                            severity="high",
-                        ))
+                        self.report.findings.append(
+                            TestQualityFinding(
+                                file=str(test_file.relative_to(self.test_dir.parent)),
+                                line=node.lineno,
+                                issue_type="no_assert",
+                                description=f"Test '{node.name}' has no assertions — passes vacuously",
+                                severity="high",
+                            )
+                        )
 
     def _check_no_assertion_tests(self) -> None:
         """Find test files where no function uses assert."""
@@ -155,23 +157,23 @@ class SycophancyGuardrail:
             except (SyntaxError, UnicodeDecodeError):
                 continue
 
-            has_assert = any(
-                isinstance(node, ast.Assert)
-                for node in ast.walk(tree)
-            )
+            has_assert = any(isinstance(node, ast.Assert) for node in ast.walk(tree))
             if not has_assert:
                 test_funcs = [
-                    n.name for n in ast.walk(tree)
+                    n.name
+                    for n in ast.walk(tree)
                     if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")
                 ]
                 if test_funcs:
-                    self.report.findings.append(TestQualityFinding(
-                        file=str(test_file.relative_to(self.test_dir.parent)),
-                        line=1,
-                        issue_type="no_assert",
-                        description=f"Test file has {len(test_funcs)} tests but zero assertions",
-                        severity="high",
-                    ))
+                    self.report.findings.append(
+                        TestQualityFinding(
+                            file=str(test_file.relative_to(self.test_dir.parent)),
+                            line=1,
+                            issue_type="no_assert",
+                            description=f"Test file has {len(test_funcs)} tests but zero assertions",
+                            severity="high",
+                        )
+                    )
 
     def _run_mutation_tests(self) -> None:
         """Run mutation tests: modify source code and check if tests catch it.
@@ -194,7 +196,9 @@ class SycophancyGuardrail:
                 stripped = line.strip()
 
                 # Skip non-code lines
-                if not stripped or stripped.startswith(("#", "\"", "'", "import", "from")):
+                if not stripped or stripped.startswith(
+                    ("#", '"', "'", "import", "from")
+                ):
                     continue
 
                 mutation = None
@@ -215,21 +219,25 @@ class SycophancyGuardrail:
                     # Run tests with mutated source
                     caught = self._run_single_mutation(src_file, mutated_source)
 
-                    self.report.mutations.append(MutationResult(
-                        target_file=str(src_file.relative_to(self.src_dir.parent)),
-                        mutation=f"{original} → {mutated}",
-                        line=line_num,
-                        test_caught=caught,
-                    ))
+                    self.report.mutations.append(
+                        MutationResult(
+                            target_file=str(src_file.relative_to(self.src_dir.parent)),
+                            mutation=f"{original} → {mutated}",
+                            line=line_num,
+                            test_caught=caught,
+                        )
+                    )
 
                     if not caught:
-                        self.report.findings.append(TestQualityFinding(
-                            file=str(src_file.relative_to(self.src_dir.parent)),
-                            line=line_num,
-                            issue_type="mutation_survived",
-                            description=f"Mutation '{original} → {mutated}' survived — tests didn't catch it",
-                            severity="critical",
-                        ))
+                        self.report.findings.append(
+                            TestQualityFinding(
+                                file=str(src_file.relative_to(self.src_dir.parent)),
+                                line=line_num,
+                                issue_type="mutation_survived",
+                                description=f"Mutation '{original} → {mutated}' survived — tests didn't catch it",
+                                severity="critical",
+                            )
+                        )
 
     def _run_single_mutation(self, src_file: Path, mutated_source: str) -> bool:
         """Apply a single mutation and check if tests catch it.
@@ -248,8 +256,17 @@ class SycophancyGuardrail:
 
             try:
                 result = subprocess.run(
-                    ["python3", "-m", "pytest", str(self.test_dir), "-q", "--timeout=30"],
-                    capture_output=True, text=True, timeout=60,
+                    [
+                        "python3",
+                        "-m",
+                        "pytest",
+                        str(self.test_dir),
+                        "-q",
+                        "--timeout=30",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
                     cwd=str(self.src_dir.parent),
                 )
                 # If tests fail, mutation was caught
@@ -302,8 +319,12 @@ class SycophancyGuardrail:
         if self.report.findings:
             lines.append("## Findings")
             for f in self.report.findings:
-                icon = {"critical": "🔴", "high": "🟡", "warning": "🟢"}.get(f.severity, "⚪")
-                lines.append(f"- {icon} [{f.severity}] {f.file}:{f.line} — {f.description}")
+                icon = {"critical": "🔴", "high": "🟡", "warning": "🟢"}.get(
+                    f.severity, "⚪"
+                )
+                lines.append(
+                    f"- {icon} [{f.severity}] {f.file}:{f.line} — {f.description}"
+                )
 
         if self.report.mutations:
             lines.append("")
@@ -312,7 +333,11 @@ class SycophancyGuardrail:
                 status = "✅ Caught" if m.test_caught else "❌ Survived"
                 lines.append(f"- {m.target_file}:{m.line} {m.mutation} → {status}")
 
-        verdict = "PASS" if self.report.score >= 70 and self.report.mutation_kill_rate >= 0.8 else "FAIL"
+        verdict = (
+            "PASS"
+            if self.report.score >= 70 and self.report.mutation_kill_rate >= 0.8
+            else "FAIL"
+        )
         lines.extend(["", f"## Verdict: **{verdict}**"])
 
         return "\n".join(lines)

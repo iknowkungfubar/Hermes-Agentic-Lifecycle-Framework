@@ -11,11 +11,9 @@ from __future__ import annotations
 
 import logging
 import subprocess
-import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.prewarm")
 
@@ -49,7 +47,9 @@ class PreWarmDeployment:
         self.compose_file = Path(compose_file)
         self._warm_containers: dict[str, WarmContainer] = {}
 
-    def prewarm(self, service_name: str = "app", image_tag: str = "latest") -> WarmContainer:
+    def prewarm(
+        self, service_name: str = "app", image_tag: str = "latest"
+    ) -> WarmContainer:
         """Pre-warm a staging container.
 
         Args:
@@ -69,27 +69,52 @@ class PreWarmDeployment:
         try:
             # Build image
             subprocess.run(
-                ["docker", "build", "-t", container.image, "-f", str(self.compose_file.parent / "Dockerfile"), "."],
-                capture_output=True, text=True, timeout=300,
+                [
+                    "docker",
+                    "build",
+                    "-t",
+                    container.image,
+                    "-f",
+                    str(self.compose_file.parent / "Dockerfile"),
+                    ".",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
 
             # Start container in background
             result = subprocess.run(
-                ["docker", "run", "-d", "--name", f"half-prewarm-{service_name}",
-                 "-p", "0",  # Random port
-                 container.image],
-                capture_output=True, text=True, timeout=30,
+                [
+                    "docker",
+                    "run",
+                    "-d",
+                    "--name",
+                    f"half-prewarm-{service_name}",
+                    "-p",
+                    "0",  # Random port
+                    container.image,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
 
             if result.returncode == 0:
                 container.container_id = result.stdout.strip()
                 container.status = "ready"
-                container.warmed_at = datetime.now(tz=timezone.utc).isoformat()
+                container.warmed_at = datetime.now(tz=UTC).isoformat()
                 self._warm_containers[service_name] = container
-                logger.info("PreWarm: Container '%s' ready (ID: %s)", service_name, container.container_id[:12])
+                logger.info(
+                    "PreWarm: Container '%s' ready (ID: %s)",
+                    service_name,
+                    container.container_id[:12],
+                )
             else:
                 container.status = "failed"
-                logger.warning("PreWarm: Failed to start '%s': %s", service_name, result.stderr)
+                logger.warning(
+                    "PreWarm: Failed to start '%s': %s", service_name, result.stderr
+                )
 
         except subprocess.TimeoutExpired:
             container.status = "failed"
@@ -116,8 +141,16 @@ class PreWarmDeployment:
         try:
             # Try to ping the container's health endpoint
             result = subprocess.run(
-                ["docker", "inspect", "--format", "{{.State.Status}}", container.container_id],
-                capture_output=True, text=True, timeout=10,
+                [
+                    "docker",
+                    "inspect",
+                    "--format",
+                    "{{.State.Status}}",
+                    container.container_id,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             healthy = result.stdout.strip() == "running"
             container.health_check_passed = healthy
@@ -143,30 +176,46 @@ class PreWarmDeployment:
             # Tag as production
             subprocess.run(
                 ["docker", "tag", container.image, f"{service_name}:production"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             # Stop the old production container
             subprocess.run(
                 ["docker", "stop", f"{service_name}-production"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             subprocess.run(
                 ["docker", "rm", f"{service_name}-production"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             # Start the pre-warmed container as production
             subprocess.run(
-                ["docker", "rename", container.container_id, f"{service_name}-production"],
-                capture_output=True, text=True, timeout=15,
+                [
+                    "docker",
+                    "rename",
+                    container.container_id,
+                    f"{service_name}-production",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             # Remove the prewarm tag
             self._warm_containers.pop(service_name, None)
             container.status = "promoted"
-            logger.info("PreWarm: '%s' promoted to production — zero-latency deploy", service_name)
+            logger.info(
+                "PreWarm: '%s' promoted to production — zero-latency deploy",
+                service_name,
+            )
             return True
 
         except Exception as e:
-            logger.error("PreWarm: Promotion failed: %s", e)
+            logger.exception("PreWarm: Promotion failed: %s", e)
             return False
 
     def cleanup(self) -> None:
@@ -176,7 +225,9 @@ class PreWarmDeployment:
                 try:
                     subprocess.run(
                         ["docker", "rm", "-f", container.container_id],
-                        capture_output=True, text=True, timeout=15,
+                        capture_output=True,
+                        text=True,
+                        timeout=15,
                     )
                     logger.info("PreWarm: Cleaned up '%s'", service_name)
                 except Exception:
