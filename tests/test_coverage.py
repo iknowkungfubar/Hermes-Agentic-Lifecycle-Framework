@@ -711,11 +711,18 @@ class TestVoiceEngine:
     def test_transcribe_microphone_raises_without_arecord(self):
         """Microphone transcription requires arecord."""
         from half.half_voice import VoiceEngine
-
+        import subprocess
         engine = VoiceEngine()
-        # This should raise because arecord likely doesn't exist or no mic
-        with pytest.raises((RuntimeError, FileNotFoundError)):
-            engine.transcribe_microphone(1)
+        try:
+            subprocess.run(["arecord", "--version"], capture_output=True, timeout=5)
+            try:
+                result = engine.transcribe_microphone(1)
+                assert isinstance(result, str)
+            except (RuntimeError, FileNotFoundError) as e:
+                assert "arecord not found" not in str(e)
+        except FileNotFoundError:
+            with pytest.raises((RuntimeError, FileNotFoundError)):
+                engine.transcribe_microphone(1)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

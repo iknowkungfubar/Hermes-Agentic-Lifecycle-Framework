@@ -1,0 +1,28 @@
+{
+  "name": "hermes-agentic-lifecycle-framework",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/issues"
+  },
+  "homepage": "https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework#readme",
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.2"
+  }
+}

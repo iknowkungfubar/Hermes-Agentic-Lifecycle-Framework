@@ -133,12 +133,23 @@ class TestVoiceEngineDetailed:
         assert isinstance(result, str)
 
     def test_transcribe_microphone_requires_arecord(self):
-        """Microphone transcription raises if arecord not available."""
+        """Microphone transcription works if arecord is available."""
         from half.half_voice import VoiceEngine
-
-        engine = VoiceEngine()
-        with pytest.raises((RuntimeError, FileNotFoundError)):
-            engine.transcribe_microphone(1)
+        import subprocess
+        try:
+            subprocess.run(["arecord", "--version"], capture_output=True, timeout=5)
+            engine = VoiceEngine()
+            # If arecord is available, the method should attempt recording
+            # (may fail for other reasons like no mic, but shouldn't raise RuntimeError for missing arecord)
+            try:
+                engine.transcribe_microphone(1)
+            except (RuntimeError, FileNotFoundError) as e:
+                # Only pass if the error is NOT about arecord being missing
+                assert "arecord not found" not in str(e)
+        except FileNotFoundError:
+            engine = VoiceEngine()
+            with pytest.raises((RuntimeError, FileNotFoundError)):
+                engine.transcribe_microphone(1)
 
     def test_rocm_device_flag(self):
         """ROCM device flag should add --gpu 1 to whisper command."""

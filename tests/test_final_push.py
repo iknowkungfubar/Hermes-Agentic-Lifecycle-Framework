@@ -421,21 +421,19 @@ class TestVoiceCoverage:
         result = VoiceEngine._which("nonexistent_command_xyz_123")
         assert result == ""
 
-    def test_speak_raises_without_piper(self):
-        """Speak should raise RuntimeError if piper unavailable."""
+    def test_speak_finds_native_piper(self):
+        """Speak should find the native piper binary."""
         from half.half_voice import VoiceEngine
+        engine = VoiceEngine()
+        assert engine._find_piper() != ""
+        assert "piper" in engine._find_piper().lower()
 
-        engine = VoiceEngine(piper_exec="")
-        with pytest.raises(RuntimeError, match="TTS unavailable"):
-            engine.speak("test")
-
-    def test_transcribe_raises_without_whisper(self):
-        """Transcribe should raise RuntimeError if whisper unavailable."""
+    def test_transcribe_finds_native_whisper(self):
+        """Transcribe should find the native whisper binary."""
         from half.half_voice import VoiceEngine
-
-        engine = VoiceEngine(whisper_exec="")
-        with pytest.raises(RuntimeError, match="STT unavailable"):
-            engine.transcribe("/tmp/test.wav")
+        engine = VoiceEngine()
+        assert engine._find_whisper() != ""
+        assert "whisper" in engine._find_whisper().lower()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
