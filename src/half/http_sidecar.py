@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import json
 import logging
+import subprocess
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from pathlib import Path
 from half.half_sidecar import cmd_status, cmd_generate_mrp
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
@@ -36,6 +38,12 @@ class HalfAPIHandler(BaseHTTPRequestHandler):
             self._json_response(data)
         elif self.path == "/api/approve_deployment":
             self._json_response({"status": "error", "message": "Use POST with signature body"})
+        elif self.path == "/api/vram":
+            self._json_response(self._get_vram())
+        elif self.path == "/api/stalled":
+            self._json_response({"stalled": self._get_stalled()})
+        elif self.path == "/api/diff":
+            self._json_response(self._get_diff())
         else:
             self._json_response({"status": "error", "message": f"Unknown endpoint: {self.path}"}, 404)
 
@@ -72,6 +80,35 @@ class HalfAPIHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(json.dumps(data, indent=2).encode())
+
+    def _get_vram(self) -> dict[str, object]:
+        try:
+            from half.vram_monitor import VRAMMonitor
+            return VRAMMonitor().to_dict()
+        except Exception as e:
+            return {"error": str(e)[:100]}
+
+    def _get_stalled(self) -> list[dict[str, object]]:
+        try:
+            from half.stale_monitor import StaleSessionMonitor
+            monitor = StaleSessionMonitor()
+            sessions = monitor.scan()
+            return [
+                {"type": s.type, "name": s.name, "age_hours": round(s.age_hours, 1), "action": s.action}
+                for s in sessions
+            ]
+        except Exception:
+            return []
+
+    def _get_diff(self) -> dict[str, object]:
+        try:
+            diff_result = subprocess.run(
+                ["git", "diff", "HEAD~1", "--stat"],
+                capture_output=True, text=True, timeout=10,
+            )
+            return {"diff": diff_result.stdout[:2000]}
+        except Exception:
+            return {"diff": ""}
 
     def log_message(self, format: str, *args: str) -> None:
         logger.info("%s - %s", self.client_address[0], format % args)
