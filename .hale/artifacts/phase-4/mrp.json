@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-12T10:09:40.942516+00:00",
+  "generated_at": "2026-06-12T10:19:26.573841+00:00",
   "project": "default",
   "checks": {
     "ci_passing": true,
     "docker_build_success": true,
     "health_endpoint_ok": true,
     "smoke_tests_pass": true,
-    "rollback_plan_exists": false,
+    "rollback_plan_exists": true,
     "monitoring_configured": true
   },
   "status": "pending"

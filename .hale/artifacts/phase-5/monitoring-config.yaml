@@ -1,0 +1,4 @@
+monitoring:
+  metric_collection: every 15m
+  log_analysis: every 1h
+  health_check: every 5m
