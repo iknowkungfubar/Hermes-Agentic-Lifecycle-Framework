@@ -42,7 +42,8 @@ class TestHalfSidecarMissedLines:
         d = Doctor()
         r = d.run_full_diagnostics()
         result = _format_doctor_report(r)
-        assert isinstance(result, str) and len(result) > 0
+        assert isinstance(result, str)
+        assert len(result) > 0
 
     def test_main_dispatch(self):
         """Hit main() with various args."""

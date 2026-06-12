@@ -16,7 +16,8 @@ class TestHalfSidecarDirect:
         assert isinstance(cmd_generate_mrp(), dict)
         assert isinstance(cmd_gate_check("phase-1"), dict)
         r = cmd_run_phase("phase-1")
-        assert isinstance(r, dict) and "status" in r
+        assert isinstance(r, dict)
+        assert "status" in r
 
     def test_gate_check_all_phases(self):
         from half.half_sidecar import cmd_gate_check

@@ -101,7 +101,8 @@ class TestPDAFull:
             from half.pda_digest import PDADigest
             digest = PDADigest(repo_path=tmp)
             briefing = digest.generate_briefing()
-            assert isinstance(briefing, str) and len(briefing) > 0
+            assert isinstance(briefing, str)
+        assert len(briefing) > 0
 
 
 class TestSecurityFull:

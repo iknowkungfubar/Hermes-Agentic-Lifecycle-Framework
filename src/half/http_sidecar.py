@@ -51,6 +51,10 @@ class HalfAPIHandler(BaseHTTPRequestHandler):
             self._json_response({"stalled": self._get_stalled()})
         elif self.path == "/api/diff":
             self._json_response(self._get_diff())
+        elif self.path == "/api/health":
+            from half import __version__
+            import os
+            self._json_response({"status": "ok", "version": __version__, "host": os.uname().nodename})
         else:
             self._json_response(
                 {"status": "error", "message": f"Unknown endpoint: {self.path}"}, 404

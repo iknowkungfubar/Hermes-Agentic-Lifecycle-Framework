@@ -13,7 +13,8 @@ class TestHalfSidecarAggressive:
     def test_cmd_status(self):
         from half.half_sidecar import cmd_status
         r = cmd_status()
-        assert isinstance(r, dict) and "status" in r
+        assert isinstance(r, dict)
+        assert "status" in r
 
     def test_cmd_generate_mrp(self):
         from half.half_sidecar import cmd_generate_mrp

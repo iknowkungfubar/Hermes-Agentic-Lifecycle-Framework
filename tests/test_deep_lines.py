@@ -68,13 +68,15 @@ class TestMainDeepLines:
 class TestHTTPSidecarDeepLines:
     def test_handler_methods(self):
         from half.http_sidecar import HalfAPIHandler, run_server
-        assert hasattr(HalfAPIHandler, "do_GET") and callable(run_server)
+        assert hasattr(HalfAPIHandler, "do_GET")
+        assert callable(run_server)
 
 
 class TestRestDaemonDeepLines:
     def test_handler_methods(self):
         from half.rest_daemon import RESTAPIHandler, run_server
-        assert hasattr(RESTAPIHandler, "do_GET") and callable(run_server)
+        assert hasattr(RESTAPIHandler, "do_GET")
+        assert callable(run_server)
 
 
 class TestWebhooksDeepLines:

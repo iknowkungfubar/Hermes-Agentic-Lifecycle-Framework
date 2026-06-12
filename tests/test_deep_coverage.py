@@ -110,7 +110,8 @@ class TestDoomLoopDeep:
         for i in range(3):
             detector.record_retry("dl-test", "timeout", f"timeout #{i}", "TB" * 100)
         session = detector.get_session("dl-test")
-        assert session is not None and session.truncated
+        assert session is not None
+        assert session.truncated
 
     def test_growing_traceback(self):
         from half.doom_loop import DoomLoopDetector
