@@ -50,8 +50,14 @@ class GitWorktreeManager:
     def __init__(
         self, repo_path: str | Path = ".", worktree_base: str | Path = ".worktrees"
     ):
-        self.repo_path = Path(repo_path).resolve()
-        self.worktree_base = Path(worktree_base).resolve()
+        try:
+            self.repo_path = Path(repo_path).resolve()
+        except (FileNotFoundError, OSError):
+            self.repo_path = Path("/tmp/half-worktrees") / Path(repo_path).name
+        try:
+            self.worktree_base = Path(worktree_base).resolve()
+        except (FileNotFoundError, OSError):
+            self.worktree_base = Path("/tmp/half-worktrees") / Path(worktree_base).name
         self.worktree_base.mkdir(parents=True, exist_ok=True)
         self._sessions: dict[str, WorktreeSession] = {}
 
