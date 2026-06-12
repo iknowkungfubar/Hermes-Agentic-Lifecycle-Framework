@@ -1,0 +1,18 @@
+[run]
+parallel = True
+concurrency = multiprocessing,thread
+source = src/half
+omit = */test*, */__pycache__/*, *.egg-info/*
+
+[paths]
+source =
+    src/half
+    ./
+
+[report]
+show_missing = True
+skip_covered = True
+fail_under = 74
+
+[html]
+directory = htmlcov
