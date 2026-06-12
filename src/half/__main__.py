@@ -93,6 +93,8 @@ def _show_version() -> None:
     print(f"HALF v{__version__}")
     print(__description__)
     print(f"License: {__license__}")
+
+
 def _route_command(args: argparse.Namespace) -> dict[str, object] | None:
     """Route to the appropriate handler."""
     if args.command == "version":
