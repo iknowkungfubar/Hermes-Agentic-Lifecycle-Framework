@@ -52,6 +52,12 @@ node_modules/
 # Test artifacts
 test/
 testp/
+
+# Generated test databases
+.hale/context-registry.db
+.hale/state/
+.hale/logs/
+.hale/investigations/
 test/
 test-half/
 testp/
