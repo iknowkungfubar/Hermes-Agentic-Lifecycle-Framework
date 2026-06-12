@@ -38,19 +38,21 @@ class VoiceEngine:
 
     def __init__(
         self,
-        whisper_model: str = "ggml-large-v3-q5_0.bin",
+        whisper_model: str = "ggml-tiny.en.bin",
         whisper_exec: str = "",
         piper_exec: str = "",
-        piper_voice: str = "en_US-less-medium.onnx",
-        models_dir: str | Path = config.VOICE_MODELS_DIR,
-        device: str = "auto",  # auto, cpu, rocm, cuda
+        piper_voice: str = "",
+        models_dir: str | Path = "",
+        device: str = "auto",
     ):
+        if not models_dir:
+            models_dir = Path(__file__).resolve().parent.parent.parent.parent / ".whisper" / "models"
         self.models_dir = Path(models_dir)
-        self.models_dir.mkdir(parents=True, exist_ok=True)
-
         self.whisper_model = whisper_model
         self.whisper_exec = whisper_exec or self._find_whisper()
         self.piper_exec = piper_exec or self._find_piper()
+        if not piper_voice:
+            piper_voice = str(Path(__file__).resolve().parent.parent.parent.parent / ".piper" / "voices" / "en_US-lessac-medium.onnx")
         self.piper_voice = piper_voice
         self.device = device
 
@@ -74,13 +76,17 @@ class VoiceEngine:
             if path:
                 return path
         # Check common locations
-        for loc in [
-            "/usr/local/bin/whisper-cli",
-            "/opt/whisper.cpp/main",
-            os.path.expanduser("~/whisper.cpp/main"),
-        ]:
-            if os.path.isfile(loc) and os.access(loc, os.X_OK):
-                return loc
+        whisper_dirs = [
+            Path(__file__).resolve().parent.parent.parent.parent / ".whisper" / "build" / "bin",
+            Path(__file__).resolve().parent.parent.parent.parent / ".whisper",
+            Path("/usr/local/bin"),
+            Path(os.path.expanduser("~/.whisper")),
+        ]
+        for d in whisper_dirs:
+            for name in ["whisper-cli", "main", "whisper"]:
+                p = d / name
+                if p.exists() and os.access(str(p), os.X_OK):
+                    return str(p)
         return ""
 
     def _find_piper(self) -> str:
@@ -90,13 +96,15 @@ class VoiceEngine:
             path = self._which(cmd)
             if path:
                 return path
-        for loc in [
-            "/usr/local/bin/piper",
-            "/opt/piper/piper",
-            os.path.expanduser("~/piper/piper"),
-        ]:
-            if os.path.isfile(loc) and os.access(loc, os.X_OK):
-                return loc
+        piper_dirs = [
+            Path(__file__).resolve().parent.parent.parent.parent / ".piper" / "build" / "piper",
+            Path("/usr/local/bin"),
+            Path(os.path.expanduser("~/.piper")),
+        ]
+        for d in piper_dirs:
+            p = d if d.name == "piper" and d.parent.name == "piper" else d / "piper"
+            if p.exists() and os.access(str(p), os.X_OK):
+                return str(p)
         return ""
 
     @staticmethod
@@ -254,7 +262,7 @@ class VoiceEngine:
         cmd = [
             self.piper_exec,
             "--model",
-            str(self.models_dir / self.piper_voice),
+            self.piper_voice if Path(self.piper_voice).is_absolute() else str(self.models_dir / self.piper_voice),
             "--output-file",
             output_path,
         ]
