@@ -171,22 +171,19 @@ class TestBranchFS:
     def test_import(self):
         from half.branchfs import BranchFS, SpeculativeBranch
         assert BranchFS is not None
+        assert SpeculativeBranch is not None
 
     def test_spawn_without_git(self):
-        import tempfile
-        with tempfile.TemporaryDirectory() as tmp:
-            from half.branchfs import BranchFS
-            bfs = BranchFS(repo_path=tmp)
-            branches = bfs.get_all_branches()
-            assert isinstance(branches, list)
+        from half.branchfs import BranchFS
+        bfs = BranchFS(repo_path="/tmp/nonexistent-repo")
+        branches = bfs.get_all_branches()
+        assert isinstance(branches, list)
 
     def test_get_all_branches(self):
-        import tempfile
-        with tempfile.TemporaryDirectory() as tmp:
-            from half.branchfs import BranchFS
-            bfs = BranchFS(repo_path=tmp)
-            branches = bfs.get_all_branches()
-            assert isinstance(branches, list)
+        from half.branchfs import BranchFS
+        bfs = BranchFS(repo_path="/tmp/nonexistent-repo")
+        branches = bfs.get_all_branches()
+        assert isinstance(branches, list)
 
 
 class TestPreWarmDeployment:
