@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger("half.rlvmr")
@@ -59,16 +59,27 @@ class RLVMRTracker:
         self._runs[run_id] = run
         return run
 
-    def tag_step(self, run_id: str, step_type: str, description: str,
-                 token_cost: int = 0, success: bool = True) -> CognitiveTag:
+    def tag_step(
+        self,
+        run_id: str,
+        step_type: str,
+        description: str,
+        token_cost: int = 0,
+        success: bool = True,
+    ) -> CognitiveTag:
         run = self._runs.get(run_id)
         if not run:
             run = self.start_run(run_id, description)
         rewards = self.REWARDS.get(step_type, {"success": 0.2, "failure": 0.0})
         reward = rewards["success"] if success else rewards["failure"]
-        tag = CognitiveTag(step_type=step_type, description=description,
-                           timestamp=datetime.now(tz=timezone.utc).isoformat(),
-                           token_cost=token_cost, reward=reward, success=success)
+        tag = CognitiveTag(
+            step_type=step_type,
+            description=description,
+            timestamp=datetime.now(tz=UTC).isoformat(),
+            token_cost=token_cost,
+            reward=reward,
+            success=success,
+        )
         run.steps.append(tag)
         run.total_reward += reward
         run.total_tokens += token_cost
@@ -76,6 +87,7 @@ class RLVMRTracker:
 
     def calculate_efficiency(self, run_id: str) -> float:
         import math
+
         run = self._runs.get(run_id)
         if not run or run.total_tokens == 0:
             return 0.0
@@ -110,5 +122,7 @@ class RLVMRTracker:
         ps = sum(1 for s in best_run.steps if s.step_type == CognitiveStep.PLANNING)
         es = sum(1 for s in best_run.steps if s.step_type == CognitiveStep.EXPLORATION)
         rs = sum(1 for s in best_run.steps if s.step_type == CognitiveStep.REFLECTION)
-        return (f"Best run '{best_run.run_id}': {best_run.total_reward:.1f} reward, "
-                f"{ps} plan, {es} explore, {rs} reflect steps")
+        return (
+            f"Best run '{best_run.run_id}': {best_run.total_reward:.1f} reward, "
+            f"{ps} plan, {es} explore, {rs} reflect steps"
+        )

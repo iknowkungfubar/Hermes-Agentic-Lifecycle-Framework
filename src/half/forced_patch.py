@@ -11,11 +11,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from half.self_correct import SelfCorrectionLoop
 from half.sandbox_exec import SandboxExecutor, SandboxResult
+from half.self_correct import SelfCorrectionLoop
 
 logger = logging.getLogger("half.forced_patch")
 
@@ -90,7 +90,7 @@ class ForcedPatchingLoop:
                 command="; ".join(sandbox_result.commands_run),
                 stderr=stderr,
                 passed=sandbox_result.passed,
-                created_at=datetime.now(tz=timezone.utc).isoformat(),
+                created_at=datetime.now(tz=UTC).isoformat(),
             )
 
             # Step 3: If passed, we're done
@@ -109,8 +109,12 @@ class ForcedPatchingLoop:
             )
 
             attempt_record.correction_actions = [
-                {"type": a.action_type, "file": a.target_file, "line": a.target_line,
-                 "guidance": a.guidance}
+                {
+                    "type": a.action_type,
+                    "file": a.target_file,
+                    "line": a.target_line,
+                    "guidance": a.guidance,
+                }
                 for a in correction_report.actions
             ]
 
@@ -119,7 +123,8 @@ class ForcedPatchingLoop:
             if attempt < self.max_attempts:
                 logger.info(
                     "Forced Patch: Attempt %d failed — %d corrective actions generated. Retrying...",
-                    attempt, len(correction_report.actions),
+                    attempt,
+                    len(correction_report.actions),
                 )
 
         # Max attempts reached without success

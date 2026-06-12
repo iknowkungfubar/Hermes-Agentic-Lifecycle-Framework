@@ -10,12 +10,10 @@ Based on the HALF 1.5 doctrine's 'BranchFS' and 'speculative branches' spec.
 from __future__ import annotations
 
 import logging
-import subprocess
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from half.git_worktree import GitWorktreeManager
 
@@ -76,7 +74,7 @@ class BranchFS:
             List of SpeculativeBranch instances.
         """
         branches: list[SpeculativeBranch] = []
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
 
         for approach_name, description in approaches:
             branch_id = f"branch-{uuid.uuid4().hex[:6]}"
@@ -100,10 +98,12 @@ class BranchFS:
                 )
                 self._branches[branch_id] = branch
                 branches.append(branch)
-                logger.info("BranchFS: Spawned '%s' at %s", approach_name, session.worktree_path)
+                logger.info(
+                    "BranchFS: Spawned '%s' at %s", approach_name, session.worktree_path
+                )
 
             except RuntimeError as e:
-                logger.error("BranchFS: Failed to spawn '%s': %s", approach_name, e)
+                logger.exception("BranchFS: Failed to spawn '%s': %s", approach_name, e)
 
         return branches
 
@@ -120,10 +120,14 @@ class BranchFS:
             branch.status = "completed"
             branch.score = score
             branch.result_summary = summary
-            branch.completed_at = datetime.now(tz=timezone.utc).isoformat()
-            logger.info("BranchFS: '%s' completed (score=%.2f)", branch.approach_name, score)
+            branch.completed_at = datetime.now(tz=UTC).isoformat()
+            logger.info(
+                "BranchFS: '%s' completed (score=%.2f)", branch.approach_name, score
+            )
 
-    def compare_and_select(self, branches: list[SpeculativeBranch]) -> SpeculativeBranch:
+    def compare_and_select(
+        self, branches: list[SpeculativeBranch]
+    ) -> SpeculativeBranch:
         """Compare completed branches and select the best approach.
 
         Args:
@@ -134,7 +138,8 @@ class BranchFS:
         """
         completed = [b for b in branches if b.status == "completed"]
         if not completed:
-            raise ValueError("No completed branches to compare")
+            msg = "No completed branches to compare"
+            raise ValueError(msg)
 
         # Sort by score descending
         completed.sort(key=lambda b: b.score, reverse=True)
@@ -142,7 +147,9 @@ class BranchFS:
 
         logger.info(
             "BranchFS: Selected '%s' (score=%.2f) from %d branches",
-            winner.approach_name, winner.score, len(completed),
+            winner.approach_name,
+            winner.score,
+            len(completed),
         )
         return winner
 

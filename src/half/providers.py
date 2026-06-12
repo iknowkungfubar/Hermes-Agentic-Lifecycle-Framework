@@ -42,8 +42,12 @@ DEFAULT_CONFIGS: dict[str, list[ModelMapping]] = {
     ],
     "openrouter": [
         ModelMapping("planner", "openrouter", "openai/gpt-5.1", "OPENROUTER_API_KEY"),
-        ModelMapping("coder", "openrouter", "anthropic/claude-sonnet-4", "OPENROUTER_API_KEY"),
-        ModelMapping("reviewer", "openrouter", "google/gemini-2.5-pro", "OPENROUTER_API_KEY"),
+        ModelMapping(
+            "coder", "openrouter", "anthropic/claude-sonnet-4", "OPENROUTER_API_KEY"
+        ),
+        ModelMapping(
+            "reviewer", "openrouter", "google/gemini-2.5-pro", "OPENROUTER_API_KEY"
+        ),
     ],
     "deepseek": [
         ModelMapping("planner", "deepseek", "deepseek-reasoner", "DEEPSEEK_API_KEY"),
@@ -51,14 +55,26 @@ DEFAULT_CONFIGS: dict[str, list[ModelMapping]] = {
         ModelMapping("reviewer", "deepseek", "deepseek-chat", "DEEPSEEK_API_KEY"),
     ],
     "lmstudio": [
-        ModelMapping("planner", "lmstudio", "qwen2.5-coder:7b", "", "http://127.0.0.1:1234/v1"),
-        ModelMapping("coder", "lmstudio", "qwen2.5-coder:7b", "", "http://127.0.0.1:1234/v1"),
-        ModelMapping("reviewer", "lmstudio", "qwen2.5-coder:7b", "", "http://127.0.0.1:1234/v1"),
+        ModelMapping(
+            "planner", "lmstudio", "qwen2.5-coder:7b", "", "http://127.0.0.1:1234/v1"
+        ),
+        ModelMapping(
+            "coder", "lmstudio", "qwen2.5-coder:7b", "", "http://127.0.0.1:1234/v1"
+        ),
+        ModelMapping(
+            "reviewer", "lmstudio", "qwen2.5-coder:7b", "", "http://127.0.0.1:1234/v1"
+        ),
     ],
     "custom": [
-        ModelMapping("planner", "custom", "", "CUSTOM_API_KEY", "http://127.0.0.1:8000/v1"),
-        ModelMapping("coder", "custom", "", "CUSTOM_API_KEY", "http://127.0.0.1:8000/v1"),
-        ModelMapping("reviewer", "custom", "", "CUSTOM_API_KEY", "http://127.0.0.1:8000/v1"),
+        ModelMapping(
+            "planner", "custom", "", "CUSTOM_API_KEY", "http://127.0.0.1:8000/v1"
+        ),
+        ModelMapping(
+            "coder", "custom", "", "CUSTOM_API_KEY", "http://127.0.0.1:8000/v1"
+        ),
+        ModelMapping(
+            "reviewer", "custom", "", "CUSTOM_API_KEY", "http://127.0.0.1:8000/v1"
+        ),
     ],
 }
 
@@ -86,33 +102,44 @@ class ProviderRouter:
             self._mappings = list(DEFAULT_CONFIGS[provider])
             logger.info("ProviderRouter: using default config for '%s'", provider)
         else:
-            logger.warning("ProviderRouter: unknown provider '%s', falling back to openrouter", provider)
+            logger.warning(
+                "ProviderRouter: unknown provider '%s', falling back to openrouter",
+                provider,
+            )
             self._mappings = list(DEFAULT_CONFIGS["openrouter"])
 
     def _load_config(self, config_file: Path) -> None:
         """Load provider config from a JSON file."""
         if not config_file.exists():
             logger.warning("Provider config not found: %s", config_file)
-            self._mappings = list(DEFAULT_CONFIGS.get(self.provider, DEFAULT_CONFIGS["openrouter"]))
+            self._mappings = list(
+                DEFAULT_CONFIGS.get(self.provider, DEFAULT_CONFIGS["openrouter"])
+            )
             return
 
         try:
             data = json.loads(config_file.read_text())
             mappings = []
             for entry in data.get("models", []):
-                mappings.append(ModelMapping(
-                    role=entry.get("role", "coder"),
-                    provider=entry.get("provider", self.provider),
-                    model=entry.get("model", ""),
-                    api_key=entry.get("api_key", ""),
-                    endpoint=entry.get("endpoint", ""),
-                ))
+                mappings.append(
+                    ModelMapping(
+                        role=entry.get("role", "coder"),
+                        provider=entry.get("provider", self.provider),
+                        model=entry.get("model", ""),
+                        api_key=entry.get("api_key", ""),
+                        endpoint=entry.get("endpoint", ""),
+                    )
+                )
             if mappings:
                 self._mappings = mappings
-                logger.info("Loaded %d model mappings from %s", len(mappings), config_file)
+                logger.info(
+                    "Loaded %d model mappings from %s", len(mappings), config_file
+                )
         except (json.JSONDecodeError, KeyError) as e:
             logger.exception("Failed to load provider config: %s", e)
-            self._mappings = list(DEFAULT_CONFIGS.get(self.provider, DEFAULT_CONFIGS["openrouter"]))
+            self._mappings = list(
+                DEFAULT_CONFIGS.get(self.provider, DEFAULT_CONFIGS["openrouter"])
+            )
 
     def get_model(self, role: str = "coder") -> ModelMapping:
         """Get the model mapping for a given role.
@@ -131,8 +158,12 @@ class ProviderRouter:
                 return m
         # Fallback: return first available
         if self._mappings:
-            logger.warning("No mapping for role '%s', using first available: %s/%s",
-                          role, self._mappings[0].provider, self._mappings[0].model)
+            logger.warning(
+                "No mapping for role '%s', using first available: %s/%s",
+                role,
+                self._mappings[0].provider,
+                self._mappings[0].model,
+            )
             return self._mappings[0]
         msg = f"No model mappings configured for provider '{self.provider}'"
         raise ValueError(msg)
@@ -151,7 +182,9 @@ class ProviderRouter:
             return ""
         key = os.environ.get(mapping.api_key, "")
         if not key:
-            logger.warning("API key env var '%s' not set for role '%s'", mapping.api_key, role)
+            logger.warning(
+                "API key env var '%s' not set for role '%s'", mapping.api_key, role
+            )
         return key
 
     def get_endpoint(self, role: str = "coder") -> str:

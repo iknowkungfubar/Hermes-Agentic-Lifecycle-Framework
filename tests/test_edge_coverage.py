@@ -18,12 +18,14 @@ class TestSidecarEdgeCases:
     def test_cmd_run_phase_returns_started(self):
         """run-phase should return started status."""
         from half.half_sidecar import cmd_run_phase
+
         result = cmd_run_phase("phase-1")
         assert result["status"] == "started"
 
     def test_cmd_gate_check_phase2_returns_error(self):
         """gate-check for phase-2 should return error (no automated check)."""
         from half.half_sidecar import cmd_gate_check
+
         result = cmd_gate_check("phase-2")
         assert result["status"] == "error"
         assert "No automated gate check" in result["message"]
@@ -31,18 +33,21 @@ class TestSidecarEdgeCases:
     def test_cmd_gate_check_phase4_returns_error(self):
         """gate-check for phase-4 should return error."""
         from half.half_sidecar import cmd_gate_check
+
         result = cmd_gate_check("phase-4")
         assert result["status"] == "error"
 
     def test_cmd_voice_tts_returns_dict(self):
         """Voice TTS should return a dict with status."""
         from half.half_sidecar import cmd_voice_tts
+
         result = cmd_voice_tts("Hello HALF")
         assert isinstance(result, dict)
 
     def test_cmd_focalboard_create_offline(self):
         """Focalboard create when offline should return error gracefully."""
         from half.half_sidecar import cmd_focalboard_create
+
         result = cmd_focalboard_create()
         assert isinstance(result, dict)
         assert "status" in result
@@ -61,6 +66,7 @@ class TestCLIRouting:
         import argparse
 
         from half.__main__ import _route_command
+
         args = argparse.Namespace(command="nonexistent_cmd", fb_cmd="")
         result = _route_command(args)
         assert isinstance(result, dict)
@@ -71,6 +77,7 @@ class TestCLIRouting:
         import argparse
 
         from half.__main__ import _route_command
+
         args = argparse.Namespace(command="voice", voice_cmd=None, fb_cmd="")
         result = _route_command(args)
         assert (isinstance(result, dict) and "error" in result) or result is None
@@ -80,6 +87,7 @@ class TestCLIRouting:
         import argparse
 
         from half.__main__ import _route_command
+
         args = argparse.Namespace(command="focalboard", fb_cmd=None)
         result = _route_command(args)
         assert (isinstance(result, dict) and "error" in result) or result is None
@@ -90,6 +98,7 @@ class TestCLIRouting:
         import io
 
         from half.__main__ import _route_command
+
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
@@ -106,7 +115,10 @@ class TestCLIRouting:
         import argparse
 
         from half.__main__ import _cmd_init
-        args = argparse.Namespace(command="init", project="test-cli", mode="full", dir="/tmp/test-init-cli")
+
+        args = argparse.Namespace(
+            command="init", project="test-cli", mode="full", dir="/tmp/test-init-cli"
+        )
         result = _cmd_init(args)
         assert isinstance(result, dict)
         assert "project" in result or "status" in result
@@ -125,7 +137,9 @@ class TestImplementAgentCoverage:
         from half.agents.implement import ImplementAgent
 
         agent = ImplementAgent()
-        harness = agent.create_test_harness("T-001", "FR-001", "tests/test_x.py", "assert True")
+        harness = agent.create_test_harness(
+            "T-001", "FR-001", "tests/test_x.py", "assert True"
+        )
         assert harness.task_id == "T-001"
         assert harness.fr_id == "FR-001"
 
@@ -139,12 +153,16 @@ class TestImplementAgentCoverage:
         with tempfile.TemporaryDirectory() as tmp:
             # Write a test that FAILS (RED phase)
             test_file = Path(tmp) / "test_dummy.py"
-            test_file.write_text("def test_fail():\n    assert False  # Fails until implemented\n")
+            test_file.write_text(
+                "def test_fail():\n    assert False  # Fails until implemented\n"
+            )
             orig_cwd = Path.cwd()
             os.chdir(tmp)
             try:
                 agent = ImplementAgent()
-                harness = agent.create_test_harness("T-001", "FR-001", str(test_file), "assert False")
+                harness = agent.create_test_harness(
+                    "T-001", "FR-001", str(test_file), "assert False"
+                )
                 # verify_harness_first will run pytest — it should fail (RED)
                 # and created_before_implementation will be set based on exit code
                 result = agent.verify_harness_first("T-001")
@@ -153,7 +171,9 @@ class TestImplementAgentCoverage:
                 # So overall verification should be False — test exists and fails correctly
                 assert result is False  # Because final_run_passed is still False
                 assert harness.first_run_passed is False  # RED: test failed
-                assert harness.created_before_implementation is True  # Test file existed first
+                assert (
+                    harness.created_before_implementation is True
+                )  # Test file existed first
             finally:
                 os.chdir(orig_cwd)
 
@@ -171,7 +191,9 @@ class TestImplementAgentCoverage:
             os.chdir(tmp)
             try:
                 agent = ImplementAgent()
-                agent.create_test_harness("T-001", "FR-001", str(test_file), "assert True")
+                agent.create_test_harness(
+                    "T-001", "FR-001", str(test_file), "assert True"
+                )
                 # created_before_implementation defaults to False — should fail
                 result = agent.verify_harness_first("T-001")
                 assert result is False
@@ -183,7 +205,8 @@ class TestImplementAgentCoverage:
         from half.agents.implement import ImplementAgent
 
         source = ImplementAgent.generate_source_template(
-            "pkg.module", "process_data",
+            "pkg.module",
+            "process_data",
             {"input_data": "str", "config": "dict | None"},
             "dict",
             "Process input data with optional config.",

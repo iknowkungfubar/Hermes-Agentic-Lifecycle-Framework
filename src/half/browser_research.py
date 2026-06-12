@@ -34,7 +34,9 @@ class BrowserResearchAgent:
             Dict with text content and metadata.
         """
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "HALF-Research/1.0"})
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "HALF-Research/1.0"}
+            )
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 content = resp.read().decode("utf-8", errors="replace")
                 # Strip HTML tags for plain text
@@ -50,7 +52,11 @@ class BrowserResearchAgent:
         except urllib.error.HTTPError as e:
             return {"url": url, "error": f"HTTP {e.code}: {e.reason}", "success": False}
         except urllib.error.URLError as e:
-            return {"url": url, "error": f"Connection failed: {e.reason}", "success": False}
+            return {
+                "url": url,
+                "error": f"Connection failed: {e.reason}",
+                "success": False,
+            }
         except Exception as e:
             return {"url": url, "error": str(e), "success": False}
 
@@ -94,12 +100,20 @@ class BrowserResearchAgent:
         """Scrape documentation from a URL."""
         result = self.fetch_url(url)
         if result.get("success"):
-            logger.info("Documentation fetched: %s (%d chars)", url, result.get("content_length", 0))
+            logger.info(
+                "Documentation fetched: %s (%d chars)",
+                url,
+                result.get("content_length", 0),
+            )
         else:
-            logger.warning("Documentation fetch failed: %s — %s", url, result.get("error"))
+            logger.warning(
+                "Documentation fetch failed: %s — %s", url, result.get("error")
+            )
         return result
 
-    def compare_technologies(self, options: list[str], criteria: list[str]) -> dict[str, Any]:
+    def compare_technologies(
+        self, options: list[str], criteria: list[str]
+    ) -> dict[str, Any]:
         """Compare multiple technologies by researching each."""
         comparison: dict[str, Any] = {
             "options": options,
@@ -110,14 +124,20 @@ class BrowserResearchAgent:
         for opt in options:
             comparison["matrix"][opt] = dict.fromkeys(criteria, "TBD")
             # Try to fetch info about each option
-            result = self.fetch_url(f"https://duckduckgo.com/html/?q={urllib.parse.quote(opt + ' documentation')}")
+            result = self.fetch_url(
+                f"https://duckduckgo.com/html/?q={urllib.parse.quote(opt + ' documentation')}"
+            )
             if result.get("success"):
-                comparison["matrix"][opt]["documentation_found"] = "Yes" if result.get("text") else "No"
+                comparison["matrix"][opt]["documentation_found"] = (
+                    "Yes" if result.get("text") else "No"
+                )
 
         logger.info("Compared %d technologies", len(options))
         return comparison
 
-    def generate_adr_from_research(self, title: str, context: str, options: list[str], decision: str) -> str:
+    def generate_adr_from_research(
+        self, title: str, context: str, options: list[str], decision: str
+    ) -> str:
         """Generate an Architecture Decision Record from research data."""
         lines = [
             f"# ADR: {title}",
@@ -129,16 +149,18 @@ class BrowserResearchAgent:
         ]
         for i, opt in enumerate(options, 1):
             lines.append(f"{i}. {opt}")
-        lines.extend([
-            "",
-            "## Decision",
-            decision,
-            "",
-            "## Status",
-            "Proposed",
-            "",
-            "## Consequences",
-            "- Research-backed decision",
-            "- See research history for detailed analysis",
-        ])
+        lines.extend(
+            [
+                "",
+                "## Decision",
+                decision,
+                "",
+                "## Status",
+                "Proposed",
+                "",
+                "## Consequences",
+                "- Research-backed decision",
+                "- See research history for detailed analysis",
+            ]
+        )
         return "\n".join(lines)

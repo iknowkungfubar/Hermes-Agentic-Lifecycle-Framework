@@ -8,10 +8,9 @@ Based on the HALF 1.5 doctrine's 'Environment Bootstrapping' specification.
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +24,9 @@ class BootstrapSnapshot:
     project_name: str
     task: str
     directory_tree: str  # ASCII tree of relevant files
-    key_files: dict[str, str] = field(default_factory=dict)  # filename -> first 50 lines
+    key_files: dict[str, str] = field(
+        default_factory=dict
+    )  # filename -> first 50 lines
     recent_git_history: list[str] = field(default_factory=list)
     dependency_summary: str = ""
     active_agents: list[str] = field(default_factory=list)
@@ -65,7 +66,7 @@ class EnvironmentBootstrapper:
             project_name=project_name or self.root_path.name,
             task=task,
             directory_tree="",
-            timestamp=datetime.now(tz=timezone.utc).isoformat(),
+            timestamp=datetime.now(tz=UTC).isoformat(),
         )
 
         self._capture_directory_tree(snapshot)
@@ -74,8 +75,11 @@ class EnvironmentBootstrapper:
         self._capture_dependencies(snapshot)
         self._capture_memory(snapshot)
 
-        logger.info("Bootstrap: Captured %d key files, %d git entries",
-                     len(snapshot.key_files), len(snapshot.recent_git_history))
+        logger.info(
+            "Bootstrap: Captured %d key files, %d git entries",
+            len(snapshot.key_files),
+            len(snapshot.recent_git_history),
+        )
         return snapshot
 
     def _capture_directory_tree(self, snapshot: BootstrapSnapshot) -> None:
@@ -103,8 +107,12 @@ class EnvironmentBootstrapper:
         """Capture the most important project files."""
         # Always capture these key files
         key_files_to_read = [
-            "AGENTS.md", "README.md", ".goal/config.yaml",
-            "pyproject.toml", "SKILL.md", "CHANGELOG.md",
+            "AGENTS.md",
+            "README.md",
+            ".goal/config.yaml",
+            "pyproject.toml",
+            "SKILL.md",
+            "CHANGELOG.md",
         ]
         for fname in key_files_to_read:
             fpath = self.root_path / fname
@@ -118,10 +126,13 @@ class EnvironmentBootstrapper:
     def _capture_git_history(self, snapshot: BootstrapSnapshot) -> None:
         """Capture recent git commit history."""
         import subprocess
+
         try:
             result = subprocess.run(
                 ["git", "log", "--oneline", "-20"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.root_path),
             )
             if result.stdout:
@@ -134,10 +145,13 @@ class EnvironmentBootstrapper:
     def _capture_dependencies(self, snapshot: BootstrapSnapshot) -> None:
         """Capture project dependency summary."""
         import subprocess
+
         try:
             result = subprocess.run(
                 ["uv", "pip", "list", "--format=columns"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.root_path),
             )
             if result.stdout:
@@ -147,7 +161,9 @@ class EnvironmentBootstrapper:
             try:
                 result = subprocess.run(
                     ["python3", "-m", "pip", "list", "--format=columns"],
-                    capture_output=True, text=True, timeout=15,
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
                     cwd=str(self.root_path),
                 )
                 if result.stdout:
@@ -162,6 +178,7 @@ class EnvironmentBootstrapper:
             registry_path = self.root_path / ".hale" / "context-registry.db"
             if registry_path.exists():
                 import sqlite3
+
                 conn = sqlite3.connect(str(registry_path))
                 conn.row_factory = sqlite3.Row
                 rows = conn.execute(
@@ -206,7 +223,9 @@ class EnvironmentBootstrapper:
             lines.append("```")
 
         if snapshot.dependency_summary:
-            lines.extend(["", "## Dependencies", "```", snapshot.dependency_summary, "```"])
+            lines.extend(
+                ["", "## Dependencies", "```", snapshot.dependency_summary, "```"]
+            )
 
         if snapshot.memory_snapshot:
             lines.extend(["", "## User Preferences"])
@@ -228,6 +247,9 @@ class EnvironmentBootstrapper:
                 lines = log_path.read_text().split("\n")
                 if len(lines) > keep_lines:
                     log_path.write_text("\n".join(lines[-keep_lines:]))
-                    logger.info("Bootstrap: Flushed conversation history to %d lines", keep_lines)
+                    logger.info(
+                        "Bootstrap: Flushed conversation history to %d lines",
+                        keep_lines,
+                    )
             except Exception:
                 pass

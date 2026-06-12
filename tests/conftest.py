@@ -41,6 +41,7 @@ def _cleanup_db_after_test() -> None:
     yield
     try:
         from half.agent_mail.database import cleanup_db
+
         cleanup_db()
     except ImportError:
         pass
@@ -48,6 +49,7 @@ def _cleanup_db_after_test() -> None:
         # Close any open checkpointers — stored in module state
         import half.runtime.graph as graph_mod
         from half.runtime.checkpointer import close_checkpointer
+
         if hasattr(graph_mod, "_checkpointers"):
             for cp in graph_mod._checkpointers:
                 close_checkpointer(cp)
@@ -63,5 +65,6 @@ def half_config_initialized(tmp_half_home: str) -> str:
     Returns the HALF_HOME path.
     """
     from half.config import ensure_dirs
+
     ensure_dirs()
     return tmp_half_home

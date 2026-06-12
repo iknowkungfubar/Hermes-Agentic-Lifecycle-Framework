@@ -16,6 +16,7 @@ def _cleanup_db():
     """Clean up database singleton after each test."""
     yield
     from half.agent_mail.database import cleanup_db
+
     cleanup_db()
 
 
@@ -34,6 +35,7 @@ class TestCLIMainAllPaths:
         import sys
 
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
@@ -49,6 +51,7 @@ class TestCLIMainAllPaths:
     def test_main_with_no_args(self):
         """main() with no args should show help."""
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
@@ -64,6 +67,7 @@ class TestCLIMainAllPaths:
     def test_main_with_status(self):
         """main() with status should produce JSON output."""
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
@@ -80,6 +84,7 @@ class TestCLIMainAllPaths:
     def test_main_with_version_command(self):
         """main() with version should print version."""
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
@@ -95,11 +100,21 @@ class TestCLIMainAllPaths:
     def test_main_with_init(self):
         """main() with init should dispatch to genesis."""
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
         try:
-            sys.argv = ["half", "init", "--project", "testp", "--mode", "full", "--dir", "/tmp/half-test-init"]
+            sys.argv = [
+                "half",
+                "init",
+                "--project",
+                "testp",
+                "--mode",
+                "full",
+                "--dir",
+                "/tmp/half-test-init",
+            ]
             with contextlib.suppress(SystemExit):
                 main()
             output = captured.getvalue()
@@ -111,6 +126,7 @@ class TestCLIMainAllPaths:
     def test_main_with_run_phase(self):
         """main() with run-phase should dispatch."""
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
@@ -127,6 +143,7 @@ class TestCLIMainAllPaths:
     def test_main_with_gate_check(self):
         """main() with gate-check should dispatch."""
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
@@ -143,6 +160,7 @@ class TestCLIMainAllPaths:
     def test_main_with_generate_mrp(self):
         """main() with generate-mrp should dispatch."""
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
@@ -159,6 +177,7 @@ class TestCLIMainAllPaths:
     def test_main_with_focalboard_create(self):
         """main() with focalboard create should dispatch."""
         from half.__main__ import main
+
         captured = io.StringIO()
         old_stdout = sys.stdout
         sys.stdout = captured
@@ -175,6 +194,7 @@ class TestCLIMainAllPaths:
     def test_main_with_unknown_command(self):
         """main() with unknown command should print error."""
         from half.__main__ import main
+
         captured = io.StringIO()
         captured_err = io.StringIO()
         old_stdout = sys.stdout
@@ -217,7 +237,8 @@ class TestSpecificationDetailed:
 
         agent = SpecificationAgent()
         contract = agent.add_api_contract(
-            "POST", "/api/users",
+            "POST",
+            "/api/users",
             {"name": "string"},
             {"id": "uuid"},
             [{"code": 400, "description": "Bad request"}],
@@ -247,7 +268,9 @@ class TestSpecificationDetailed:
 
         agent = SpecificationAgent()
         agent.add_functional_requirement("Auth", "Auth system", "P0")
-        agent.add_functional_requirement("Profile", "User profile", "P1", depends_on=["FR-001"])
+        agent.add_functional_requirement(
+            "Profile", "User profile", "P1", depends_on=["FR-001"]
+        )
         agent.decompose_tasks()
         md = agent.render_tasks_markdown()
         assert "Task Decomposition" in md
@@ -318,7 +341,9 @@ class TestTestingDetailed:
         from half.agents.testing import TestingAgent
 
         tests = TestingAgent.derive_tests_from_fr("FR-002", "User login with auth")
-        auth_tests = [t for t in tests if "token" in t or "password" in t or "rate" in t]
+        auth_tests = [
+            t for t in tests if "token" in t or "password" in t or "rate" in t
+        ]
         assert len(auth_tests) > 0
 
     def test_render_report_with_coverage(self):
@@ -363,7 +388,14 @@ class TestSidecarRemaining:
         from half.half_sidecar import cmd_status
 
         result = cmd_status()
-        expected_keys = {"status", "project", "mode", "completed_phases", "active_phase", "error_budget_remaining"}
+        expected_keys = {
+            "status",
+            "project",
+            "mode",
+            "completed_phases",
+            "active_phase",
+            "error_budget_remaining",
+        }
         assert expected_keys.issubset(result.keys())
 
 
@@ -420,6 +452,7 @@ class TestAgentMailServer:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -435,6 +468,7 @@ class TestAgentMailServer:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -449,6 +483,7 @@ class TestAgentMailServer:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -478,12 +513,15 @@ class TestAgentMailServer:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
                 register_agent("alice", "coder")
                 register_agent("bob", "reviewer")
-                result = send_message("alice@half.local", "bob@half.local", "Read test", "Body")
+                result = send_message(
+                    "alice@half.local", "bob@half.local", "Read test", "Body"
+                )
                 mark_read(result["message_id"])
                 msgs = get_messages("bob@half.local", unread_only=True)
                 assert len(msgs) == 0  # All read
@@ -496,6 +534,7 @@ class TestAgentMailServer:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -503,8 +542,12 @@ class TestAgentMailServer:
                 register_agent("b", "reviewer")
                 msg1 = send_message("a@half.local", "b@half.local", "Thread1", "First")
                 send_message(
-                    "b@half.local", "a@half.local", "Re: Thread1", "Second",
-                    thread_id=msg1["thread_id"], in_reply_to=msg1["message_id"],
+                    "b@half.local",
+                    "a@half.local",
+                    "Re: Thread1",
+                    "Second",
+                    thread_id=msg1["thread_id"],
+                    in_reply_to=msg1["message_id"],
                 )
                 thread = get_thread(msg1["thread_id"])
                 assert len(thread) >= 2
@@ -517,6 +560,7 @@ class TestAgentMailServer:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -538,6 +582,7 @@ class TestAgentMailServer:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -555,13 +600,16 @@ class TestAgentMailServer:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
                 register_agent("dev1", "coder")
                 register_agent("dev2", "coder")
                 acquire_lease("src/conflict.py", "dev1@half.local", "First")
-                conflict = acquire_lease("src/conflict.py", "dev2@half.local", "Conflict")
+                conflict = acquire_lease(
+                    "src/conflict.py", "dev2@half.local", "Conflict"
+                )
                 assert conflict["status"] == "conflict"
             finally:
                 os2.chdir(orig)
@@ -584,7 +632,9 @@ class TestPhase5GateWithMonitoring:
             halve = Path(tmp) / ".hale"
             phase5_dir = halve / "artifacts" / "phase-5"
             phase5_dir.mkdir(parents=True)
-            (phase5_dir / "monitoring-config.yaml").write_text("monitoring:\n  enabled: true\n")
+            (phase5_dir / "monitoring-config.yaml").write_text(
+                "monitoring:\n  enabled: true\n"
+            )
 
             orig = os.getcwd()
             os.chdir(tmp)
@@ -592,8 +642,9 @@ class TestPhase5GateWithMonitoring:
                 state = initial_state("test")
                 result = phase_5_gate(state)
                 gate = result["gate_results"][0]
-                assert gate["passed"] is True, \
+                assert gate["passed"] is True, (
                     f"Phase 5 gate should pass with monitoring config, got: {gate}"
+                )
             finally:
                 os.chdir(orig)
 
@@ -612,7 +663,8 @@ class TestPhase5GateWithMonitoring:
                 state = initial_state("test")
                 result = phase_5_gate(state)
                 gate = result["gate_results"][0]
-                assert gate["passed"] is False, \
+                assert gate["passed"] is False, (
                     f"Phase 5 gate should fail without monitoring config, got: {gate}"
+                )
             finally:
                 os.chdir(orig)

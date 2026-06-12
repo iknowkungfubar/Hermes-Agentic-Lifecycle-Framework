@@ -128,7 +128,9 @@ class TestFocalboardClient:
         from half.half_focalboard import FocalboardClient
 
         card = FocalboardClient.task_from_phase_step(
-            "phase-2", "Implementation", "HALF-Implement",
+            "phase-2",
+            "Implementation",
+            "HALF-Implement",
         )
         assert "[PHASE-2]" in card.title
         assert "HALF-Implement" in card.description
@@ -169,6 +171,7 @@ class TestHalfSidecar:
         with tempfile.TemporaryDirectory() as tmp:
             original = Path.cwd()
             import os
+
             os.chdir(tmp)
             try:
                 result = cmd_generate_mrp()

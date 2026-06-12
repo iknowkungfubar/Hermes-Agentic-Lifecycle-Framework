@@ -111,7 +111,9 @@ class ImplementAgent:
         try:
             result = subprocess.run(
                 [sys.executable, "-m", "pytest", str(test_path), "-q", "--tb=line"],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             harness.first_run_passed = result.returncode == 0
             harness.first_run_output = result.stdout + result.stderr

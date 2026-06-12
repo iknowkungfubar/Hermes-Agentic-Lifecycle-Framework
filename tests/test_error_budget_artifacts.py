@@ -180,15 +180,19 @@ class TestErrorBudgetTracker:
         from half.core.error_budget import ErrorBudgetTracker
 
         with tempfile.TemporaryDirectory() as tmp:
-            budget = ErrorBudgetTracker(total_points=100, window_days=30, state_dir=Path(tmp))
+            budget = ErrorBudgetTracker(
+                total_points=100, window_days=30, state_dir=Path(tmp)
+            )
             # Manually add an old event
             old_time = (datetime.now(tz=UTC) - timedelta(days=60)).isoformat()
-            budget._events.append({
-                "event_type": "phase_1_gate_fail",
-                "deduction": 5,
-                "timestamp": old_time,
-                "details": "old event",
-            })
+            budget._events.append(
+                {
+                    "event_type": "phase_1_gate_fail",
+                    "deduction": 5,
+                    "timestamp": old_time,
+                    "details": "old event",
+                }
+            )
             budget._prune_old_events()
             assert len(budget._events) == 0  # Should have been pruned
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -70,7 +70,7 @@ class AIDeclarationGenerator:
         Returns:
             The complete AI-DECLARATION.md content.
         """
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         phases = phases_executed or ["phase-1", "phase-2", "phase-3", "phase-4"]
 
         # Load MRP data if available
@@ -103,7 +103,7 @@ AI-DECLARATION: {declaration_level}
 
 - **Engine:** Hermes Agent (Nous Research)
 - **Methodology:** Hermes Agentic Lifecycle Framework (HALF) v1.0.0
-- **Phases executed:** {', '.join(phases)}
+- **Phases executed:** {", ".join(phases)}
 - **Inference provider:** {self.provider}
 - **Human checkpoints:** Phase 1 (spec review), Phase 3 (security review), Phase 4 (Finality Gate)
 
@@ -118,7 +118,7 @@ AI-DECLARATION: {declaration_level}
         content += f"""
 ## Audit Trail
 
-- **Repository:** {repo_url or '[repo-url]'}
+- **Repository:** {repo_url or "[repo-url]"}
 - **Generated at:** {now.isoformat()}
 - **Last updated:** {now.isoformat()}
 """

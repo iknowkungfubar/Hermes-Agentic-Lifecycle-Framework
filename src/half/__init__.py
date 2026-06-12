@@ -10,7 +10,9 @@ from __future__ import annotations
 __version__ = "1.0.0"
 __author__ = "Hermes Agent / Turin Tech Solutions"
 __license__ = "MIT"
-__description__ = "Hermes Agentic Lifecycle Framework — transform concepts into production software"
+__description__ = (
+    "Hermes Agentic Lifecycle Framework — transform concepts into production software"
+)
 
 import sys as _sys
 

@@ -355,7 +355,9 @@ class TestRuntimeState:
         from half.runtime.state import initial_state, is_gate_passed
 
         state = initial_state()
-        state["gate_results"] = [{"gate_id": "G1", "passed": True, "details": "", "timestamp": ""}]
+        state["gate_results"] = [
+            {"gate_id": "G1", "passed": True, "details": "", "timestamp": ""}
+        ]
         assert is_gate_passed(state, "G1") is True
 
     def test_is_gate_passed_false(self):
@@ -363,7 +365,9 @@ class TestRuntimeState:
         from half.runtime.state import initial_state, is_gate_passed
 
         state = initial_state()
-        state["gate_results"] = [{"gate_id": "G1", "passed": False, "details": "", "timestamp": ""}]
+        state["gate_results"] = [
+            {"gate_id": "G1", "passed": False, "details": "", "timestamp": ""}
+        ]
         assert is_gate_passed(state, "G1") is False
 
     def test_is_gate_passed_no_results(self):
@@ -457,6 +461,7 @@ class TestRuntimeNodes:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os
+
             original = os.getcwd()
             os.chdir(tmp)
             try:
@@ -474,6 +479,7 @@ class TestRuntimeNodes:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os
+
             original = os.getcwd()
             os.chdir(tmp)
             try:
@@ -499,6 +505,7 @@ class TestRuntimeNodes:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os
+
             original = os.getcwd()
             os.chdir(tmp)
             try:
@@ -517,6 +524,7 @@ class TestRuntimeNodes:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os
+
             original = os.getcwd()
             os.chdir(tmp)
             try:
@@ -533,6 +541,7 @@ class TestRuntimeNodes:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os
+
             original = os.getcwd()
             os.chdir(tmp)
             try:
@@ -549,7 +558,9 @@ class TestRuntimeNodes:
 
         state = initial_state()
         state["current_phase"] = "phase-1"
-        state["gate_results"] = [{"gate_id": "G1", "passed": True, "details": "", "timestamp": ""}]
+        state["gate_results"] = [
+            {"gate_id": "G1", "passed": True, "details": "", "timestamp": ""}
+        ]
         assert route_from_gate(state) == "advance_to_phase-2"
 
     def test_route_from_gate_failed_with_retries(self):
@@ -559,7 +570,9 @@ class TestRuntimeNodes:
 
         state = initial_state()
         state["current_phase"] = "phase-1"
-        state["gate_results"] = [{"gate_id": "G1", "passed": False, "details": "", "timestamp": ""}]
+        state["gate_results"] = [
+            {"gate_id": "G1", "passed": False, "details": "", "timestamp": ""}
+        ]
         state["retry_count"] = 1
         assert route_from_gate(state) == "retry_phase"
 
@@ -570,7 +583,9 @@ class TestRuntimeNodes:
 
         state = initial_state()
         state["current_phase"] = "phase-1"
-        state["gate_results"] = [{"gate_id": "G1", "passed": False, "details": "", "timestamp": ""}]
+        state["gate_results"] = [
+            {"gate_id": "G1", "passed": False, "details": "", "timestamp": ""}
+        ]
         state["retry_count"] = 3
         state["max_retries"] = 3
         assert route_from_gate(state) == "fail_safe_escalate"
@@ -599,7 +614,9 @@ class TestRuntimeNodes:
 
         state = initial_state()
         state["current_phase"] = "phase-5"
-        state["gate_results"] = [{"gate_id": "G5", "passed": True, "details": "", "timestamp": ""}]
+        state["gate_results"] = [
+            {"gate_id": "G5", "passed": True, "details": "", "timestamp": ""}
+        ]
         assert route_from_gate(state) == "pipeline_complete"
 
 
@@ -746,7 +763,9 @@ class TestFocalboardClient:
         """Phase step task should have correct metadata."""
         from half.half_focalboard import FocalboardClient
 
-        card = FocalboardClient.task_from_phase_step("phase-2", "Implementation", "HALF-Implement")
+        card = FocalboardClient.task_from_phase_step(
+            "phase-2", "Implementation", "HALF-Implement"
+        )
         assert "[PHASE-2]" in card.title
         assert card.phase == "phase-2"
 
@@ -832,7 +851,8 @@ class TestLangGraphSecurity:
         with tempfile.TemporaryDirectory() as tmp:
             os.environ["HALF_HOME"] = tmp
             ctx = StateMachineContext(
-                project="test", phase="phase-1",
+                project="test",
+                phase="phase-1",
                 checkpoint_dir=Path(tmp) / "checkpoints",
             )
             saved = ctx.save_checkpoint({"tasks": ["T-001"]})

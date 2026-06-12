@@ -9,9 +9,9 @@ Based on the HALF 1.5 doctrine's 'Relentless Proactivity' specification.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Callable
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
 
 logger = logging.getLogger("half.event_driven")
 
@@ -69,7 +69,11 @@ class EventDrivenAgency:
             trigger: The trigger configuration.
         """
         self.triggers.append(trigger)
-        logger.info("Event Agency: Registered trigger '%s' (%s)", trigger.name, trigger.trigger_type)
+        logger.info(
+            "Event Agency: Registered trigger '%s' (%s)",
+            trigger.name,
+            trigger.trigger_type,
+        )
 
     def remove_trigger(self, name: str) -> bool:
         """Remove a trigger by name.
@@ -90,7 +94,7 @@ class EventDrivenAgency:
         Returns:
             List of actions that were triggered.
         """
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         fired: list[TriggeredAction] = []
 
         for trigger in self.triggers:
@@ -124,6 +128,7 @@ class EventDrivenAgency:
             True if the cron should fire.
         """
         import croniter
+
         try:
             cron = croniter.croniter(expression, now)
             prev = cron.get_prev(datetime)
@@ -141,13 +146,27 @@ class EventDrivenAgency:
     def _check_ci_failure(self, branch: str) -> bool:
         """Check if CI has failed on a specific branch."""
         import subprocess
+
         try:
             result = subprocess.run(
-                ["gh", "run", "list", "--branch", branch, "--json", "conclusion", "--limit", "1"],
-                capture_output=True, text=True, timeout=15,
+                [
+                    "gh",
+                    "run",
+                    "list",
+                    "--branch",
+                    branch,
+                    "--json",
+                    "conclusion",
+                    "--limit",
+                    "1",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             if result.returncode == 0:
                 import json
+
                 runs = json.loads(result.stdout)
                 return any(r.get("conclusion") == "failure" for r in runs)
         except Exception:
@@ -176,8 +195,11 @@ class EventDrivenAgency:
             TriggeredAction with status.
         """
         import subprocess
-        now = datetime.now(tz=timezone.utc).isoformat()
-        logger.info("Event Agency: Firing trigger '%s' → %s", trigger.name, trigger.action)
+
+        now = datetime.now(tz=UTC).isoformat()
+        logger.info(
+            "Event Agency: Firing trigger '%s' → %s", trigger.name, trigger.action
+        )
 
         action = TriggeredAction(
             trigger_name=trigger.name,
@@ -188,7 +210,9 @@ class EventDrivenAgency:
         try:
             result = subprocess.run(
                 trigger.action.split(),
-                capture_output=True, text=True, timeout=300,
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
             action.status = "completed" if result.returncode == 0 else "failed"
             action.output = (result.stdout + result.stderr)[:500]
@@ -199,7 +223,7 @@ class EventDrivenAgency:
             action.status = "failed"
             action.output = str(e)
 
-        action.completed_at = datetime.now(tz=timezone.utc).isoformat()
+        action.completed_at = datetime.now(tz=UTC).isoformat()
         self._history.append(action)
         return action
 
@@ -232,6 +256,6 @@ class EventDrivenAgency:
                 if trigger.trigger_type == "ci_failure" and trigger.condition == branch:
                     action = self._execute(trigger)
                     fired.append(action)
-                    trigger.last_fired = datetime.now(tz=timezone.utc).isoformat()
+                    trigger.last_fired = datetime.now(tz=UTC).isoformat()
 
         return fired

@@ -9,11 +9,8 @@ Based on the HALF 1.5 doctrine's 'Interactive Interviews & Personality' spec.
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("half.interview")
@@ -122,7 +119,9 @@ class InterviewEngine:
         self.script = BriefingScript()
         self._question_log: list[dict[str, str]] = []
 
-    def start_interview(self, project_name: str, initial_description: str) -> list[dict[str, Any]]:
+    def start_interview(
+        self, project_name: str, initial_description: str
+    ) -> list[dict[str, Any]]:
         """Start the interview process. Returns the first batch of questions.
 
         Args:
@@ -138,7 +137,10 @@ class InterviewEngine:
 
         # Start with business questions first, then technical
         questions = BUSINESS_QUESTIONS + TECHNICAL_QUESTIONS
-        return [{"id": str(q["id"]), "question": self._format_question(str(q["question"]))} for q in questions]
+        return [
+            {"id": str(q["id"]), "question": self._format_question(str(q["question"]))}
+            for q in questions
+        ]
 
     def process_answer(self, question_id: str, answer: str) -> dict[str, Any]:
         """Process an answer from the user.
@@ -157,7 +159,10 @@ class InterviewEngine:
         q_def = next((q for q in all_questions if q["id"] == question_id), None)
 
         if not q_def:
-            return {"status": "unknown_question", "message": f"No question found with id '{question_id}'"}
+            return {
+                "status": "unknown_question",
+                "message": f"No question found with id '{question_id}'",
+            }
 
         field = q_def["field"]
         answer_list = [s.strip() for s in answer.split(",") if s.strip()]
@@ -179,11 +184,13 @@ class InterviewEngine:
         # Check for confidence gaps (answers that suggest uncertainty)
         uncertainty_markers = ["not sure", "maybe", "i don't know", "unsure", "?"]
         if any(marker in answer.lower() for marker in uncertainty_markers):
-            self.script.confidence_gaps.append({
-                "question_id": question_id,
-                "question": str(q_def["question"]),
-                "note": "Low confidence in answer - consider further research",
-            })
+            self.script.confidence_gaps.append(
+                {
+                    "question_id": question_id,
+                    "question": str(q_def["question"]),
+                    "note": "Low confidence in answer - consider further research",
+                }
+            )
 
         return {
             "status": "recorded",
@@ -205,7 +212,9 @@ class InterviewEngine:
 
         logger.info(
             "Interview: BriefingScript finalized for '%s' (%d constraints, %d questions)",
-            self.script.project_name, len(self.script.technical_constraints), len(self._question_log),
+            self.script.project_name,
+            len(self.script.technical_constraints),
+            len(self._question_log),
         )
         return self.script
 
@@ -218,20 +227,45 @@ class InterviewEngine:
         lines = [
             f"# BriefingScript: {self.script.project_name}",
             "",
-            f"## Description",
+            "## Description",
             self.script.description,
             "",
         ]
         if self.script.tech_stack:
-            lines.extend(["## Tech Stack", "", *[f"- {t}" for t in self.script.tech_stack], ""])
+            lines.extend(
+                ["## Tech Stack", "", *[f"- {t}" for t in self.script.tech_stack], ""]
+            )
         if self.script.technical_constraints:
-            lines.extend(["## Technical Constraints", "", *[f"- {c}" for c in self.script.technical_constraints], ""])
+            lines.extend(
+                [
+                    "## Technical Constraints",
+                    "",
+                    *[f"- {c}" for c in self.script.technical_constraints],
+                    "",
+                ]
+            )
         if self.script.target_users:
-            lines.extend(["## Target Users", "", *[f"- {u}" for u in self.script.target_users], ""])
+            lines.extend(
+                [
+                    "## Target Users",
+                    "",
+                    *[f"- {u}" for u in self.script.target_users],
+                    "",
+                ]
+            )
         if self.script.success_metrics:
-            lines.extend(["## Success Metrics", "", *[f"- {m}" for m in self.script.success_metrics], ""])
+            lines.extend(
+                [
+                    "## Success Metrics",
+                    "",
+                    *[f"- {m}" for m in self.script.success_metrics],
+                    "",
+                ]
+            )
         if self.script.non_goals:
-            lines.extend(["## Non-Goals", "", *[f"- {n}" for n in self.script.non_goals], ""])
+            lines.extend(
+                ["## Non-Goals", "", *[f"- {n}" for n in self.script.non_goals], ""]
+            )
         if self.script.confidence_gaps:
             lines.extend(["## Confidence Gaps", ""])
             for gap in self.script.confidence_gaps:
@@ -252,10 +286,11 @@ class InterviewEngine:
         if self.profile.tone == "casual":
             prefixes = ["Hey! ", "Quick one: ", "Let me ask: "]
             import random
+
             return random.choice(prefixes) + question.lower()
-        elif self.profile.tone == "playful":
+        if self.profile.tone == "playful":
             return "✨ " + question.replace("?", "? 🧐")
-        elif self.profile.tone == "academic":
+        if self.profile.tone == "academic":
             return "Inquiry: " + question
         return question  # professional/direct
 
@@ -266,7 +301,11 @@ class InterviewEngine:
             profile: New profile settings.
         """
         self.profile = profile
-        logger.info("Interview: PDA personality updated — tone=%s, verbosity=%d", profile.tone, profile.verbosity)
+        logger.info(
+            "Interview: PDA personality updated — tone=%s, verbosity=%d",
+            profile.tone,
+            profile.verbosity,
+        )
 
     def get_personality_prompt(self) -> str:
         """Generate a system prompt snippet for the personality.

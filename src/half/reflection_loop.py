@@ -14,9 +14,8 @@ import json
 import logging
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.reflection_loop")
 
@@ -61,7 +60,7 @@ class ReflectionLoop:
 
     def __init__(self, repo_path: str | Path = "."):
         self.repo_path = Path(repo_path)
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         week_ago = now - timedelta(days=7)
         self.report = ReflectionReport(
             week_start=week_ago.isoformat(),
@@ -94,7 +93,9 @@ class ReflectionLoop:
         try:
             result = subprocess.run(
                 ["git", "log", "--since=7.days", "--oneline"],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True,
+                text=True,
+                timeout=30,
                 cwd=str(self.repo_path),
             )
             commits = result.stdout.strip().split("\n")
@@ -105,25 +106,35 @@ class ReflectionLoop:
             # Look for patterns indicating systemic issues
             fix_commits = [c for c in commits if "fix" in c.lower()]
             if len(fix_commits) > len(commits) * 0.5:
-                self.report.findings.append(ReflectionFinding(
-                    category="pattern_failure",
-                    description=f"{len(fix_commits)}/{len(commits)} commits are fixes — possible systemic quality issue",
-                    evidence="\n".join(fix_commits[:5]),
-                    suggested_change="Review root causes — consider adding pre-commit checks or stricter gates",
-                    priority="high",
-                ))
+                self.report.findings.append(
+                    ReflectionFinding(
+                        category="pattern_failure",
+                        description=f"{len(fix_commits)}/{len(commits)} commits are fixes — possible systemic quality issue",
+                        evidence="\n".join(fix_commits[:5]),
+                        suggested_change="Review root causes — consider adding pre-commit checks or stricter gates",
+                        priority="high",
+                    )
+                )
 
             # Check for repeated security fixes
-            security_commits = [c for c in commits if any(kw in c.lower()
-                                for kw in ["security", "cve", "vuln", "xs", "inject"])]
+            security_commits = [
+                c
+                for c in commits
+                if any(
+                    kw in c.lower()
+                    for kw in ["security", "cve", "vuln", "xs", "inject"]
+                )
+            ]
             if len(security_commits) >= 3:
-                self.report.findings.append(ReflectionFinding(
-                    category="pattern_failure",
-                    description=f"{len(security_commits)} security-related commits in one week",
-                    evidence="\n".join(security_commits[:5]),
-                    suggested_change="Add security scanning to CI pipeline and security.md rules to MentorScript",
-                    priority="high",
-                ))
+                self.report.findings.append(
+                    ReflectionFinding(
+                        category="pattern_failure",
+                        description=f"{len(security_commits)} security-related commits in one week",
+                        evidence="\n".join(security_commits[:5]),
+                        suggested_change="Add security scanning to CI pipeline and security.md rules to MentorScript",
+                        priority="high",
+                    )
+                )
 
             # Check for "fix fix" patterns (repeated fixes on same area)
             areas: dict[str, int] = {}
@@ -135,13 +146,15 @@ class ReflectionLoop:
             hot_areas = {k: v for k, v in areas.items() if v >= 3}
             if hot_areas:
                 for area, count in hot_areas.items():
-                    self.report.findings.append(ReflectionFinding(
-                        category="pattern_failure",
-                        description=f"Hotspot: '{area}' modified {count} times in week ({count}/day avg)",
-                        evidence=f"Area {area} has {count} commits",
-                        suggested_change=f"Consider refactoring or adding tests for {area}",
-                        priority="medium",
-                    ))
+                    self.report.findings.append(
+                        ReflectionFinding(
+                            category="pattern_failure",
+                            description=f"Hotspot: '{area}' modified {count} times in week ({count}/day avg)",
+                            evidence=f"Area {area} has {count} commits",
+                            suggested_change=f"Consider refactoring or adding tests for {area}",
+                            priority="medium",
+                        )
+                    )
 
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             logger.warning("Reflection Loop: Git analysis failed: %s", e)
@@ -151,8 +164,18 @@ class ReflectionLoop:
         try:
             # Run tests and capture failures
             result = subprocess.run(
-                ["python3", "-m", "pytest", "tests/", "-q", "--tb=line", "--json-report"],
-                capture_output=True, text=True, timeout=120,
+                [
+                    "python3",
+                    "-m",
+                    "pytest",
+                    "tests/",
+                    "-q",
+                    "--tb=line",
+                    "--json-report",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=120,
                 cwd=str(self.repo_path),
             )
 
@@ -163,14 +186,18 @@ class ReflectionLoop:
                     data = json.loads(report_file.read_text())
                     failures = data.get("failures", [])
                     if failures:
-                        self.report.findings.append(ReflectionFinding(
-                            category="test_gap",
-                            description=f"{len(failures)} test(s) failing in latest run",
-                            evidence="\n".join(f.get("call", {}).get("longrepr", "")[:100]
-                                               for f in failures[:3]),
-                            suggested_change="Fix failing tests or mark as expected failures with xfail",
-                            priority="high" if len(failures) > 3 else "medium",
-                        ))
+                        self.report.findings.append(
+                            ReflectionFinding(
+                                category="test_gap",
+                                description=f"{len(failures)} test(s) failing in latest run",
+                                evidence="\n".join(
+                                    f.get("call", {}).get("longrepr", "")[:100]
+                                    for f in failures[:3]
+                                ),
+                                suggested_change="Fix failing tests or mark as expected failures with xfail",
+                                priority="high" if len(failures) > 3 else "medium",
+                            )
+                        )
                 except (json.JSONDecodeError, KeyError):
                     pass
 
@@ -178,17 +205,21 @@ class ReflectionLoop:
             if result.returncode != 0:
                 flaky_check = subprocess.run(
                     ["python3", "-m", "pytest", "tests/", "-q", "--tb=line", "-x"],
-                    capture_output=True, text=True, timeout=120,
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
                     cwd=str(self.repo_path),
                 )
                 if flaky_check.returncode == 0 and result.returncode != 0:
-                    self.report.findings.append(ReflectionFinding(
-                        category="test_gap",
-                        description="Possible flaky tests — test suite passes on retry",
-                        evidence="First run failed, second run passed",
-                        suggested_change="Tag flaky tests with @pytest.mark.flaky and investigate",
-                        priority="medium",
-                    ))
+                    self.report.findings.append(
+                        ReflectionFinding(
+                            category="test_gap",
+                            description="Possible flaky tests — test suite passes on retry",
+                            evidence="First run failed, second run passed",
+                            suggested_change="Tag flaky tests with @pytest.mark.flaky and investigate",
+                            priority="medium",
+                        )
+                    )
 
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             logger.warning("Reflection Loop: Test analysis failed: %s", e)
@@ -200,20 +231,24 @@ class ReflectionLoop:
         """
         agents_file = self.repo_path / ".harness" / "agents.md"
         if not agents_file.exists():
-            self.report.findings.append(ReflectionFinding(
-                category="mentor_update",
-                description="MentorScript (.harness/agents.md) not found",
-                evidence="File missing from .harness/ directory",
-                suggested_change="Create .harness/agents.md with project conventions and routing rules",
-                priority="medium",
-            ))
+            self.report.findings.append(
+                ReflectionFinding(
+                    category="mentor_update",
+                    description="MentorScript (.harness/agents.md) not found",
+                    evidence="File missing from .harness/ directory",
+                    suggested_change="Create .harness/agents.md with project conventions and routing rules",
+                    priority="medium",
+                )
+            )
             return
 
         # Check if mentor is stale (>30 days since last commit)
         try:
             result = subprocess.run(
                 ["git", "log", "-1", "--format=%ci", "--", ".harness/agents.md"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
             if result.stdout:
@@ -221,15 +256,17 @@ class ReflectionLoop:
                     last_modified = datetime.strptime(
                         result.stdout.strip(), "%Y-%m-%d %H:%M:%S %z"
                     )
-                    age = (datetime.now(tz=timezone.utc) - last_modified).days
+                    age = (datetime.now(tz=UTC) - last_modified).days
                     if age > 30:
-                        self.report.findings.append(ReflectionFinding(
-                            category="mentor_update",
-                            description=f"MentorScript not updated in {age} days",
-                            evidence=f"Last modified: {result.stdout.strip()}",
-                            suggested_change="Review and update MentorScript rules based on recent project changes",
-                            priority="low",
-                        ))
+                        self.report.findings.append(
+                            ReflectionFinding(
+                                category="mentor_update",
+                                description=f"MentorScript not updated in {age} days",
+                                evidence=f"Last modified: {result.stdout.strip()}",
+                                suggested_change="Review and update MentorScript rules based on recent project changes",
+                                priority="low",
+                            )
+                        )
                 except ValueError:
                     pass
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -240,24 +277,28 @@ class ReflectionLoop:
         # Check if there are skills already
         skills_dir = self.repo_path / ".harness" / "skills"
         if not skills_dir.exists():
-            self.report.findings.append(ReflectionFinding(
-                category="skill_proposal",
-                description="No Portable Skill Modules found in .harness/skills/",
-                evidence="Skills directory is empty or missing",
-                suggested_change="Add standard skills: browser-use for web research, data-analysis for CSV/Excel processing",
-                priority="low",
-            ))
+            self.report.findings.append(
+                ReflectionFinding(
+                    category="skill_proposal",
+                    description="No Portable Skill Modules found in .harness/skills/",
+                    evidence="Skills directory is empty or missing",
+                    suggested_change="Add standard skills: browser-use for web research, data-analysis for CSV/Excel processing",
+                    priority="low",
+                )
+            )
             return
 
         existing = list(skills_dir.glob("*"))
         if len(existing) < 3:
-            self.report.findings.append(ReflectionFinding(
-                category="skill_proposal",
-                description=f"Only {len(existing)} skill(s) in .harness/skills/ — consider expanding",
-                evidence=f"Found: {', '.join(f.name for f in existing)}",
-                suggested_change="Add commonly needed skills: browser-use, financial-data, legal-document-generation",
-                priority="low",
-            ))
+            self.report.findings.append(
+                ReflectionFinding(
+                    category="skill_proposal",
+                    description=f"Only {len(existing)} skill(s) in .harness/skills/ — consider expanding",
+                    evidence=f"Found: {', '.join(f.name for f in existing)}",
+                    suggested_change="Add commonly needed skills: browser-use, financial-data, legal-document-generation",
+                    priority="low",
+                )
+            )
 
     def _create_pr(self) -> None:
         """Create a Git branch and PR with the reflection suggestions."""
@@ -265,19 +306,27 @@ class ReflectionLoop:
             logger.info("Reflection Loop: No findings — skipping PR creation")
             return
 
-        branch_name = f"reflection/weekly-{datetime.now(tz=timezone.utc).strftime('%Y%m%d')}"
+        branch_name = f"reflection/weekly-{datetime.now(tz=UTC).strftime('%Y%m%d')}"
         self.report.pr_branch = branch_name
 
         try:
             # Create branch
             subprocess.run(
                 ["git", "checkout", "-b", branch_name],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
 
             # Write report to artifacts
-            report_path = self.repo_path / ".hale" / "artifacts" / "phase-5" / f"reflection-{datetime.now(tz=timezone.utc).strftime('%Y%m%d')}.md"
+            report_path = (
+                self.repo_path
+                / ".hale"
+                / "artifacts"
+                / "phase-5"
+                / f"reflection-{datetime.now(tz=UTC).strftime('%Y%m%d')}.md"
+            )
             report_path.parent.mkdir(parents=True, exist_ok=True)
             report_path.write_text(self._generate_report_markdown())
 
@@ -287,22 +336,34 @@ class ReflectionLoop:
                     agents_file = self.repo_path / ".harness" / "agents.md"
                     if agents_file.exists():
                         agents_file.write_text(
-                            agents_file.read_text() + f"\n# Reflection Loop Update ({datetime.now(tz=timezone.utc).strftime('%Y-%m-%d')})\n# {finding.suggested_change}\n"
+                            agents_file.read_text()
+                            + f"\n# Reflection Loop Update ({datetime.now(tz=UTC).strftime('%Y-%m-%d')})\n# {finding.suggested_change}\n"
                         )
 
             subprocess.run(
                 ["git", "add", "-A"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
             subprocess.run(
-                ["git", "commit", "-m", f"reflection: weekly review — {len(self.report.findings)} findings"],
-                capture_output=True, text=True, timeout=15,
+                [
+                    "git",
+                    "commit",
+                    "-m",
+                    f"reflection: weekly review — {len(self.report.findings)} findings",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
             subprocess.run(
                 ["git", "checkout", "-"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
 
@@ -325,7 +386,12 @@ class ReflectionLoop:
             "",
         ]
 
-        for category in ["pattern_failure", "test_gap", "mentor_update", "skill_proposal"]:
+        for category in [
+            "pattern_failure",
+            "test_gap",
+            "mentor_update",
+            "skill_proposal",
+        ]:
             cat_findings = [f for f in self.report.findings if f.category == category]
             if not cat_findings:
                 continue
@@ -334,11 +400,13 @@ class ReflectionLoop:
             lines.append(f"## {cat_name}")
             for f in cat_findings:
                 icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(f.priority, "⚪")
-                lines.extend([
-                    f"### {icon} [{f.priority}] {f.description}",
-                    f"- **Evidence:** {f.evidence}",
-                    f"- **Suggested change:** {f.suggested_change}",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"### {icon} [{f.priority}] {f.description}",
+                        f"- **Evidence:** {f.evidence}",
+                        f"- **Suggested change:** {f.suggested_change}",
+                        "",
+                    ]
+                )
 
         return "\n".join(lines)

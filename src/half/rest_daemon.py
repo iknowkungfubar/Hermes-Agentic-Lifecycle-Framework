@@ -13,11 +13,16 @@ from __future__ import annotations
 
 import json
 import logging
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
 from half.doctor import run_doctor
-from half.half_sidecar import cmd_status, cmd_run_phase, cmd_gate_check, cmd_generate_mrp
+from half.half_sidecar import (
+    cmd_gate_check,
+    cmd_generate_mrp,
+    cmd_run_phase,
+    cmd_status,
+)
 
 logger = logging.getLogger("half.rest_daemon")
 
@@ -26,7 +31,7 @@ class RESTAPIHandler(BaseHTTPRequestHandler):
     """REST API for the HALF Commander Agent."""
 
     def do_GET(self) -> None:
-        if self.path == "/health" or self.path == "/":
+        if self.path in {"/health", "/"}:
             self._json({"status": "ok", "service": "HALF REST Daemon"})
         elif self.path == "/status":
             self._json(cmd_status())
@@ -37,15 +42,19 @@ class RESTAPIHandler(BaseHTTPRequestHandler):
             self._json(cmd_generate_mrp())
         elif self.path == "/ralph":
             from half.ralph_loop import RalphLoop
+
             ralph = RalphLoop()
             ralph_report = ralph.run()
-            self._json({
-                "status": "ok",
-                "findings": len(ralph_report.findings),
-                "branches": ralph_report.branch_count,
-            })
+            self._json(
+                {
+                    "status": "ok",
+                    "findings": len(ralph_report.findings),
+                    "branches": ralph_report.branch_count,
+                }
+            )
         elif self.path == "/digest":
             from half.pda_digest import PDADigest
+
             digest = PDADigest()
             briefing = digest.generate_briefing()
             self._json({"status": "ok", "briefing": briefing})
@@ -73,6 +82,7 @@ class RESTAPIHandler(BaseHTTPRequestHandler):
             self._json({"status": "approved" if len(sig) >= 8 else "error"})
         elif self.path == "/digest/speak":
             from half.pda_digest import PDADigest
+
             digest = PDADigest()
             briefing = digest.generate_briefing()
             digest.speak_briefing(briefing)
@@ -105,7 +115,9 @@ def run_server(host: str = "127.0.0.1", port: int = 31337) -> None:
     """
     server = HTTPServer((host, port), RESTAPIHandler)
     logger.info("HALF REST Daemon listening on http://%s:%d", host, port)
-    logger.info("Endpoints: /health, /status, /doctor, /mrp, /ralph, /digest, /run-phase, /gate-check")
+    logger.info(
+        "Endpoints: /health, /status, /doctor, /mrp, /ralph, /digest, /run-phase, /gate-check"
+    )
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -115,6 +127,7 @@ def run_server(host: str = "127.0.0.1", port: int = 31337) -> None:
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="HALF REST API Daemon")
     parser.add_argument("--host", default="127.0.0.1", help="Bind address")
     parser.add_argument("--port", type=int, default=31337, help="Port")

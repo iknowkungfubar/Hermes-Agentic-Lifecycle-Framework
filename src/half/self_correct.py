@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import ast
 import logging
-import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -97,36 +96,44 @@ class SelfCorrectionLoop:
         for match in tb_pattern.finditer(text):
             file_path, line_str = match.group(1), match.group(2)
             line = int(line_str)
-            report.failures.append(FailurePoint(
-                file=file_path,
-                line=line,
-                error_type="test_failure" if "test" in file_path.lower() else "compile_error",
-                error_message=text[match.end():match.end() + 200].split("\n")[0],
-                confidence=0.8,
-            ))
+            report.failures.append(
+                FailurePoint(
+                    file=file_path,
+                    line=line,
+                    error_type="test_failure"
+                    if "test" in file_path.lower()
+                    else "compile_error",
+                    error_message=text[match.end() : match.end() + 200].split("\n")[0],
+                    confidence=0.8,
+                )
+            )
 
         # Pytest failure pattern
         pytest_pattern = re.compile(r"(FAILED|ERROR)\s+(tests/[^\s]+)")
         for match in pytest_pattern.finditer(text):
-            report.failures.append(FailurePoint(
-                file=match.group(2),
-                line=0,
-                error_type="test_failure",
-                error_message=match.group(0),
-                confidence=0.9,
-            ))
+            report.failures.append(
+                FailurePoint(
+                    file=match.group(2),
+                    line=0,
+                    error_type="test_failure",
+                    error_message=match.group(0),
+                    confidence=0.9,
+                )
+            )
 
         # Lint error pattern
         lint_pattern = re.compile(r"([^\s]+\.py):(\d+):(\d+):\s+(error|warning)")
         for match in lint_pattern.finditer(text):
-            report.failures.append(FailurePoint(
-                file=match.group(1),
-                line=int(match.group(2)),
-                column=int(match.group(3)),
-                error_type="lint_error",
-                error_message=match.group(0),
-                confidence=0.9,
-            ))
+            report.failures.append(
+                FailurePoint(
+                    file=match.group(1),
+                    line=int(match.group(2)),
+                    column=int(match.group(3)),
+                    error_type="lint_error",
+                    error_message=match.group(0),
+                    confidence=0.9,
+                )
+            )
 
         # Generate corrective actions for each failure
         report.actions = self._generate_actions(report.failures, codebase_path)
@@ -151,14 +158,20 @@ class SelfCorrectionLoop:
         codebase = Path(codebase_path)
 
         for failure in failures:
-            file_path = codebase / failure.file if not Path(failure.file).is_absolute() else Path(failure.file)
+            file_path = (
+                codebase / failure.file
+                if not Path(failure.file).is_absolute()
+                else Path(failure.file)
+            )
             if not file_path.exists():
-                actions.append(CorrectiveAction(
-                    action_type="rewrite_function",
-                    target_file=failure.file,
-                    target_line=failure.line,
-                    guidance=f"File not found — check imports and paths near line {failure.line}",
-                ))
+                actions.append(
+                    CorrectiveAction(
+                        action_type="rewrite_function",
+                        target_file=failure.file,
+                        target_line=failure.line,
+                        guidance=f"File not found — check imports and paths near line {failure.line}",
+                    )
+                )
                 continue
 
             # Read surrounding code context
@@ -167,39 +180,49 @@ class SelfCorrectionLoop:
                 lines = source.split("\n")
                 context_start = max(0, failure.line - 5)
                 context_end = min(len(lines), failure.line + 5)
-                context = "\n".join(lines[context_start:context_end])
+                "\n".join(lines[context_start:context_end])
 
                 # Try to parse AST to understand the scope
                 tree = ast.parse(source)
                 for node in ast.walk(tree):
                     if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
-                        if node.lineno <= failure.line <= (getattr(node, "end_lineno", node.lineno) or node.lineno):
-                            actions.append(CorrectiveAction(
-                                action_type="rewrite_function",
-                                target_file=failure.file,
-                                target_line=node.lineno,
-                                guidance=(
-                                    f"Function '{node.name}' at line {node.lineno} "
-                                    f"is implicated in error: {failure.error_message[:100]}. "
-                                    f"Review logic near line {failure.line}."
-                                ),
-                            ))
+                        if (
+                            node.lineno
+                            <= failure.line
+                            <= (getattr(node, "end_lineno", node.lineno) or node.lineno)
+                        ):
+                            actions.append(
+                                CorrectiveAction(
+                                    action_type="rewrite_function",
+                                    target_file=failure.file,
+                                    target_line=node.lineno,
+                                    guidance=(
+                                        f"Function '{node.name}' at line {node.lineno} "
+                                        f"is implicated in error: {failure.error_message[:100]}. "
+                                        f"Review logic near line {failure.line}."
+                                    ),
+                                )
+                            )
                             break
                 else:
                     # No specific function found — general location
-                    actions.append(CorrectiveAction(
+                    actions.append(
+                        CorrectiveAction(
+                            action_type="patch_code",
+                            target_file=failure.file,
+                            target_line=failure.line,
+                            guidance=f"Error near line {failure.line}: {failure.error_message[:100]}",
+                        )
+                    )
+            except Exception as e:
+                actions.append(
+                    CorrectiveAction(
                         action_type="patch_code",
                         target_file=failure.file,
                         target_line=failure.line,
-                        guidance=f"Error near line {failure.line}: {failure.error_message[:100]}",
-                    ))
-            except Exception as e:
-                actions.append(CorrectiveAction(
-                    action_type="patch_code",
-                    target_file=failure.file,
-                    target_line=failure.line,
-                    guidance=f"Could not analyze context: {e}",
-                ))
+                        guidance=f"Could not analyze context: {e}",
+                    )
+                )
 
         return actions
 
@@ -243,17 +266,27 @@ class SelfCorrectionLoop:
             try:
                 file_path = Path(action.target_file)
                 if not file_path.exists():
-                    results.append({"file": action.target_file, "status": "skipped", "reason": "not found"})
+                    results.append(
+                        {
+                            "file": action.target_file,
+                            "status": "skipped",
+                            "reason": "not found",
+                        }
+                    )
                     continue
 
-                if action.action_type == "patch_code":
-                    results.append({"file": action.target_file, "status": "needs_review",
-                                    "guidance": action.guidance})
-                elif action.action_type == "rewrite_function":
-                    results.append({"file": action.target_file, "status": "needs_review",
-                                    "guidance": action.guidance})
+                if action.action_type in {"patch_code", "rewrite_function"}:
+                    results.append(
+                        {
+                            "file": action.target_file,
+                            "status": "needs_review",
+                            "guidance": action.guidance,
+                        }
+                    )
 
             except Exception as e:
-                results.append({"file": action.target_file, "status": "error", "error": str(e)})
+                results.append(
+                    {"file": action.target_file, "status": "error", "error": str(e)}
+                )
 
         return {"status": "partial", "results": results}

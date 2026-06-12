@@ -134,11 +134,20 @@ class TestProviderRouter:
 
         with tempfile.TemporaryDirectory() as tmp:
             config_file = Path(tmp) / "providers.json"
-            config_file.write_text(json.dumps({
-                "models": [
-                    {"role": "coder", "provider": "custom", "model": "my-model", "endpoint": "http://localhost:8080/v1"}
-                ]
-            }))
+            config_file.write_text(
+                json.dumps(
+                    {
+                        "models": [
+                            {
+                                "role": "coder",
+                                "provider": "custom",
+                                "model": "my-model",
+                                "endpoint": "http://localhost:8080/v1",
+                            }
+                        ]
+                    }
+                )
+            )
             router = ProviderRouter(provider="custom", config_file=str(config_file))
             model = router.get_model("coder")
             assert model.model == "my-model"
@@ -151,11 +160,13 @@ class TestHalfCLI:
     def test_version_output(self):
         """half version should print version info."""
         from half import __version__
+
         assert __version__ == "1.0.0"
 
     def test_import_main(self):
         """The main function should be importable."""
         from half.__main__ import main
+
         assert main is not None
 
     def test_route_init_command(self):
@@ -164,7 +175,12 @@ class TestHalfCLI:
 
         from half.__main__ import _route_command
 
-        args = argparse.Namespace(command="init", project="test-half", mode="full", dir="/tmp/test-half-install")
+        args = argparse.Namespace(
+            command="init",
+            project="test-half",
+            mode="full",
+            dir="/tmp/test-half-install",
+        )
         result = _route_command(args)
         assert result is not None
         assert isinstance(result, dict)
@@ -189,14 +205,17 @@ class TestHalfInit:
     def test_version_constant(self):
         """Version constant should exist."""
         import half
+
         assert half.__version__ == "1.0.0"
 
     def test_license_constant(self):
         """License constant should exist."""
         import half
+
         assert half.__license__ == "MIT"
 
     def test_python_version_check(self):
         """Python version check should pass on 3.13+."""
         import sys
+
         assert sys.version_info >= (3, 13)

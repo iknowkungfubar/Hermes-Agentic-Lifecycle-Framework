@@ -64,10 +64,13 @@ class TestVoiceEngineDetailed:
         from unittest.mock import patch
 
         from half.half_voice import VoiceEngine
+
         with tempfile.TemporaryDirectory() as tmp:
             engine = VoiceEngine(models_dir=tmp)
             # Mock subprocess to simulate curl failure
-            with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, ["curl"])):
+            with patch(
+                "subprocess.run", side_effect=subprocess.CalledProcessError(1, ["curl"])
+            ):
                 result = engine.download_model("whisper")
             assert result is False
 
@@ -76,6 +79,7 @@ class TestVoiceEngineDetailed:
         import tempfile
 
         from half.half_voice import VoiceEngine
+
         with tempfile.TemporaryDirectory() as tmp:
             engine = VoiceEngine(models_dir=tmp)
             result = engine.download_model("piper")
@@ -158,6 +162,7 @@ class TestSidecarDetailed:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -172,6 +177,7 @@ class TestSidecarDetailed:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -186,6 +192,7 @@ class TestSidecarDetailed:
 
         with tempfile.TemporaryDirectory() as tmp:
             import os as os2
+
             orig = os2.getcwd()
             os2.chdir(tmp)
             try:
@@ -255,7 +262,9 @@ class TestGateCheckerDetailed:
             phase_dir = Path(tmp) / "phase-1"
             phase_dir.mkdir(parents=True)
             spec = phase_dir / "02-SPECIFICATION.md"
-            spec.write_text("### FR-001: Test\n**Acceptance Criteria:**\n- [ ] Criterion 1\n")
+            spec.write_text(
+                "### FR-001: Test\n**Acceptance Criteria:**\n- [ ] Criterion 1\n"
+            )
             gates = Phase1Gates(Path(tmp))
             check = gates.get_all()[1]  # G1.2
             result = check.run()
@@ -509,7 +518,9 @@ class TestAgentArchitectArchitecture:
         from half.agents.architect import ArchitectAgent
 
         agent = ArchitectAgent()
-        agent.add_component("API", "API Gateway", interfaces=["REST"], dependencies=["DB"])
+        agent.add_component(
+            "API", "API Gateway", interfaces=["REST"], dependencies=["DB"]
+        )
         agent.add_component("DB", "PostgreSQL", interfaces=["SQL"])
         doc = agent.render_architecture_markdown()
         assert "API" in doc
@@ -533,9 +544,12 @@ class TestAgentArchitectArchitecture:
 
         agent = ArchitectAgent()
         agent.add_adr(
-            "Database", "Need storage",
-            ["Postgres", "MySQL"], "Postgres",
-            positive=["ACID"], negative=["Complex"],
+            "Database",
+            "Need storage",
+            ["Postgres", "MySQL"],
+            "Postgres",
+            positive=["ACID"],
+            negative=["Complex"],
         )
         doc = agent.render_adrs_markdown()
         assert "ADR-001" in doc
@@ -563,7 +577,9 @@ class TestAgentSecurityReport:
         from half.agents.security import SecurityAgent
 
         agent = SecurityAgent()
-        agent.add_finding("CRITICAL", "sast", "f.py", 1, "critical", "fix", auto_fixable=True)
+        agent.add_finding(
+            "CRITICAL", "sast", "f.py", 1, "critical", "fix", auto_fixable=True
+        )
         agent.add_finding("MEDIUM", "sast", "f.py", 2, "medium", "fix")
         fixable = agent.get_fixable_critical()
         assert len(fixable) == 1
@@ -575,8 +591,12 @@ class TestAgentSecurityReport:
         from half.agents.security import SecurityAgent
 
         agent = SecurityAgent()
-        agent.add_finding("HIGH", "sast", "src/main.py", 10, "SQL injection", "Use params")
-        agent.add_finding("LOW", "red-team", "src/auth.py", 20, "Weak cookie", "Use secure flag")
+        agent.add_finding(
+            "HIGH", "sast", "src/main.py", 10, "SQL injection", "Use params"
+        )
+        agent.add_finding(
+            "LOW", "red-team", "src/auth.py", 20, "Weak cookie", "Use secure flag"
+        )
         report = agent.get_report()
         rendered = agent.render_report_markdown(report)
         assert "SAST Scan Findings" in rendered
@@ -738,7 +758,8 @@ class TestAgentCodifyCorrections:
         from half.agents.codify import CodificationTarget, analyze_correction
 
         corr = analyze_correction(
-            "C-002", "Wrong review process",
+            "C-002",
+            "Wrong review process",
             "Steps out of order",
             "Missing step in workflow",
             "Add review step after implementation",
@@ -750,7 +771,8 @@ class TestAgentCodifyCorrections:
         from half.agents.codify import CodificationTarget, analyze_correction
 
         corr = analyze_correction(
-            "C-003", "Missing assertion",
+            "C-003",
+            "Missing assertion",
             "Test didn't check result",
             "Missing assertion in test",
             "Add assert for return value",
@@ -836,7 +858,9 @@ class TestAgentIterateDetailed:
         from half.agents.iterate import IterateAgent
 
         agent = IterateAgent()
-        issue = agent.create_issue("Site down", "Production outage", severity="critical")
+        issue = agent.create_issue(
+            "Site down", "Production outage", severity="critical"
+        )
         result = agent.triage(issue.id)
         assert result.requires_human is True
 
@@ -965,7 +989,9 @@ class TestAgentDiscoveryExpand:
 
         agent = DiscoveryAgent("test")
         agent.requirements.capabilities.append(
-            Capability(id="C-001", description="Vague feature", priority="P1", confidence="LOW")
+            Capability(
+                id="C-001", description="Vague feature", priority="P1", confidence="LOW"
+            )
         )
         questions = agent.find_ambiguities()
         assert len(questions) == 1

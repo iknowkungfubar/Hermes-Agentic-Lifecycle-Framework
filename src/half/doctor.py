@@ -9,14 +9,12 @@ Based on the HALF doctrine's 'goal doctor' diagnostic protocol.
 
 from __future__ import annotations
 
-import json
 import logging
 import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger("half.doctor")
@@ -62,7 +60,12 @@ class DoctorReport:
             "system": self.system,
             "overall_status": self.overall_status,
             "checks": [
-                {"name": c.name, "status": c.status, "message": c.message, "severity": c.severity}
+                {
+                    "name": c.name,
+                    "status": c.status,
+                    "message": c.message,
+                    "severity": c.severity,
+                }
                 for c in self.checks
             ],
             "summary": self.summary,
@@ -81,7 +84,7 @@ class Doctor:
 
     def __init__(self) -> None:
         self.report = DoctorReport(
-            timestamp=datetime.now(tz=timezone.utc).isoformat(),
+            timestamp=datetime.now(tz=UTC).isoformat(),
         )
 
     def run_full_diagnostics(self) -> DoctorReport:
@@ -101,7 +104,9 @@ class Doctor:
         total = len(self.report.checks)
         self.report.summary = f"{passed}/{total} checks passed"
 
-        logger.info("Doctor report: %s (%s)", self.report.overall_status, self.report.summary)
+        logger.info(
+            "Doctor report: %s (%s)", self.report.overall_status, self.report.summary
+        )
         return self.report
 
     # ─── Individual Checks ──────────────────────────────────────────────
@@ -110,12 +115,14 @@ class Doctor:
         """Verify Python version meets minimum."""
         py = sys.version_info
         ok = py.major >= 3 and py.minor >= 13
-        self.report.add(HealthCheck(
-            name="python-version",
-            status=ok,
-            message=f"Python {py.major}.{py.minor}.{py.micro} ({'OK' if ok else 'need 3.13+'})",
-            severity="critical" if not ok else "info",
-        ))
+        self.report.add(
+            HealthCheck(
+                name="python-version",
+                status=ok,
+                message=f"Python {py.major}.{py.minor}.{py.micro} ({'OK' if ok else 'need 3.13+'})",
+                severity="critical" if not ok else "info",
+            )
+        )
         self.report.system["python"] = f"{py.major}.{py.minor}.{py.micro}"
 
     def _check_disk_space(self) -> None:
@@ -124,42 +131,62 @@ class Doctor:
             st = shutil.disk_usage("/")
             free_gb = st.free / (1024**3)
             ok = free_gb > 1.0
-            self.report.add(HealthCheck(
-                name="disk-space",
-                status=ok,
-                message=f"{free_gb:.1f} GB free ({'OK' if ok else 'need >1GB'})",
-                severity="error" if not ok else "info",
-            ))
+            self.report.add(
+                HealthCheck(
+                    name="disk-space",
+                    status=ok,
+                    message=f"{free_gb:.1f} GB free ({'OK' if ok else 'need >1GB'})",
+                    severity="error" if not ok else "info",
+                )
+            )
         except Exception as e:
-            self.report.add(HealthCheck(
-                name="disk-space", status=False, message=str(e), severity="warning",
-            ))
+            self.report.add(
+                HealthCheck(
+                    name="disk-space",
+                    status=False,
+                    message=str(e),
+                    severity="warning",
+                )
+            )
 
     def _check_git(self) -> None:
         """Verify git is available and repo is clean."""
         git_path = shutil.which("git")
         if not git_path:
-            self.report.add(HealthCheck(
-                name="git", status=False, message="git not found in PATH",
-                severity="critical",
-            ))
+            self.report.add(
+                HealthCheck(
+                    name="git",
+                    status=False,
+                    message="git not found in PATH",
+                    severity="critical",
+                )
+            )
             return
         try:
             result = subprocess.run(
                 ["git", "status", "--porcelain"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             dirty = bool(result.stdout.strip())
-            self.report.add(HealthCheck(
-                name="git",
-                status=True,
-                message=f"git available ({'uncommitted changes' if dirty else 'clean'})",
-                severity="info",
-            ))
+            self.report.add(
+                HealthCheck(
+                    name="git",
+                    status=True,
+                    message=f"git available ({'uncommitted changes' if dirty else 'clean'})",
+                    severity="info",
+                )
+            )
         except Exception as e:
-            self.report.add(HealthCheck(
-                name="git", status=False, message=str(e), severity="warning",
-            ))
+            self.report.add(
+                HealthCheck(
+                    name="git",
+                    status=False,
+                    message=str(e),
+                    severity="warning",
+                )
+            )
 
     def _check_docker(self) -> None:
         """Verify Docker/Podman is available."""
@@ -169,24 +196,30 @@ class Doctor:
                 try:
                     result = subprocess.run(
                         [cmd, "info", "--format", "{{.OSType}}"],
-                        capture_output=True, text=True, timeout=15,
+                        capture_output=True,
+                        text=True,
+                        timeout=15,
                     )
                     ok = result.returncode == 0
-                    self.report.add(HealthCheck(
-                        name=f"container-runtime-{cmd}",
-                        status=ok,
-                        message=f"{cmd} available ({result.stdout.strip() if ok else 'not responding'})",
-                        severity="warning" if not ok else "info",
-                    ))
+                    self.report.add(
+                        HealthCheck(
+                            name=f"container-runtime-{cmd}",
+                            status=ok,
+                            message=f"{cmd} available ({result.stdout.strip() if ok else 'not responding'})",
+                            severity="warning" if not ok else "info",
+                        )
+                    )
                     return
                 except Exception:
                     continue
-        self.report.add(HealthCheck(
-            name="container-runtime",
-            status=False,
-            message="No container runtime (docker/podman) found",
-            severity="warning",
-        ))
+        self.report.add(
+            HealthCheck(
+                name="container-runtime",
+                status=False,
+                message="No container runtime (docker/podman) found",
+                severity="warning",
+            )
+        )
 
     def _check_dependencies(self) -> None:
         """Verify project dependencies are installed."""
@@ -194,39 +227,50 @@ class Doctor:
             # Check uv/pip
             uv = shutil.which("uv")
             if uv:
-                self.report.add(HealthCheck(
-                    name="package-manager",
-                    status=True,
-                    message=f"uv available at {uv}",
-                    severity="info",
-                ))
+                self.report.add(
+                    HealthCheck(
+                        name="package-manager",
+                        status=True,
+                        message=f"uv available at {uv}",
+                        severity="info",
+                    )
+                )
             else:
-                self.report.add(HealthCheck(
-                    name="package-manager",
-                    status=bool(shutil.which("pip")),
-                    message="uv not found, pip fallback",
-                    severity="warning",
-                ))
+                self.report.add(
+                    HealthCheck(
+                        name="package-manager",
+                        status=bool(shutil.which("pip")),
+                        message="uv not found, pip fallback",
+                        severity="warning",
+                    )
+                )
             # Check key packages
             for mod in ["pydantic", "yaml", "langgraph"]:
                 try:
                     __import__(mod)
                 except ImportError:
-                    self.report.add(HealthCheck(
-                        name=f"dep-{mod}",
-                        status=False,
-                        message=f"{mod} not installed",
-                        severity="error",
-                    ))
+                    self.report.add(
+                        HealthCheck(
+                            name=f"dep-{mod}",
+                            status=False,
+                            message=f"{mod} not installed",
+                            severity="error",
+                        )
+                    )
         except Exception as e:
-            self.report.add(HealthCheck(
-                name="dependencies", status=False, message=str(e), severity="error",
-            ))
+            self.report.add(
+                HealthCheck(
+                    name="dependencies",
+                    status=False,
+                    message=str(e),
+                    severity="error",
+                )
+            )
 
     def _check_llm_backend(self) -> None:
         """Check if LM Studio or other LLM backend is reachable."""
-        import urllib.request
         import urllib.error
+        import urllib.request
 
         endpoints = [
             ("http://127.0.0.1:1234/v1/models", "LM Studio"),
@@ -237,12 +281,14 @@ class Doctor:
             try:
                 req = urllib.request.Request(url, method="HEAD")
                 with urllib.request.urlopen(req, timeout=3) as resp:
-                    self.report.add(HealthCheck(
-                        name=f"llm-{name.lower().replace(' ', '-')}",
-                        status=True,
-                        message=f"{name} reachable ({resp.status})",
-                        severity="info",
-                    ))
+                    self.report.add(
+                        HealthCheck(
+                            name=f"llm-{name.lower().replace(' ', '-')}",
+                            status=True,
+                            message=f"{name} reachable ({resp.status})",
+                            severity="info",
+                        )
+                    )
             except (urllib.error.URLError, TimeoutError, OSError):
                 pass  # Not all endpoints are expected to be up
 
@@ -252,27 +298,41 @@ class Doctor:
         if rocminfo:
             try:
                 result = subprocess.run(
-                    [rocminfo], capture_output=True, text=True, timeout=15,
+                    [rocminfo],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
                 )
                 ok = result.returncode == 0
                 # Extract GPU info
                 gpu_lines = [l for l in result.stdout.split("\n") if "Name:" in l]
                 gpu_info = gpu_lines[:3] if gpu_lines else ["AMD GPU detected"]
-                self.report.add(HealthCheck(
-                    name="rocm",
-                    status=ok,
-                    message="; ".join(gpu_info),
-                    severity="info",
-                ))
+                self.report.add(
+                    HealthCheck(
+                        name="rocm",
+                        status=ok,
+                        message="; ".join(gpu_info),
+                        severity="info",
+                    )
+                )
             except Exception as e:
-                self.report.add(HealthCheck(
-                    name="rocm", status=False, message=str(e), severity="warning",
-                ))
+                self.report.add(
+                    HealthCheck(
+                        name="rocm",
+                        status=False,
+                        message=str(e),
+                        severity="warning",
+                    )
+                )
         else:
-            self.report.add(HealthCheck(
-                name="rocm", status=False, message="rocminfo not found (not critical)",
-                severity="warning",
-            ))
+            self.report.add(
+                HealthCheck(
+                    name="rocm",
+                    status=False,
+                    message="rocminfo not found (not critical)",
+                    severity="warning",
+                )
+            )
 
     def _check_tailscale(self) -> None:
         """Check Tailscale status for air-gapped networking."""
@@ -281,15 +341,21 @@ class Doctor:
             try:
                 result = subprocess.run(
                     [tailscale, "status", "--json"],
-                    capture_output=True, text=True, timeout=10,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 ok = result.returncode == 0
-                self.report.add(HealthCheck(
-                    name="tailscale",
-                    status=ok,
-                    message="Tailscale connected" if ok else "Tailscale not connected",
-                    severity="info",
-                ))
+                self.report.add(
+                    HealthCheck(
+                        name="tailscale",
+                        status=ok,
+                        message="Tailscale connected"
+                        if ok
+                        else "Tailscale not connected",
+                        severity="info",
+                    )
+                )
             except Exception:
                 pass
 
@@ -321,4 +387,3 @@ def run_doctor() -> DoctorReport:
 if __name__ == "__main__":
     doctor = Doctor()
     report = doctor.run_full_diagnostics()
-    print(doctor.print_report())

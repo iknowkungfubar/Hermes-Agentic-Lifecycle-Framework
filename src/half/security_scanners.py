@@ -26,7 +26,9 @@ class GarakScanner:
     def __init__(self, target_url: str = "http://127.0.0.1:8000"):
         self.target_url = target_url
 
-    def run_scan(self, report_path: str | Path = ".hale/security/garak-report.json") -> dict[str, Any]:
+    def run_scan(
+        self, report_path: str | Path = ".hale/security/garak-report.json"
+    ) -> dict[str, Any]:
         """Run a garak vulnerability scan against the target.
 
         Returns:
@@ -37,11 +39,22 @@ class GarakScanner:
 
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "garak", "--model_type", "rest",
-                 "--model_name", self.target_url,
-                 "--probes", "probe:all",
-                 "--report_prefix", str(report_path.with_suffix(""))],
-                capture_output=True, text=True, timeout=300,
+                [
+                    sys.executable,
+                    "-m",
+                    "garak",
+                    "--model_type",
+                    "rest",
+                    "--model_name",
+                    self.target_url,
+                    "--probes",
+                    "probe:all",
+                    "--report_prefix",
+                    str(report_path.with_suffix("")),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
             output = result.stdout
             defcon_score = self._parse_defcon(output)
@@ -64,6 +77,7 @@ class GarakScanner:
     def _parse_defcon(output: str) -> int:
         """Extract DEFCON score from garak output."""
         import re
+
         match = re.search(r"DEFCON\s*(\d+)", output, re.IGNORECASE)
         return int(match.group(1)) if match else 99
 
@@ -78,7 +92,9 @@ class BumblebeeScanner:
     def __init__(self, workspace: str | Path = "."):
         self.workspace = Path(workspace)
 
-    def run_scan(self, report_path: str | Path = ".hale/security/bumblebee-report.json") -> dict[str, Any]:
+    def run_scan(
+        self, report_path: str | Path = ".hale/security/bumblebee-report.json"
+    ) -> dict[str, Any]:
         """Run a Bumblebee supply chain scan.
 
         Returns:
@@ -109,7 +125,9 @@ class BumblebeeScanner:
             "tool": "bumblebee",
             "workspace": str(self.workspace),
             "findings": findings,
-            "critical_count": sum(1 for f in findings if f.get("severity") == "CRITICAL"),
+            "critical_count": sum(
+                1 for f in findings if f.get("severity") == "CRITICAL"
+            ),
             "high_count": sum(1 for f in findings if f.get("severity") == "HIGH"),
         }
         report_path.write_text(json.dumps(report, indent=2))
@@ -123,18 +141,24 @@ class BumblebeeScanner:
         try:
             result = subprocess.run(
                 [sys.executable, "-m", "pip", "audit", "--format", "json"],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.stdout:
                 data = json.loads(result.stdout)
-                for vuln in data if isinstance(data, list) else data.get("vulnerabilities", []):
-                    findings.append({
-                        "type": "python",
-                        "package": vuln.get("name", "unknown"),
-                        "installed": vuln.get("installed", ""),
-                        "vulnerability": vuln.get("id", ""),
-                        "severity": vuln.get("severity", "MEDIUM"),
-                    })
+                for vuln in (
+                    data if isinstance(data, list) else data.get("vulnerabilities", [])
+                ):
+                    findings.append(
+                        {
+                            "type": "python",
+                            "package": vuln.get("name", "unknown"),
+                            "installed": vuln.get("installed", ""),
+                            "vulnerability": vuln.get("id", ""),
+                            "severity": vuln.get("severity", "MEDIUM"),
+                        }
+                    )
         except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
             pass
         return findings

@@ -9,13 +9,9 @@ Based on the HALF doctrine's 'Portable Skill Modules' specification.
 
 from __future__ import annotations
 
-import json
 import logging
-import shutil
-import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("half.psm")
 
@@ -82,13 +78,16 @@ class PSMManager:
                 if module:
                     self._modules[module.name] = module
 
-        logger.info("PSM: Discovered %d modules in %s", len(self._modules), self.skills_dir)
+        logger.info(
+            "PSM: Discovered %d modules in %s", len(self._modules), self.skills_dir
+        )
         return list(self._modules.values())
 
     def _load_skill_file(self, yaml_path: Path) -> PortableSkillModule | None:
         """Load a YAML skill definition."""
         try:
             import yaml
+
             with open(yaml_path) as f:
                 data = yaml.safe_load(f)
             if not data or "name" not in data:
@@ -117,6 +116,7 @@ class PSMManager:
                 if len(parts) >= 3:
                     frontmatter = parts[1]
                     import yaml
+
                     data = yaml.safe_load(frontmatter)
                     if data and "name" in data:
                         return PortableSkillModule(
@@ -149,12 +149,15 @@ class PSMManager:
         target = self.skills_dir / f"{skill_name}.yaml"
         try:
             import urllib.request
+
             logger.info("PSM: Downloading '%s' from %s", skill_name, url)
             urllib.request.urlretrieve(url, target)
             module = self._load_skill_file(target)
             if module:
                 self._modules[module.name] = module
-                logger.info("PSM: Installed skill '%s' v%s", module.name, module.version)
+                logger.info(
+                    "PSM: Installed skill '%s' v%s", module.name, module.version
+                )
                 return module
         except Exception as e:
             logger.warning("PSM: Failed to install '%s': %s", skill_name, e)
@@ -178,8 +181,8 @@ class PSMManager:
             stub_path.write_text(
                 f"---\n"
                 f"name: {name}\n"
-                f"version: \"1.0.0\"\n"
-                f"description: \"Stub for {name} — install from agentskills.io\"\n"
+                f'version: "1.0.0"\n'
+                f'description: "Stub for {name} — install from agentskills.io"\n'
                 f"---\n\n"
                 f"# {name}\n\n"
                 f"To install the full version:\n"

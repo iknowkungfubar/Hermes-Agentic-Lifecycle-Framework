@@ -14,7 +14,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from half import config
-from half.runtime.state import HalfState
+
+if TYPE_CHECKING:
+    from half.runtime.state import HalfState
 
 logger = logging.getLogger("half.runtime.nodes")
 
@@ -75,8 +77,13 @@ def phase_1_discovery(state: HalfState) -> dict[str, Any]:
     _write_artifact("phase-1", "01-REQUIREMENTS.md", content)
     return {
         "current_step": "phase-1-discovery",
-        "artifacts": [*state.get("artifacts", []), {"name": "01-REQUIREMENTS.md", "phase": "phase-1"}],
-        "messages": [{"role": "assistant", "content": "Phase 1A: REQUIREMENTS.md generated"}],
+        "artifacts": [
+            *state.get("artifacts", []),
+            {"name": "01-REQUIREMENTS.md", "phase": "phase-1"},
+        ],
+        "messages": [
+            {"role": "assistant", "content": "Phase 1A: REQUIREMENTS.md generated"}
+        ],
     }
 
 
@@ -131,7 +138,12 @@ def phase_1_specification(state: HalfState) -> dict[str, Any]:
     return {
         "current_step": "phase-1-specification",
         "iteration_count": iteration,
-        "messages": [{"role": "assistant", "content": "Phase 1B: Specification and tasks generated"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 1B: Specification and tasks generated",
+            }
+        ],
     }
 
 
@@ -177,7 +189,12 @@ graph TB
 
     return {
         "current_step": "phase-1-architecture",
-        "messages": [{"role": "assistant", "content": "Phase 1C: Architecture and ADRs generated"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 1C: Architecture and ADRs generated",
+            }
+        ],
     }
 
 
@@ -185,21 +202,33 @@ def phase_1_gate(state: HalfState) -> dict[str, Any]:
     """Gate: Phase 1 completeness — verifies all 5 artifacts exist."""
     logger.info("Phase 1: Gate check")
     artifacts_dir = Path(config.ARTIFACTS_PHASE_1)
-    required = ["01-REQUIREMENTS.md", "02-SPECIFICATION.md", "03-TASKS.md",
-                "04-ARCHITECTURE.md", "05-ADRs.md"]
+    required = [
+        "01-REQUIREMENTS.md",
+        "02-SPECIFICATION.md",
+        "03-TASKS.md",
+        "04-ARCHITECTURE.md",
+        "05-ADRs.md",
+    ]
     missing = [r for r in required if not (artifacts_dir / r).exists()]
     passed = len(missing) == 0
 
     return {
         "current_step": "phase-1-gate",
-        "gate_results": [{
-            "gate_id": "G1",
-            "passed": passed,
-            "details": f"Phase 1 artifacts: {len(required) - len(missing)}/{len(required)} present"
-                       + (f". Missing: {missing}" if missing else ""),
-            "timestamp": datetime.now(tz=UTC).isoformat(),
-        }],
-        "messages": [{"role": "assistant", "content": f"Phase 1 Gate: {'PASSED' if passed else 'FAILED'} - {missing}"}],
+        "gate_results": [
+            {
+                "gate_id": "G1",
+                "passed": passed,
+                "details": f"Phase 1 artifacts: {len(required) - len(missing)}/{len(required)} present"
+                + (f". Missing: {missing}" if missing else ""),
+                "timestamp": datetime.now(tz=UTC).isoformat(),
+            }
+        ],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 1 Gate: {'PASSED' if passed else 'FAILED'} - {missing}",
+            }
+        ],
     }
 
 
@@ -225,7 +254,12 @@ def phase_2_scaffold(state: HalfState) -> dict[str, Any]:
 
     return {
         "current_step": "phase-2-scaffold",
-        "messages": [{"role": "assistant", "content": f"Phase 2A: Repository scaffolded at {target}"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 2A: Repository scaffolded at {target}",
+            }
+        ],
     }
 
 
@@ -247,7 +281,12 @@ def phase_2_research(state: HalfState) -> dict[str, Any]:
     return {
         "current_step": "phase-2-research",
         "iteration_count": state.get("iteration_count", 0) + 1,
-        "messages": [{"role": "assistant", "content": f"Phase 2B.1: Codebase analyzed — {len(py_files)} Python files found"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 2B.1: Codebase analyzed — {len(py_files)} Python files found",
+            }
+        ],
     }
 
 
@@ -262,7 +301,12 @@ def phase_2_plan(state: HalfState) -> dict[str, Any]:
     }
     return {
         "current_step": "phase-2-plan",
-        "messages": [{"role": "assistant", "content": f"Phase 2B.2: Plan generated — {len(spec['files_to_create'])} files to create"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 2B.2: Plan generated — {len(spec['files_to_create'])} files to create",
+            }
+        ],
     }
 
 
@@ -288,7 +332,12 @@ def test_placeholder() -> None:
 
     return {
         "current_step": "phase-2-implement",
-        "messages": [{"role": "assistant", "content": f"Phase 2B.3: Test harness created at {test_file}"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 2B.3: Test harness created at {test_file}",
+            }
+        ],
     }
 
 
@@ -297,6 +346,7 @@ def phase_2_simplify(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 2B.4: Code-Simplifier pass")
 
     from half.agents.code_simplifier import CodeSimplifier
+
     simplifier = CodeSimplifier()
     issues = simplifier.analyze_all("src/**/*.py")
     report = simplifier.generate_report(issues)
@@ -304,7 +354,12 @@ def phase_2_simplify(state: HalfState) -> dict[str, Any]:
     report_path = _write_artifact("phase-2", "code-simplifier-report.md", report)
     return {
         "current_step": "phase-2-simplify",
-        "messages": [{"role": "assistant", "content": f"Phase 2B.4: Code-Simplifier found {len(issues)} issues — report at {report_path}"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 2B.4: Code-Simplifier found {len(issues)} issues — report at {report_path}",
+            }
+        ],
     }
 
 
@@ -317,13 +372,20 @@ def phase_2_gate(state: HalfState) -> dict[str, Any]:
 
     return {
         "current_step": "phase-2-gate",
-        "gate_results": [{
-            "gate_id": "G2",
-            "passed": passed,
-            "details": f"Tests found: {has_tests}. Lint/type/coverage checks passed.",
-            "timestamp": datetime.now(tz=UTC).isoformat(),
-        }],
-        "messages": [{"role": "assistant", "content": f"Phase 2 Gate: {'PASSED' if passed else 'FAILED — no tests found'}"}],
+        "gate_results": [
+            {
+                "gate_id": "G2",
+                "passed": passed,
+                "details": f"Tests found: {has_tests}. Lint/type/coverage checks passed.",
+                "timestamp": datetime.now(tz=UTC).isoformat(),
+            }
+        ],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 2 Gate: {'PASSED' if passed else 'FAILED — no tests found'}",
+            }
+        ],
     }
 
 
@@ -336,10 +398,22 @@ def phase_3_testing(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 3A: Running tests for '%s'", project)
 
     import subprocess
+
     try:
         result = subprocess.run(
-            ["python3", "-m", "pytest", "tests/", "-q", "--tb=short", "--cov=src", "--cov-report=term-missing"],
-            capture_output=True, text=True, timeout=120,
+            [
+                "python3",
+                "-m",
+                "pytest",
+                "tests/",
+                "-q",
+                "--tb=short",
+                "--cov=src",
+                "--cov-report=term-missing",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         output = result.stdout[-1000:] if result.stdout else ""
         passed = result.returncode == 0
@@ -347,10 +421,19 @@ def phase_3_testing(state: HalfState) -> dict[str, Any]:
         output = "Tests could not be executed (pytest not found or timeout)"
         passed = False
 
-    _write_artifact("phase-3", "test-quality-report.md", f"# Test Report\n\n{output}\n\n**Passed:** {passed}")
+    _write_artifact(
+        "phase-3",
+        "test-quality-report.md",
+        f"# Test Report\n\n{output}\n\n**Passed:** {passed}",
+    )
     return {
         "current_step": "phase-3-testing",
-        "messages": [{"role": "assistant", "content": f"Phase 3A: {'All tests passed' if passed else 'Tests failed — see report'}"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 3A: {'All tests passed' if passed else 'Tests failed — see report'}",
+            }
+        ],
     }
 
 
@@ -358,10 +441,13 @@ def phase_3_security(state: HalfState) -> dict[str, Any]:
     """Phase 3B: Security scanning with bandit."""
     logger.info("Phase 3B: Security scan")
     import subprocess
+
     try:
         result = subprocess.run(
             ["python3", "-m", "bandit", "-r", "src/", "-ll", "-f", "json"],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         try:
             scan_data = json.loads(result.stdout)
@@ -369,24 +455,40 @@ def phase_3_security(state: HalfState) -> dict[str, Any]:
         except json.JSONDecodeError:
             findings = []
     except (subprocess.TimeoutExpired, FileNotFoundError):
-        findings = [{"issue_text": "Bandit not available — install with: pip install bandit"}]
+        findings = [
+            {"issue_text": "Bandit not available — install with: pip install bandit"}
+        ]
 
-    _write_artifact("phase-3", "security-scan.md",
-                    f"# Security Scan\n\n**Findings:** {len(findings)}\n\n" +
-                    "\n".join(f"- {f.get('issue_text', 'unknown')}" for f in findings[:20]))
+    _write_artifact(
+        "phase-3",
+        "security-scan.md",
+        f"# Security Scan\n\n**Findings:** {len(findings)}\n\n"
+        + "\n".join(f"- {f.get('issue_text', 'unknown')}" for f in findings[:20]),
+    )
     return {
         "current_step": "phase-3-security",
-        "messages": [{"role": "assistant", "content": f"Phase 3B: Security scan complete — {len(findings)} findings"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 3B: Security scan complete — {len(findings)} findings",
+            }
+        ],
     }
 
 
 def phase_3_integration(state: HalfState) -> dict[str, Any]:
     """Phase 3C: Integration test report generation."""
     logger.info("Phase 3C: Integration check")
-    _write_artifact("phase-3", "integration-test-report.md", "# Integration Test Report\n\n**Status:** Passed\n\n**Contract verification:** All endpoints match spec")
+    _write_artifact(
+        "phase-3",
+        "integration-test-report.md",
+        "# Integration Test Report\n\n**Status:** Passed\n\n**Contract verification:** All endpoints match spec",
+    )
     return {
         "current_step": "phase-3-integration",
-        "messages": [{"role": "assistant", "content": "Phase 3C: Integration report generated"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 3C: Integration report generated"}
+        ],
     }
 
 
@@ -402,13 +504,22 @@ def phase_3_gate(state: HalfState) -> dict[str, Any]:
 
     return {
         "current_step": "phase-3-gate",
-        "gate_results": [{
-            "gate_id": "G3",
-            "passed": passed,
-            "details": "No CRITICAL security findings" if passed else "CRITICAL findings detected",
-            "timestamp": datetime.now(tz=UTC).isoformat(),
-        }],
-        "messages": [{"role": "assistant", "content": f"Phase 3 Gate: {'PASSED' if passed else 'FAILED — CRITICAL findings'}"}],
+        "gate_results": [
+            {
+                "gate_id": "G3",
+                "passed": passed,
+                "details": "No CRITICAL security findings"
+                if passed
+                else "CRITICAL findings detected",
+                "timestamp": datetime.now(tz=UTC).isoformat(),
+            }
+        ],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 3 Gate: {'PASSED' if passed else 'FAILED — CRITICAL findings'}",
+            }
+        ],
     }
 
 
@@ -418,24 +529,37 @@ def phase_3_gate(state: HalfState) -> dict[str, Any]:
 def phase_4_infrastructure(state: HalfState) -> dict[str, Any]:
     """Phase 4A: Infrastructure as Code generation."""
     logger.info("Phase 4A: Infrastructure generation")
-    _write_artifact("phase-4", "docker-compose.yml",
-                    "version: '3.8'\nservices:\n  app:\n    build: .\n    ports: ['8000:8000']\n")
-    _write_artifact("phase-4", "Dockerfile",
-                    "FROM python:3.13-slim\nWORKDIR /app\nCOPY . .\nCMD ['python', 'main.py']\n")
+    _write_artifact(
+        "phase-4",
+        "docker-compose.yml",
+        "version: '3.8'\nservices:\n  app:\n    build: .\n    ports: ['8000:8000']\n",
+    )
+    _write_artifact(
+        "phase-4",
+        "Dockerfile",
+        "FROM python:3.13-slim\nWORKDIR /app\nCOPY . .\nCMD ['python', 'main.py']\n",
+    )
     return {
         "current_step": "phase-4-infrastructure",
-        "messages": [{"role": "assistant", "content": "Phase 4A: Docker config generated"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 4A: Docker config generated"}
+        ],
     }
 
 
 def phase_4_cicd(state: HalfState) -> dict[str, Any]:
     """Phase 4B: CI/CD pipeline generation."""
     logger.info("Phase 4B: CI/CD generation")
-    _write_artifact("phase-4", ".github/workflows/ci.yml",
-                    "name: CI\non: [pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: pip install pytest && pytest\n")
+    _write_artifact(
+        "phase-4",
+        ".github/workflows/ci.yml",
+        "name: CI\non: [pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: pip install pytest && pytest\n",
+    )
     return {
         "current_step": "phase-4-cicd",
-        "messages": [{"role": "assistant", "content": "Phase 4B: CI pipeline generated"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 4B: CI pipeline generated"}
+        ],
     }
 
 
@@ -451,14 +575,25 @@ def phase_4_launch(state: HalfState) -> dict[str, Any]:
         "Health endpoint operational",
         "Secret management verified",
     ]
-    _write_artifact("phase-4", "production-readiness.md",
-                    "# Production Readiness\n\n" + "\n".join(f"- [ ] {c}" for c in checks))
-    _write_artifact("phase-4", "rollback-plan.md",
-                    "# Rollback Plan\n\n## One-Line Rollback\n`docker compose down && docker compose up -d`\n")
+    _write_artifact(
+        "phase-4",
+        "production-readiness.md",
+        "# Production Readiness\n\n" + "\n".join(f"- [ ] {c}" for c in checks),
+    )
+    _write_artifact(
+        "phase-4",
+        "rollback-plan.md",
+        "# Rollback Plan\n\n## One-Line Rollback\n`docker compose down && docker compose up -d`\n",
+    )
     return {
         "current_step": "phase-4-launch",
         "mrp_generated": True,
-        "messages": [{"role": "assistant", "content": "Phase 4C: MRP generated — Finality Gate ready"}],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": "Phase 4C: MRP generated — Finality Gate ready",
+            }
+        ],
     }
 
 
@@ -468,13 +603,22 @@ def phase_4_gate(state: HalfState) -> dict[str, Any]:
     approved = state.get("deployment_approved", False)
     return {
         "current_step": "phase-4-gate",
-        "gate_results": [{
-            "gate_id": "G4",
-            "passed": approved,
-            "details": "Awaiting human sign-off" if not approved else "Deployment approved",
-            "timestamp": datetime.now(tz=UTC).isoformat(),
-        }],
-        "messages": [{"role": "assistant", "content": f"Phase 4 Gate: {'APPROVED' if approved else 'WAITING for sign-off'}"}],
+        "gate_results": [
+            {
+                "gate_id": "G4",
+                "passed": approved,
+                "details": "Awaiting human sign-off"
+                if not approved
+                else "Deployment approved",
+                "timestamp": datetime.now(tz=UTC).isoformat(),
+            }
+        ],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 4 Gate: {'APPROVED' if approved else 'WAITING for sign-off'}",
+            }
+        ],
     }
 
 
@@ -484,33 +628,48 @@ def phase_4_gate(state: HalfState) -> dict[str, Any]:
 def phase_5_observe(state: HalfState) -> dict[str, Any]:
     """Phase 5A: Writes monitoring configuration."""
     logger.info("Phase 5A: Monitoring setup")
-    _write_artifact("phase-5", "monitoring-config.yaml",
-                    "monitoring:\n  metric_collection: every 15m\n  log_analysis: every 1h\n  health_check: every 5m\n")
+    _write_artifact(
+        "phase-5",
+        "monitoring-config.yaml",
+        "monitoring:\n  metric_collection: every 15m\n  log_analysis: every 1h\n  health_check: every 5m\n",
+    )
     return {
         "current_step": "phase-5-observe",
-        "messages": [{"role": "assistant", "content": "Phase 5A: Monitoring config written"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 5A: Monitoring config written"}
+        ],
     }
 
 
 def phase_5_iterate(state: HalfState) -> dict[str, Any]:
     """Phase 5B: Issue triage playbook."""
     logger.info("Phase 5B: Iteration setup")
-    _write_artifact("phase-5", "triage-playbook.md",
-                    "# Issue Triage\n\n- Bugs: reproduce → root cause → fix (TDD) → PR\n- Features: mini-spec → estimate → implement\n- Tech debt: document → prioritize → fix\n")
+    _write_artifact(
+        "phase-5",
+        "triage-playbook.md",
+        "# Issue Triage\n\n- Bugs: reproduce → root cause → fix (TDD) → PR\n- Features: mini-spec → estimate → implement\n- Tech debt: document → prioritize → fix\n",
+    )
     return {
         "current_step": "phase-5-iterate",
-        "messages": [{"role": "assistant", "content": "Phase 5B: Triage playbook written"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 5B: Triage playbook written"}
+        ],
     }
 
 
 def phase_5_codify(state: HalfState) -> dict[str, Any]:
     """Phase 5C: Codification Imperative — records corrections."""
     logger.info("Phase 5C: Codification")
-    _write_artifact("phase-5", "codification-log.md",
-                    f"# Codification Log\n\n## {datetime.now(tz=UTC).isoformat()}\n- [Record corrections here]\n")
+    _write_artifact(
+        "phase-5",
+        "codification-log.md",
+        f"# Codification Log\n\n## {datetime.now(tz=UTC).isoformat()}\n- [Record corrections here]\n",
+    )
     return {
         "current_step": "phase-5-codify",
-        "messages": [{"role": "assistant", "content": "Phase 5C: Codification log initialized"}],
+        "messages": [
+            {"role": "assistant", "content": "Phase 5C: Codification log initialized"}
+        ],
     }
 
 
@@ -521,13 +680,20 @@ def phase_5_gate(state: HalfState) -> dict[str, Any]:
     passed = monitoring
     return {
         "current_step": "phase-5-gate",
-        "gate_results": [{
-            "gate_id": "G5",
-            "passed": passed,
-            "details": f"Monitoring active: {monitoring}",
-            "timestamp": datetime.now(tz=UTC).isoformat(),
-        }],
-        "messages": [{"role": "assistant", "content": f"Phase 5 Gate: {'PASSED' if passed else 'FAILED'}"}],
+        "gate_results": [
+            {
+                "gate_id": "G5",
+                "passed": passed,
+                "details": f"Monitoring active: {monitoring}",
+                "timestamp": datetime.now(tz=UTC).isoformat(),
+            }
+        ],
+        "messages": [
+            {
+                "role": "assistant",
+                "content": f"Phase 5 Gate: {'PASSED' if passed else 'FAILED'}",
+            }
+        ],
     }
 
 

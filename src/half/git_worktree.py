@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import UTC
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +47,9 @@ class GitWorktreeManager:
         manager.merge_back(session.session_id)
     """
 
-    def __init__(self, repo_path: str | Path = ".", worktree_base: str | Path = ".worktrees"):
+    def __init__(
+        self, repo_path: str | Path = ".", worktree_base: str | Path = ".worktrees"
+    ):
         self.repo_path = Path(repo_path).resolve()
         self.worktree_base = Path(worktree_base).resolve()
         self.worktree_base.mkdir(parents=True, exist_ok=True)
@@ -71,31 +74,35 @@ class GitWorktreeManager:
         Raises:
             RuntimeError: If git worktree creation fails.
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        session_id = f"{agent_name}-{datetime.now(tz=timezone.utc).strftime('%H%M%S')}"
+        session_id = f"{agent_name}-{datetime.now(tz=UTC).strftime('%H%M%S')}"
         if not branch_name:
             branch_name = f"agent/{agent_name}"
 
         worktree_path = self.worktree_base / agent_name
-        branch_ref = f"refs/heads/{branch_name}"
 
         try:
             # Create the branch if it doesn't exist
             subprocess.run(
                 ["git", "branch", branch_name, base_branch],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
 
             # Create the worktree
             result = subprocess.run(
                 ["git", "worktree", "add", str(worktree_path), branch_name],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True,
+                text=True,
+                timeout=30,
                 cwd=str(self.repo_path),
             )
             if result.returncode != 0:
-                raise RuntimeError(f"git worktree add failed: {result.stderr}")
+                msg = f"git worktree add failed: {result.stderr}"
+                raise RuntimeError(msg)
 
             session = WorktreeSession(
                 session_id=session_id,
@@ -103,17 +110,24 @@ class GitWorktreeManager:
                 worktree_path=worktree_path,
                 branch_name=branch_name,
                 base_branch=base_branch,
-                created_at=datetime.now(tz=timezone.utc).isoformat(),
+                created_at=datetime.now(tz=UTC).isoformat(),
                 git_dir=worktree_path / ".git",
             )
             self._sessions[session_id] = session
-            logger.info("Worktree: Created '%s' at %s (branch: %s)", agent_name, worktree_path, branch_name)
+            logger.info(
+                "Worktree: Created '%s' at %s (branch: %s)",
+                agent_name,
+                worktree_path,
+                branch_name,
+            )
             return session
 
         except subprocess.TimeoutExpired:
-            raise RuntimeError(f"git worktree creation timed out for {agent_name}")
+            msg = f"git worktree creation timed out for {agent_name}"
+            raise RuntimeError(msg)
         except FileNotFoundError:
-            raise RuntimeError("git not found in PATH")
+            msg = "git not found in PATH"
+            raise RuntimeError(msg)
 
     def get_session(self, session_id: str) -> WorktreeSession | None:
         """Get a worktree session by ID.
@@ -134,7 +148,9 @@ class GitWorktreeManager:
         """
         return [s for s in self._sessions.values() if s.active]
 
-    def merge_back(self, session_id: str, delete_worktree: bool = True) -> dict[str, Any]:
+    def merge_back(
+        self, session_id: str, delete_worktree: bool = True
+    ) -> dict[str, Any]:
         """Merge a worktree's changes back to the main repo.
 
         Args:
@@ -151,51 +167,84 @@ class GitWorktreeManager:
         try:
             # Verify the worktree path exists
             if not session.worktree_path.exists():
-                return {"status": "error", "message": f"Worktree path {session.worktree_path} not found"}
+                return {
+                    "status": "error",
+                    "message": f"Worktree path {session.worktree_path} not found",
+                }
 
             # Commit any pending changes in the worktree
             subprocess.run(
                 ["git", "add", "-A"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(session.worktree_path),
             )
             subprocess.run(
-                ["git", "commit", "--allow-empty", "-m", f"feat: work from agent '{session.agent_name}'"],
-                capture_output=True, text=True, timeout=15,
+                [
+                    "git",
+                    "commit",
+                    "--allow-empty",
+                    "-m",
+                    f"feat: work from agent '{session.agent_name}'",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(session.worktree_path),
             )
 
             # Fetch the worktree branch into main repo
             subprocess.run(
                 ["git", "fetch", self.repo_path.stem or ".", session.branch_name],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
 
             # Merge into base branch
             merge_result = subprocess.run(
                 ["git", "merge", session.branch_name, "--no-edit"],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True,
+                text=True,
+                timeout=30,
                 cwd=str(self.repo_path),
             )
 
-            has_conflicts = "CONFLICT" in merge_result.stdout or "CONFLICT" in merge_result.stderr
+            has_conflicts = (
+                "CONFLICT" in merge_result.stdout or "CONFLICT" in merge_result.stderr
+            )
 
             # Clean up worktree
             if delete_worktree:
                 subprocess.run(
-                    ["git", "worktree", "remove", str(session.worktree_path), "--force"],
-                    capture_output=True, text=True, timeout=15,
+                    [
+                        "git",
+                        "worktree",
+                        "remove",
+                        str(session.worktree_path),
+                        "--force",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
                     cwd=str(self.repo_path),
                 )
                 subprocess.run(
                     ["git", "branch", "-D", session.branch_name],
-                    capture_output=True, text=True, timeout=15,
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
                     cwd=str(self.repo_path),
                 )
 
             session.active = False
-            logger.info("Worktree: Merged '%s' (conflicts: %s)", session.agent_name, has_conflicts)
+            logger.info(
+                "Worktree: Merged '%s' (conflicts: %s)",
+                session.agent_name,
+                has_conflicts,
+            )
 
             return {
                 "status": "merged" if not has_conflicts else "conflicts",
@@ -226,12 +275,16 @@ class GitWorktreeManager:
         try:
             subprocess.run(
                 ["git", "worktree", "remove", str(session.worktree_path), "--force"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
             subprocess.run(
                 ["git", "branch", "-D", session.branch_name],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=str(self.repo_path),
             )
             session.active = False

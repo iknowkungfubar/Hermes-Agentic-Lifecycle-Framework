@@ -126,68 +126,76 @@ class CodeSimplifier:
         # 1. Check nesting depth
         max_depth = self._max_nesting_depth(node)
         if max_depth > self.MAX_NESTING_DEPTH:
-            issues.append({
-                "type": "nesting",
-                "severity": "medium",
-                "file": str(filepath),
-                "line": lineno,
-                "function": func_name,
-                "message": (
-                    f"Function '{func_name}' has nesting depth {max_depth} "
-                    f"(max allowed: {self.MAX_NESTING_DEPTH}). "
-                    f"Consider extracting inner logic."
-                ),
-                "suggestion": "Extract inner blocks into named helper functions",
-            })
-
-        # 2. Check function length
-        if hasattr(node, "end_lineno") and node.end_lineno:
-            func_lines = node.end_lineno - lineno
-            if func_lines > self.MAX_FUNCTION_LINES:
-                issues.append({
-                    "type": "length",
+            issues.append(
+                {
+                    "type": "nesting",
                     "severity": "medium",
                     "file": str(filepath),
                     "line": lineno,
                     "function": func_name,
                     "message": (
-                        f"Function '{func_name}' is {func_lines} lines "
-                        f"(max allowed: {self.MAX_FUNCTION_LINES}). "
-                        f"Consider splitting."
+                        f"Function '{func_name}' has nesting depth {max_depth} "
+                        f"(max allowed: {self.MAX_NESTING_DEPTH}). "
+                        f"Consider extracting inner logic."
                     ),
-                    "suggestion": "Break into smaller functions (< 50 lines each)",
-                })
+                    "suggestion": "Extract inner blocks into named helper functions",
+                }
+            )
+
+        # 2. Check function length
+        if hasattr(node, "end_lineno") and node.end_lineno:
+            func_lines = node.end_lineno - lineno
+            if func_lines > self.MAX_FUNCTION_LINES:
+                issues.append(
+                    {
+                        "type": "length",
+                        "severity": "medium",
+                        "file": str(filepath),
+                        "line": lineno,
+                        "function": func_name,
+                        "message": (
+                            f"Function '{func_name}' is {func_lines} lines "
+                            f"(max allowed: {self.MAX_FUNCTION_LINES}). "
+                            f"Consider splitting."
+                        ),
+                        "suggestion": "Break into smaller functions (< 50 lines each)",
+                    }
+                )
 
         # 3. Check parameter count
         param_count = len(node.args.args) if hasattr(node, "args") else 0
         if param_count > self.MAX_PARAMS:
-            issues.append({
-                "type": "parameters",
-                "severity": "low",
-                "file": str(filepath),
-                "line": lineno,
-                "function": func_name,
-                "message": (
-                    f"Function '{func_name}' has {param_count} parameters "
-                    f"(max recommended: {self.MAX_PARAMS}). "
-                    f"Consider using a config object."
-                ),
-                "suggestion": "Group parameters into a dataclass or config object",
-            })
+            issues.append(
+                {
+                    "type": "parameters",
+                    "severity": "low",
+                    "file": str(filepath),
+                    "line": lineno,
+                    "function": func_name,
+                    "message": (
+                        f"Function '{func_name}' has {param_count} parameters "
+                        f"(max recommended: {self.MAX_PARAMS}). "
+                        f"Consider using a config object."
+                    ),
+                    "suggestion": "Group parameters into a dataclass or config object",
+                }
+            )
 
         # 4. Check for missing return type annotations
         if not hasattr(node, "returns") or node.returns is None:
-            issues.append({
-                "type": "annotation",
-                "severity": "low",
-                "file": str(filepath),
-                "line": lineno,
-                "function": func_name,
-                "message": (
-                    f"Function '{func_name}' is missing return type annotation."
-                ),
-                "suggestion": "Add -> ReturnType annotation",
-            })
+            issues.append(
+                {
+                    "type": "annotation",
+                    "severity": "low",
+                    "file": str(filepath),
+                    "line": lineno,
+                    "function": func_name,
+                    "message": (
+                        f"Function '{func_name}' is missing return type annotation."
+                    ),
+                    "suggestion": "Add -> ReturnType annotation",
+                }
+            )
 
         return issues
 
@@ -212,34 +220,39 @@ class CodeSimplifier:
 
         # Check class has docstring
         if not ast.get_docstring(node):
-            issues.append({
-                "type": "documentation",
-                "severity": "low",
-                "file": str(filepath),
-                "line": node.lineno,
-                "function": class_name,
-                "message": f"Class '{class_name}' is missing a docstring.",
-                "suggestion": "Add class-level docstring describing responsibility",
-            })
+            issues.append(
+                {
+                    "type": "documentation",
+                    "severity": "low",
+                    "file": str(filepath),
+                    "line": node.lineno,
+                    "function": class_name,
+                    "message": f"Class '{class_name}' is missing a docstring.",
+                    "suggestion": "Add class-level docstring describing responsibility",
+                }
+            )
 
         # Count public methods
         public_methods = [
-            n.name for n in node.body
+            n.name
+            for n in node.body
             if isinstance(n, ast.FunctionDef) and not n.name.startswith("_")
         ]
         if len(public_methods) > 10:
-            issues.append({
-                "type": "complexity",
-                "severity": "medium",
-                "file": str(filepath),
-                "line": node.lineno,
-                "function": class_name,
-                "message": (
-                    f"Class '{class_name}' has {len(public_methods)} public methods. "
-                    f"Consider splitting into smaller classes."
-                ),
-                "suggestion": "Split into focused classes (ISP principle)",
-            })
+            issues.append(
+                {
+                    "type": "complexity",
+                    "severity": "medium",
+                    "file": str(filepath),
+                    "line": node.lineno,
+                    "function": class_name,
+                    "message": (
+                        f"Class '{class_name}' has {len(public_methods)} public methods. "
+                        f"Consider splitting into smaller classes."
+                    ),
+                    "suggestion": "Split into focused classes (ISP principle)",
+                }
+            )
 
         return issues
 
@@ -257,8 +270,21 @@ class CodeSimplifier:
         max_depth = current_depth
 
         for child in ast.iter_child_nodes(node):
-            if isinstance(child, (ast.If, ast.For, ast.While, ast.Try, ast.With, ast.AsyncFor, ast.AsyncWith)):
-                child_depth = CodeSimplifier._max_nesting_depth(child, current_depth + 1)
+            if isinstance(
+                child,
+                (
+                    ast.If,
+                    ast.For,
+                    ast.While,
+                    ast.Try,
+                    ast.With,
+                    ast.AsyncFor,
+                    ast.AsyncWith,
+                ),
+            ):
+                child_depth = CodeSimplifier._max_nesting_depth(
+                    child, current_depth + 1
+                )
                 max_depth = max(max_depth, child_depth)
             else:
                 child_depth = CodeSimplifier._max_nesting_depth(child, current_depth)
@@ -299,12 +325,14 @@ class CodeSimplifier:
                 f"{issue.get('suggestion', '')} |"
             )
 
-        lines.extend([
-            "",
-            "## Severity Legend",
-            "- **high**: Must fix before merging",
-            "- **medium**: Should fix in current iteration",
-            "- **low**: Nice to have, queue for backlog",
-        ])
+        lines.extend(
+            [
+                "",
+                "## Severity Legend",
+                "- **high**: Must fix before merging",
+                "- **medium**: Should fix in current iteration",
+                "- **low**: Nice to have, queue for backlog",
+            ]
+        )
 
         return "\n".join(lines)
