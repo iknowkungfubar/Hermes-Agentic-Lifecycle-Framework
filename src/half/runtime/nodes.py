@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from half import config
+from half.runtime.state import HalfState
 
 if TYPE_CHECKING:
     from half.runtime.state import HalfState

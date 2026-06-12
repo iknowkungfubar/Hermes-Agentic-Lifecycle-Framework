@@ -17,6 +17,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -68,24 +69,30 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.version or not args.command:
+    if args.version:
         _show_version()
-        if not args.command:
-            parser.print_help()
+        return
+
+    if not args.command:
+        parser.print_help()
         return
 
     try:
         result = _route_command(args)
-        if isinstance(result, dict) or result is not None:
-            pass
+        if isinstance(result, dict):
+            print(json.dumps(result, indent=2))
+        elif result is not None:
+            print(result)
     except Exception:
         sys.exit(1)
 
 
 def _show_version() -> None:
     """Print HALF version."""
-
-
+    from half import __version__, __description__, __license__
+    print(f"HALF v{__version__}")
+    print(__description__)
+    print(f"License: {__license__}")
 def _route_command(args: argparse.Namespace) -> dict[str, object] | None:
     """Route to the appropriate handler."""
     if args.command == "version":
