@@ -172,17 +172,18 @@ class ReversibilityGate:
                     scores[level] += 1
                     matched_keywords[level].append(kw)
 
-        # Highest scoring level wins, with CRITICAL having veto power
-        if scores[ReversibilityLevel.CRITICAL] > 0:
-            level = ReversibilityLevel.CRITICAL
-        elif scores[ReversibilityLevel.LOW] > scores.get(ReversibilityLevel.HIGH, 0):
-            level = ReversibilityLevel.LOW
-        elif scores[ReversibilityLevel.MEDIUM] > 0:
-            level = ReversibilityLevel.MEDIUM
-        elif scores[ReversibilityLevel.HIGH] > 0:
-            level = ReversibilityLevel.HIGH
-        else:
-            level = ReversibilityLevel.MEDIUM  # Default to medium
+        # Highest scoring level wins, with CRITICAL having veto power and ties broken by restrictiveness
+        level_order = [ReversibilityLevel.CRITICAL, ReversibilityLevel.LOW, ReversibilityLevel.MEDIUM, ReversibilityLevel.HIGH]
+        best_level = ReversibilityLevel.MEDIUM
+        best_score = 0
+        for lvl in level_order:
+            if scores[lvl] > best_score:
+                best_score = scores[lvl]
+                best_level = lvl
+            elif scores[lvl] == best_score and best_score > 0 and lvl in (ReversibilityLevel.CRITICAL, ReversibilityLevel.LOW):
+                # Ties broken in favor of more restrictive level
+                best_level = lvl if level_order.index(lvl) < level_order.index(best_level) else best_level
+        level = best_level
 
         # Calculate confidence based on keyword match strength
         total_keywords = sum(len(kws) for kws in matched_keywords.values())

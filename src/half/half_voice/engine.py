@@ -22,8 +22,6 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from half import config
-
 logger = logging.getLogger("half.voice")
 
 

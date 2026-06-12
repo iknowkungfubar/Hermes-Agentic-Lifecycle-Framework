@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import tempfile
 from pathlib import Path
-
-import pytest
 
 
 class TestAIDeclaration:
@@ -20,14 +17,14 @@ class TestAIDeclaration:
 
 class TestDoctor:
     def test_import(self):
-        from half.doctor import Doctor, DoctorReport
+        from half.doctor import Doctor
         assert Doctor is not None
 
     def test_run_doctor(self):
         from half.doctor import Doctor
         doctor = Doctor()
         report = doctor.run_full_diagnostics()
-        assert isinstance(report, dict) or hasattr(report, 'checks')
+        assert isinstance(report, dict) or hasattr(report, "checks")
 
 
 class TestDoomLoop:
@@ -163,7 +160,7 @@ class TestMetaReasoning:
 
 class TestMutationTesting:
     def test_import(self):
-        from half.mutation_testing import SycophancyGuardrail, SycophancyReport
+        from half.mutation_testing import SycophancyGuardrail
         assert SycophancyGuardrail is not None
 
     def test_check_assert_true(self):
@@ -183,7 +180,7 @@ class TestMutationTesting:
 
 class TestPSM:
     def test_import(self):
-        from half.psm import PSMManager, PortableSkillModule
+        from half.psm import PSMManager
         assert PSMManager is not None
 
     def test_discover_no_dir(self):
@@ -211,7 +208,7 @@ class TestNoSlop:
 
 class TestReflectionLoop:
     def test_import(self):
-        from half.reflection_loop import ReflectionLoop, ReflectionReport
+        from half.reflection_loop import ReflectionLoop
         assert ReflectionLoop is not None
 
     def test_run(self):
