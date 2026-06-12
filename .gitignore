@@ -43,6 +43,12 @@ secrets/
 credentials/
 *.secret
 
+# Embedded repos (native engines)
+.whisper/
+.piper/
+node_modules/
+
+
 # Test artifacts
 test/
 testp/
