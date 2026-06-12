@@ -82,9 +82,8 @@ class MetaReasoningEngine:
                 parent
                 and trace.success_metric
                 <= parent.success_metric + self.stagnation_threshold
-            ):
-                if self._iteration >= 2:
-                    return True
+            ) and self._iteration >= 2:
+                return True
         return False
 
     def prune_branch(self, step_id: str) -> ReasoningTrace | None:

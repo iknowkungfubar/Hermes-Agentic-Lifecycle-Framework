@@ -1,0 +1,8 @@
+{
+  "session_id": "test-session",
+  "initial_spec": "initial spec",
+  "truncated": false,
+  "recovery_summary": "",
+  "retry_count": 1,
+  "last_retry": "2026-06-12T08:23:19.264842+00:00"
+}
