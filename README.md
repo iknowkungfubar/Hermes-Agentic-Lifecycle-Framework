@@ -1,5 +1,7 @@
 <div align="center">
 
+![HALF Banner](docs/assets/HALF.png)
+
 # ⚡ HALF — Hermes Agentic Lifecycle Framework
 
 **Transform high-level business concepts into production-ready software through autonomous, multi-agent orchestration.**
