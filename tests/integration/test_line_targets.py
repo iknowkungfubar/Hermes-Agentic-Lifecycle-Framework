@@ -85,14 +85,13 @@ class TestHalfSidecarLineRanges:
             pass
 
     def test_line324_main_module(self):
-        """Hit the __main__ block by running as module."""
+        """Hit __main__ block line 324."""
         import subprocess, sys as _sys
         r = subprocess.run(
-            [_sys.executable, "-m", "half.half_sidecar", "--help"],
+            [_sys.executable, "-m", "half.half_sidecar", "status"],
             capture_output=True, text=True, timeout=5,
         )
-        # May return non-zero if help isn't handled, but module should load
-        assert "usage" in r.stdout.lower() or "error" not in r.stderr.lower()
+        assert r.returncode == 0
 
 
 class TestHTTPSidecarHandlerCalls:
