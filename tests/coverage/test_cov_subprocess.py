@@ -14,6 +14,8 @@ import pytest
 HERE = Path(__file__).resolve().parent.parent.parent
 COVERAGERC = HERE / ".coveragerc"
 
+pytestmark = pytest.mark.skipif(not bool(os.environ.get("COV_SUBPROCESS")), reason="Run with COV_SUBPROCESS=1 to test subprocess coverage")
+
 
 def cov_run_module(module_name: str, args: list[str] | None = None, **kw):
     """Run a Python module with coverage measurement."""
