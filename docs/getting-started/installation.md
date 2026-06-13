@@ -6,77 +6,79 @@
 - **Git** — For version control
 - **uv** (recommended) or pip — Package manager
 - **Rust** (optional) — For building the Tauri Command Center GUI
-- **Docker** (optional) — For running the FOSS observability stack
+- **Podman or Docker** (optional) — For running the FOSS observability stack
+
+## Quick Install (pip)
+
+```bash
+pip install hermes-half
+half version
+# → HALF v1.0.1
+```
 
 ## Install from Source
 
 ```bash
-# Clone the repository
 git clone https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework.git
 cd Hermes-Agentic-Lifecycle-Framework
 
-# Install uv (if not already installed)
+# Install with uv (recommended)
 pip install uv
-
-# Create virtual environment and install dependencies
 uv sync --group dev
+pip install -e .
 
-# Verify installation
+# Or with pip
+pip install -e ".[dev]"
+
+# Verify
 half version
 ```
 
-## Install via pip (when published)
+## Full Setup (with all services)
 
 ```bash
-pip install hermes-half
+# Run the setup script to install native engines and start services
+bash scripts/setup.sh
+
+# Or step by step:
+# 1. Install Python package (above)
+# 2. Start the HTTP API sidecar
+python -m half.http_sidecar &
+
+# 3. Start observability stack (requires Podman/Docker)
+podman-compose -f docker/docker-compose.foss.yml up -d
+
+# 4. Build the Tauri GUI (requires Rust)
+cd src-tauri && cargo build --release
 ```
 
-## Verify
-
-Run the test suite to verify everything is working:
+## Docker Image
 
 ```bash
-make test
+# Build
+podman build -t hermes-half:latest -f docker/Dockerfile .
+
+# Run
+podman run -p 9721:9721 hermes-half:latest
 ```
 
-You should see output like:
-```
-======================== 62 passed in 0.68s =========================
-```
+## What Gets Installed
 
-## Optional Dependencies
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| CLI (`half`) | `~/.local/bin/half` | Pipeline orchestration commands |
+| Python package | `hermes-half` on PyPI | Core framework library |
+| HTTP sidecar | `python -m half.http_sidecar` | REST API for GUI and integrations |
+| Tauri GUI | `src-tauri/target/release/half-command-center` | Desktop Command Center |
+| Agent Mail DB | `.hale/agent-mail/mail.db` | Inter-agent message store |
+| Native Whisper | `.whisper/build/bin/whisper-cli` | Speech-to-text engine |
+| Native Piper | `.piper/build/piper/piper` | Text-to-speech engine |
 
-### Tauri Command Center GUI
+## Verification
 
 ```bash
-# Requires Rust
-cargo install tauri-cli
-cd src-tauri
-cargo build --release
+half version                # → HALF v1.0.1
+half status                 # → JSON pipeline state
+curl http://127.0.0.1:9721/api/health  # → {"status": "ok", "version": "1.0.1"}
+pytest tests/ -q            # → 875+ passed
 ```
-
-### Whisper.cpp (Voice STT)
-
-```bash
-git clone https://github.com/ggerganov/whisper.cpp.git
-cd whisper.cpp
-make
-# Download model
-./models/download-ggml-model.sh large-v3-q5_0
-```
-
-### Piper (Voice TTS)
-
-```bash
-# Download from https://github.com/rhasspy/piper/releases
-# Or use package manager
-pip install piper-tts
-```
-
-### FOSS Observability Stack
-
-```bash
-docker compose -f docker/docker-compose.foss.yml up -d
-```
-
-This starts: LangWatch, Laminar, Prometheus, Grafana, PostgreSQL, Redis, Agent Mail, Focalboard
