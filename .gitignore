@@ -49,6 +49,11 @@ credentials/
 node_modules/
 
 
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
 # Test artifacts
 test/
 testp/
