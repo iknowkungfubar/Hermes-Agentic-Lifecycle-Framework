@@ -12,15 +12,12 @@ from pathlib import Path
 import pytest
 
 HERE = Path(__file__).resolve().parent.parent.parent
-COVERAGERC = HERE / ".coveragerc"
-
-pytestmark = pytest.mark.skipif(not bool(os.environ.get("COV_SUBPROCESS")), reason="Run with COV_SUBPROCESS=1 to test subprocess coverage")
 
 
 def cov_run_module(module_name: str, args: list[str] | None = None, **kw):
     """Run a Python module with coverage measurement."""
     cmd = [sys.executable, "-m", "coverage", "run",
-           f"--rcfile={COVERAGERC}", "--source=src/half", "--parallel-mode",
+           "--source=src/half", "--parallel-mode",
            "-m", module_name] + (args or [])
     return subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=HERE, **kw)
 
@@ -32,7 +29,7 @@ def cov_run_code(code: str, **kw):
         tmpfile = f.name
     try:
         cmd = [sys.executable, "-m", "coverage", "run",
-               f"--rcfile={COVERAGERC}", "--source=src/half", "--parallel-mode",
+               "--source=src/half", "--parallel-mode",
                tmpfile]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=HERE, **kw)
         return result
@@ -66,11 +63,14 @@ class TestCLICoverage:
 
 class TestHTTPSidecarCoverage:
     """HTTP sidecar under coverage."""
-
     def test_all_endpoints(self):
+        """Start server with coverage, hit all endpoints."""
+        import os
+        os.system("pkill -f 'half.http_sidecar' 2>/dev/null")
+        time.sleep(1)
         proc = subprocess.Popen(
             [sys.executable, "-m", "coverage", "run",
-             f"--rcfile={COVERAGERC}", "--source=src/half", "--parallel-mode",
+             "--source=src/half", "--parallel-mode",
              "-m", "half.http_sidecar"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
