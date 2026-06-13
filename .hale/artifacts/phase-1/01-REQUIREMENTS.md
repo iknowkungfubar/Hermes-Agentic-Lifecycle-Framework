@@ -1,4 +1,4 @@
-# Requirements: default
+# Requirements: test-proj
 
 ## Elevator Pitch
 [Project concept — expand with HALF-Discovery agent]

@@ -189,7 +189,8 @@ class HalfAPIHandler(BaseHTTPRequestHandler):
         try:
             import urllib.request
             r = urllib.request.urlopen("http://127.0.0.1:8000/api/v1/boards", timeout=3)
-            return json.loads(r.read())
+            data: list[dict[str, object]] = json.loads(r.read())
+            return data
         except Exception:
             return [{"id": "demo", "title": "HALF Pipeline", "description": "Main pipeline Kanban"}]
 
