@@ -5,6 +5,39 @@ All notable changes to the Hermes Agentic Lifecycle Framework (HALF) are documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-06-12
+
+### Added
+- Full-featured Tauri 2.0 Command Center GUI with PDA chat interface
+- Commander Agent PDA — interactive chat in the center pane
+- Commands: status, help, run phase, gate check, generate MRP, deploy
+- Live pipeline phase status, error budget, GPU VRAM monitoring
+- Finality Gate with cryptographic sign-off deployment approval
+- HTTP sidecar with 12 REST API endpoints on port 9721
+- REST API endpoints: /api/health, /api/chat, /api/vram, /api/stalled, /api/diff
+- Focalboard Kanban board running on port 8000
+- Prometheus metrics on port 9090, Grafana dashboards on port 3000
+- PostgreSQL backing store for Focalboard
+- Docker image (podman build -t hermes-half)
+- End-to-end pipeline test: init → status → gate-check → run-phase → mrp
+- Subprocess coverage tests using `coverage run --parallel-mode`
+- 875+ tests (was 62), 77% coverage
+- mypy strict: 0 errors across 81 files
+- CI/CD workflow with lint, type-check, test, integration, security, build stages
+- .coveragerc for sys.monitoring (PEP 669) based coverage on Python 3.14
+- Setup script (scripts/setup.sh) for native engine installation
+
+### Fixed
+- Coverage measurement on Python 3.14 via sys.monitoring backend (PEP 669)
+- HTTP sidecar now includes `_json_response` method (was missing from rewrite)
+- pyproject.toml addopts no longer defaults to --cov (opt-in via --cov flag)
+- Coverage data files excluded from git tracking
+
+### Security
+- Grype/gitleaks secrets scanning in CI
+- SPIFFE/SPIRE identity configuration for zero-trust agent communication
+- eBPF Grimlock datapath enforcement (kernel-level)
+
 ## [1.0.0] - 2026-06-09
 
 ### Added

@@ -5,11 +5,12 @@
 **Transform high-level business concepts into production-ready software through autonomous, multi-agent orchestration.**
 
 [![CI](https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/actions/workflows/ci.yml/badge.svg)](https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/hermes-half)](https://pypi.org/project/hermes-half/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](pyproject.toml)
-[![mypy](https://img.shields.io/badge/mypy-strict-green.svg)](https://mypy-lang.org/)
-[![Ruff](https://img.shields.io/badge/code%20style-ruff-purple.svg)](https://docs.astral.sh/ruff/)
-[![Tests](https://img.shields.io/badge/tests-62%20passing-brightgreen.svg)](tests/)
+[![mypy](https://img.shields.io/badge/mypy-0%20errors-green.svg)](https://mypy-lang.org/)
+[![Tests](https://img.shields.io/badge/tests-875%20passing-brightgreen.svg)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-77%25-yellow.svg)](pyproject.toml)
 
 </div>
 
@@ -17,7 +18,7 @@
 
 ## What is HALF?
 
-**HALF** is a modular, open-source framework that enables AI agents to autonomously execute the full software development lifecycle. It implements a **5-phase structured SDLC** with built-in quality gates, fail-safe protocols, and explicit human checkpoints.
+**HALF** is a modular, open-source framework that enables AI agents to autonomously execute the full software development lifecycle. It implements a **5-phase structured SDLC** with built-in quality gates, fail-safe protocols, explicit human checkpoints, and a **GUI-first Command Center**.
 
 ```mermaid
 graph LR
@@ -36,28 +37,23 @@ graph LR
 - **Fail-safe by design** — 3-level escalation: step retry → phase retry → human gap report
 - **TDD is mandatory** — Harness-first: write failing tests before any implementation
 - **Codification Imperative** — Every manual fix becomes a durable improvement to the agent system
+- **No-slop context** — Agents earn context through hierarchical RAG, not flat directory dumps
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Clone
+# Install from PyPI (30 seconds)
+pip install hermes-half
+half version
+# → HALF v1.0.1
+
+# Full local setup with GUI + services
 git clone https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework.git
 cd Hermes-Agentic-Lifecycle-Framework
-
-# 2. Install
-pip install uv
-uv sync --group dev
-
-# 3. Verify
-make test
-
-# 4. Bootstrap a project
-./scripts/genesis.sh --project my-app --mode full
-
-# 5. Use in Hermes Agent
-skill_view(name="half")
+bash scripts/setup.sh
+./src-tauri/target/release/half-command-center
 ```
 
 ---
@@ -80,56 +76,72 @@ skill_view(name="half")
 
 ---
 
-## Architecture
+## GUI Command Center
+
+The Tauri 2.0 desktop application provides a 3-pane Command Center:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│              Command Center (Tauri Desktop GUI)              │
-│  ┌──────────────┐  ┌───────────────┐  ┌──────────────────┐  │
-│  │ Focalboard   │  │ Agent Mail    │  │ Grafana/Laminar  │  │
-│  │ (Kanban)     │  │ (Messages)    │  │ (Observability)  │  │
-│  └──────┬───────┘  └──────┬────────┘  └────────┬─────────┘  │
-└─────────┼──────────────────┼────────────────────┼────────────┘
-          │                  │                    │
-          ▼                  ▼                    ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 LangGraph State Machine                      │
-│    Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5         │
-│                    ↕ (iteration cycle)                       │
-│        16 Agent Skills + Code-Simplifier + Gates            │
-└─────────────────────────────────────────────────────────────┘
-          │                  │                    │
-          ▼                  ▼                    ▼
-┌──────────────┐  ┌──────────────────┐  ┌────────────────────┐
-│ Observability│  │ Execution        │  │ CI/CD (GitHub      │
-│ (LangWatch,  │  │ Sandbox (Docker/ │  │ Actions → Deploy)  │
-│  Laminar,    │  │ Podman)          │  │ with per-stage     │
-│  Prometheus) │  │ Read-only Vault  │  │ quality gates      │
-└──────────────┘  └──────────────────┘  └────────────────────┘
+┌──────────────────┬──────────────────────┬──────────────────┐
+│  Swarm Overview   │  PDA Chat + CoT      │  System Resources│
+│  (Focalboard      │  Reasoning Graph      │  (Finality Gate, │
+│   Kanban)         │  + Agent Mail Logs    │   VRAM, Error    │
+│                   │                       │   Budget)        │
+│  Live pipeline    │  Commander Agent      │  Locked/Unlocked │
+│  Phase status     │  chat interface       │  Sign-off panel  │
+│  Active agents    │  Run phases, gates    │  Stalled node    │
+│                   │  Generate MRP         │  watchdog        │
+└──────────────────┴──────────────────────┴──────────────────┘
 ```
+
+**Launch:** `./src-tauri/target/release/half-command-center`
+
+**Chat commands:** `status`, `help`, `run phase 2`, `gate check phase 1`, `generate mrp`, `deploy`
 
 ---
 
-## Repository Structure
+## Architecture
 
 ```
-src/
-├── half/               # Package root + CLI entrypoint
-├── agents/             # 16 agent skill implementations
-├── core/               # Orchestrator, gates, fail-safe, error budget
-├── runtime/            # LangGraph graph, checkpointer, nodes
-├── state/              # LangGraph security (CVE mitigations)
-├── agent_mail/         # Decentralized agent coordination
-├── half_voice/         # Speech-to-text and text-to-speech
-├── half_focalboard/    # Kanban API client
-└── half_sidecar.py     # Tauri Python sidecar
-
-scripts/                # Bootstrap, genesis, deploy, install-foss
-templates/              # fail-safes.yaml, gap-report.md
-references/             # quickstart-execution.md
-docker/                 # Dockerfile + docker-compose (app + FOSS stack)
-vault_root/             # Obsidian RAG vault structure
+┌─────────────────────────────────────────────────────────────────┐
+│                    Command Center (Tauri 2.0 GUI)                │
+│  ┌────────────────┐  ┌─────────────────┐  ┌──────────────────┐  │
+│  │ Focalboard     │  │ PDA Chat +      │  │ Finality Gate    │  │
+│  │ (Kanban)       │  │ Agent Mail      │  │ + Observability  │  │
+│  └───────┬────────┘  └────────┬────────┘  └────────┬─────────┘  │
+└──────────┼────────────────────┼────────────────────┼────────────┘
+           │ HTTP :9721         │ HTTP :9721          │
+           ▼                    ▼                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     HTTP Sidecar (Python)                        │
+│   /api/status  /api/chat  /api/gate-check  /api/health          │
+│   /api/generate-mrp  /api/approve_deployment  /api/vram         │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+┌───────────────────────────────┼─────────────────────────────────┐
+│               LangGraph State Machine (5-phase DAG)             │
+│   16 Agent Skills + Code-Simplifier + Verification-at-Scale    │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+           ┌────────────────────┼────────────────────┐
+           ▼                    ▼                    ▼
+┌──────────────────┐  ┌──────────────────┐  ┌────────────────────┐
+│ Observability    │  │ Execution        │  │ CI/CD (GitHub      │
+│ (Prometheus,     │  │ Sandbox (Podman/ │  │ Actions) +         │
+│  Grafana)        │  │ Docker)          │  │ Docker Image       │
+│  Agent Mail DB   │  │ Git Worktrees    │  │ PyPI Package       │
+└──────────────────┘  └──────────────────┘  └────────────────────┘
 ```
+
+### Running Services
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| HTTP Sidecar API | `:9721` | REST API for GUI + chat |
+| Prometheus | `:9090` | Metrics collection |
+| Grafana | `:3000` | Visualization dashboards |
+| Focalboard | `:8000` | Kanban task management |
+| PostgreSQL | `:5432` | Focalboard backing store |
+| Agent Mail DB | — | SQLite inter-agent messaging |
 
 ---
 
@@ -158,24 +170,75 @@ error_budget:
 | CVE-2025-67644 | LangGraph SQLite | Metadata allowlist validates all filter keys |
 | CVE-2026-28277 | LangGraph msgpack | JSON-safe serialization prevents RCE |
 
-- Execution sandbox (read-only vault mount, network-isolated)
+- Execution sandbox (read-only vault mount, network-isolated containers)
 - Dangerous command denylist (rm -rf, dd, mkfs, format)
 - Path traversal protection via pre-execution hooks
-- Secrets detection in CI (trufflehog)
+- Secrets detection in CI (gitleaks)
 - Weekly dependency scans via Dependabot
+- Zero-trust agent identity (SPIFFE/SPIRE config)
+- eBPF Grimlock datapath enforcement (kernel-level)
+
+---
+
+## Repository Structure
+
+```
+src/half/                # Package root + CLI entrypoint
+├── agents/              # 16 agent skill implementations
+├── core/                # Orchestrator, gates, fail-safe, error budget
+├── runtime/             # LangGraph graph, checkpointer, nodes
+├── state/               # LangGraph security (CVE mitigations)
+├── agent_mail/          # Decentralized agent coordination
+├── half_voice/          # Speech-to-text and text-to-speech
+├── half_focalboard/     # Kanban API client
+├── http_sidecar.py      # REST API server (GUI backend)
+└── half_sidecar.py      # CLI sidecar (Tauri IPC)
+
+scripts/                 # Setup, genesis, CI integration runner
+templates/               # fail-safes.yaml, gap-report.md
+references/              # quickstart-execution.md
+docker/                  # Dockerfile + docker-compose (FOSS stack)
+tests/                   # 875+ tests (unit + integration + infrastructure)
+  ├── tdd/               # TDD-style regression tests
+  ├── integration/       # Integration tests (sidecar, services)
+  ├── infrastructure/    # Infrastructure tests (Podman, ffmpeg, network)
+  ├── coverage/          # Subprocess coverage tests
+  └── e2e/               # End-to-end pipeline tests
+```
 
 ---
 
 ## Development
 
 ```bash
-make install       # Install dependencies
+pip install -e ".[dev]"
 make lint          # Run ruff linter
 make typecheck     # Run mypy type checker
-make test          # Run test suite (62 tests)
+make test          # Run test suite (875+ tests)
 make ready         # Full CI pipeline
-make ship          # Release build (Tauri + Python)
+
+# Run with coverage
+pytest tests/ -q --cov=src/half --cov-report=term-missing
+
+# Start services for integration tests
+python -m half.http_sidecar &
+pytest tests/integration/ -q
 ```
+
+---
+
+## Test Stats
+
+| Metric | Value |
+|--------|-------|
+| Total tests | 875+ |
+| Integration tests | 160+ |
+| Infrastructure tests | 25+ |
+| Subprocess coverage tests | 15 |
+| E2E pipeline tests | 1 |
+| mypy errors | **0** (81 files) |
+| Coverage | **77%** (sys.monitoring) |
+| Skipped (graceful) | 13 (Docker/GPU optional) |
 
 ---
 
