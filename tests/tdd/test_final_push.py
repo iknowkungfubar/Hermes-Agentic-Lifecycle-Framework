@@ -131,7 +131,7 @@ class TestVoiceFinal:
 
     def test_ffmpeg_audio(self):
         import tempfile
-        audio = Path(tempfile.mktemp(suffix=".wav"))
+        audio = Path(tempfile.mkstemp(suffix=".wav")[1])
         try:
             r = subprocess.run(
                 ["ffmpeg", "-y", "-f", "lavfi", "-i",

@@ -1,3 +1,4 @@
+import os
 """Use available infrastructure: Podman, Prometheus, Grafana, network, ffmpeg."""
 
 from __future__ import annotations
@@ -116,7 +117,7 @@ class TestVoiceAudio:
 
     def test_ffmpeg_sine_wave(self):
         import tempfile, struct, wave
-        audio = Path(tempfile.mktemp(suffix=".wav"))
+        audio = Path(tempfile.mkstemp(suffix=".wav")[1])
         try:
             r = subprocess.run(
                 ["ffmpeg", "-y", "-f", "lavfi", "-i",

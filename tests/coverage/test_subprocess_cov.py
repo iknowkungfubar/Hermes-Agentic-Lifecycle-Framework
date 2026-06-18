@@ -118,7 +118,7 @@ class TestSubprocessCoverage:
     def test_ffmpeg_audio(self):
         """Exercise voice engine code paths via ffmpeg."""
         import tempfile, struct, wave
-        audio = Path(tempfile.mktemp(suffix=".wav"))
+        audio = Path(tempfile.mkstemp(suffix=".wav")[1])
         try:
             r = subprocess.run(
                 ["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=0.5",

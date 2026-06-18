@@ -76,7 +76,7 @@ class TestVoiceWithRealAudio:
 
     def test_transcribe_with_audio(self):
         """Create a real audio file and test transcription pipeline."""
-        audio_file = Path(tempfile.mktemp(suffix=".wav"))
+        audio_file = Path(tempfile.mkstemp(suffix=".wav")[1])
         try:
             # Create a real WAV file with a tone
             subprocess.run(
@@ -103,7 +103,7 @@ class TestVoiceWithRealAudio:
         engine = VoiceEngine()
         if not engine._tts_available:
             pytest.skip("TTS engine not available")
-        out = Path(tempfile.mktemp(suffix=".wav"))
+        out = Path(tempfile.mkstemp(suffix=".wav")[1])
         try:
             result = engine.speak("Hello, this is a test.", output_path=str(out))
             assert result is not None
