@@ -191,7 +191,7 @@ class ProviderRouter:
         key = os.environ.get(mapping.api_key, "")
         if not key:
             logger.warning(
-                "API key env var '%s' not set for role '%s'", mapping.api_key, role
+                "API key env var name not set for role '%s'", role  # mapping.api_key is the env-var NAME, not the secret value
             )
         return key
 
