@@ -14,6 +14,14 @@ Supported providers:
 
 from __future__ import annotations
 
+
+def _redact(value: str | None, show_last: int = 4) -> str:
+    """Redact sensitive values, showing only last N characters."""
+    if not value:
+        return "***"
+    if len(value) <= show_last + 4:
+        return "***" + value[-show_last:]
+    return value[:4] + "..." + value[-show_last:]
 import json
 import logging
 import os
