@@ -22,6 +22,8 @@ def _redact(value: str | None, show_last: int = 4) -> str:
     if len(value) <= show_last + 4:
         return "***" + value[-show_last:]
     return value[:4] + "..." + value[-show_last:]
+
+
 import json
 import logging
 import os
@@ -191,7 +193,8 @@ class ProviderRouter:
         key = os.environ.get(mapping.api_key, "")
         if not key:
             logger.warning(
-                "API key env var name not set for role '%s'", role  # mapping.api_key is the env-var NAME, not the secret value
+                "API key env var name not set for role '%s'",
+                role,  # mapping.api_key is the env-var NAME, not the secret value
             )
         return key
 

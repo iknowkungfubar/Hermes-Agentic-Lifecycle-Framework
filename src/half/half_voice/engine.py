@@ -44,13 +44,22 @@ class VoiceEngine:
         device: str = "auto",
     ):
         if not models_dir:
-            models_dir = Path(__file__).resolve().parent.parent.parent.parent / ".whisper" / "models"
+            models_dir = (
+                Path(__file__).resolve().parent.parent.parent.parent
+                / ".whisper"
+                / "models"
+            )
         self.models_dir = Path(models_dir)
         self.whisper_model = whisper_model
         self.whisper_exec = whisper_exec or self._find_whisper()
         self.piper_exec = piper_exec or self._find_piper()
         if not piper_voice:
-            piper_voice = str(Path(__file__).resolve().parent.parent.parent.parent / ".piper" / "voices" / "en_US-lessac-medium.onnx")
+            piper_voice = str(
+                Path(__file__).resolve().parent.parent.parent.parent
+                / ".piper"
+                / "voices"
+                / "en_US-lessac-medium.onnx"
+            )
         self.piper_voice = piper_voice
         self.device = device
 
@@ -75,7 +84,10 @@ class VoiceEngine:
                 return path
         # Check common locations
         whisper_dirs = [
-            Path(__file__).resolve().parent.parent.parent.parent / ".whisper" / "build" / "bin",
+            Path(__file__).resolve().parent.parent.parent.parent
+            / ".whisper"
+            / "build"
+            / "bin",
             Path(__file__).resolve().parent.parent.parent.parent / ".whisper",
             Path("/usr/local/bin"),
             Path(os.path.expanduser("~/.whisper")),
@@ -95,7 +107,10 @@ class VoiceEngine:
             if path:
                 return path
         piper_dirs = [
-            Path(__file__).resolve().parent.parent.parent.parent / ".piper" / "build" / "piper",
+            Path(__file__).resolve().parent.parent.parent.parent
+            / ".piper"
+            / "build"
+            / "piper",
             Path("/usr/local/bin"),
             Path(os.path.expanduser("~/.piper")),
         ]
@@ -260,7 +275,9 @@ class VoiceEngine:
         cmd = [
             self.piper_exec,
             "--model",
-            self.piper_voice if Path(self.piper_voice).is_absolute() else str(self.models_dir / self.piper_voice),
+            self.piper_voice
+            if Path(self.piper_voice).is_absolute()
+            else str(self.models_dir / self.piper_voice),
             "--output-file",
             output_path,
         ]
