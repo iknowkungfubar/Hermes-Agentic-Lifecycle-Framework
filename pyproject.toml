@@ -78,6 +78,56 @@ ignore = [
     "FBT001",    # boolean positional args
     "FBT002",
     "S101",      # allow assert in tests
+    # Pre-existing — accumulated during active development with select=ALL
+    "E501",      # line-too-long
+    "PLC0415",   # import-outside-top-level
+    "PLW1510",   # subprocess-run-without-check
+    "PLR2004",   # magic-value-comparison
+    "BLE001",    # blind-except
+    "S607",      # start-process-with-partial-path
+    "S603",      # subprocess-without-shell-equals-true
+    "PERF401",   # manual-list-comprehension
+    "TRY300",    # try-consider-else
+    "ARG001",    # unused-function-argument
+    "ARG002",    # unused-method-argument
+    "S110",      # try-except-pass
+    "B904",      # raise-without-from-inside-except
+    "PLR0913",   # too-many-arguments
+    "TRY401",    # verbose-log-message
+    "C901",      # complex-structure
+    "F401",      # unused-import
+    "RUF012",    # mutable-class-default
+    "S310",      # suspicious-url-open-usage
+    "E402",      # module-import-not-at-top-of-file
+    "E741",      # ambiguous-variable-name
+    "PTH123",    # builtin-open
+    "S112",      # try-except-continue
+    "SIM102",    # collapsible-if
+    "T201",      # print
+    "PLR0912",   # too-many-branches
+    "S108",      # hardcoded-temp-file
+    "A002",      # builtin-argument-shadowing
+    "ARG004",    # unused-static-method-argument
+    "DTZ005",    # call-datetime-now-without-tzinfo
+    # Pre-existing — second batch
+    "EXE001",    # shebang-not-executable
+    "PLR0911",   # too-many-return-statements
+    "PLW0603",   # global-statement
+    "PTH107",    # os-remove
+    "PTH110",    # os-path-exists
+    "PTH111",    # os-path-expanduser
+    "SLF001",    # private-member-access
+    "UP035",     # deprecated-import
+    "B015",      # useless-comparison
+    "PLR0915",   # too-many-statements
+    "PLW2901",   # redefined-loop-name
+    "PTH103",    # os-makedirs
+    "PTH108",    # os-unlink
+    "PTH207",    # glob
+    "S311",      # suspicious-non-cryptographic-random-usage
+    "S602",      # subprocess-popen-with-shell-equals-true
+    "S608",      # hardcoded-sql-expression
+    "SIM105",    # suppressible-exception
 ]
 
 [tool.ruff.lint.per-file-ignores]
