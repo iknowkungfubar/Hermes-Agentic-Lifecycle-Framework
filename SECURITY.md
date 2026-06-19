@@ -2,54 +2,31 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-|---------|--------------------|
-| 1.0.x   | ✅ Active development |
+| Version | Supported |
+|---------|-----------|
+| latest  | ✅ |
+| < latest| ❌ |
 
 ## Reporting a Vulnerability
 
-HALF is an early-stage framework. If you discover a security vulnerability,
-please do **NOT** open a public issue. Instead, email: **josh@turintechsolutions.com**
+We take security seriously. If you discover a security vulnerability, please **do not** open a public issue.
 
-You should receive a response within 48 hours. If you don't, follow up.
-
-### What to include
-
-- Type of vulnerability
+Instead, send a description of the issue to **turin@turintechsolutions.com** with:
+- A brief description of the vulnerability
 - Steps to reproduce
 - Affected versions
-- Potential impact
-- Suggested fix (if available)
+- Any potential mitigations you've identified
 
-## Security Features
+You should receive a response within 48 hours. If the issue is confirmed, we will:
+1. Acknowledge receipt of the report
+2. Investigate and develop a fix
+3. Release a patched version
+4. Disclose the vulnerability after the fix is released
 
-HALF includes the following security measures by design:
+## Scope
 
-### CVE Mitigations
+This security policy covers the latest release of this project. Older versions may have known vulnerabilities that are fixed in newer releases.
 
-| CVE | Component | Mitigation |
-|-----|-----------|------------|
-| CVE-2025-67644 | LangGraph SQLite | Metadata allowlist validates all filter keys before execution |
-| CVE-2026-28277 | LangGraph msgpack | JSON-safe serialization prevents RCE via malicious objects |
+## Bug Bounty
 
-### Execution Sandbox
-
-- Code runs in isolated Docker/Podman containers
-- Obsidian vault mounted read-only to sandbox
-- Network access stripped from execution containers
-- Dangerous shell commands blocked via deny list
-- Path traversal attempts rejected by pre-execution hooks
-
-### Supply Chain Security
-
-- Dependencies pinned with exact versions in `uv.lock`
-- Weekly dependency audits via GitHub Actions
-- Dependency licenses verified before production release
-- No postinstall scripts executed during dependency resolution
-
-### Secret Management
-
-- No hardcoded secrets in codebase
-- `.env` files in `.gitignore`
-- Secret detection in CI pipeline (trufflehog)
-- Environment variables for all sensitive configuration
+At this time, there is no bug bounty program. We appreciate responsible disclosure in the interest of keeping the community safe.

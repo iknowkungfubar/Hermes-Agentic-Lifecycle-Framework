@@ -1,28 +1,19 @@
 ---
-name: Feature Request
-about: Suggest an idea for HALF
-title: "[FEATURE] "
+name: Feature request
+about: Suggest an idea for this project
+title: ''
 labels: enhancement
 assignees: ''
 ---
 
-## Problem Statement
-A clear description of what problem this feature would solve.
-Ex. "I'm always frustrated when [...]"
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-## Proposed Solution
-A clear description of what you want to happen.
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
 
-## Alternative Solutions
-What alternatives have you considered?
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
 
-## HALF Phase
-Which phase(s) would this feature affect?
-- [ ] Phase 1: Discovery & Strategy
-- [ ] Phase 2: Development & Coding
-- [ ] Phase 3: Quality Assurance
-- [ ] Phase 4: Polish & Deployment
-- [ ] Phase 5: Iteration
-
-## Additional Context
-Add any other context or screenshots here.
+**Additional context**
+Add any other context or screenshots about the feature request here.

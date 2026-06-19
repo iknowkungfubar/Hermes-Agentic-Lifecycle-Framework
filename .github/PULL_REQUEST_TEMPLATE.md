@@ -1,28 +1,21 @@
----
-name: Pull Request
-about: Submit a pull request to improve HALF
-title: "[PR] "
-labels: ''
-assignees: ''
----
-
 ## Description
-A clear description of the changes in this PR.
+<!-- Provide a brief description of the changes in this PR -->
 
 ## Related Issue
-Closes #(issue-number)
+<!-- Link to the issue this PR addresses, if applicable -->
+Fixes #
 
 ## Type of Change
 - [ ] Bug fix
 - [ ] New feature
+- [ ] Breaking change
 - [ ] Documentation update
 - [ ] Refactoring
-- [ ] Test improvement
-- [ ] CI/packaging
 
 ## Testing
-- [ ] Tests added/updated
-- [ ] `make ready` passes locally
+- [ ] Tests pass locally
+- [ ] Lint/format checks pass
+- [ ] Manual testing completed
 
 ## Additional Notes
-Any deployment notes, migration steps, or other context.
+<!-- Any other information reviewers should know -->
