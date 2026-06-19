@@ -60,9 +60,12 @@ testp/
 
 # Generated test databases
 .hale/context-registry.db
+.hale/context-registry.db-shm
+.hale/context-registry.db-wal
 .hale/state/
 .hale/logs/
 .hale/investigations/
+.hale/artifacts/
 test/
 test-half/
 testp/
