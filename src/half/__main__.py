@@ -85,6 +85,7 @@ def main() -> None:
             print(result)
     except Exception:
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -92,6 +93,7 @@ def main() -> None:
 def _show_version() -> None:
     """Print HALF version."""
     from half import __description__, __license__, __version__
+
     print(f"HALF v{__version__}")
     print(__description__)
     print(f"License: {__license__}")
