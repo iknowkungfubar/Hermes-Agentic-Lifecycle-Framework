@@ -60,6 +60,9 @@ dev = [
 where = ["src"]
 include = ["half*"]
 
+[tool.setuptools.package-data]
+half = ["data/scripts/genesis.sh", "data/docker/docker-compose.foss.yml", "data/templates/*"]
+
 [tool.ruff]
 line-length = 88
 target-version = "py313"
