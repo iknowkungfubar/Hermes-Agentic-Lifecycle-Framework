@@ -84,6 +84,8 @@ def main() -> None:
         elif result is not None:
             print(result)
     except Exception:
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
@@ -148,10 +150,14 @@ def _cmd_init(args: argparse.Namespace) -> dict[str, object]:
     candidate_paths = [
         Path(__file__).resolve().parent.parent.parent
         / "scripts"
-        / "genesis.sh",  # editable install
+        / "genesis.sh",  # editable install (src/scripts/)
         Path(__file__).resolve().parent.parent
         / "scripts"
-        / "genesis.sh",  # regular install (half/scripts/)
+        / "genesis.sh",  # editable install (half/scripts/)
+        Path(__file__).resolve().parent
+        / "data"
+        / "scripts"
+        / "genesis.sh",  # pip install (bundled package data)
         Path.cwd() / "scripts" / "genesis.sh",  # running from repo root
     ]
 
