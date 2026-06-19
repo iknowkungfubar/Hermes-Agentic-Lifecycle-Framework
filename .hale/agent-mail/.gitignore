@@ -1,3 +1,0 @@
-*.db-wal
-*.db-shm
-__pycache__/

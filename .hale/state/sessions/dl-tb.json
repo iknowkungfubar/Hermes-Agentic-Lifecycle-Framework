@@ -1,8 +1,0 @@
-{
-  "session_id": "dl-tb",
-  "initial_spec": "spec",
-  "truncated": true,
-  "recovery_summary": "## Recovery Summary \u2014 Session dl-tb\n\n**Previous attempts:** 4\n**Error breakdown:**\n- error: 4 occurrence(s)\n\n**Root cause analysis:**\nNo clear pattern detected \u2014 manual review recommended\n\n**Restarting fresh with original spec:**\n```\nspec\n",
-  "retry_count": 5,
-  "last_retry": "2026-06-13T04:25:12.294778+00:00"
-}
