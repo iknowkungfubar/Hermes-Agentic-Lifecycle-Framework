@@ -168,7 +168,7 @@ omit = [
     "tests/*",
     "scripts/*",
     "src-tauri/*",
-    "src/half_voice/engine.py",
+    "src/half/half_voice/engine.py",
 ]
 
 [tool.coverage.report]

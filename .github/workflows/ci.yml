@@ -14,8 +14,8 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with: { python-version: "3.13" }
       - run: pip install ruff
-      - run: ruff check src/ --quiet || echo "Lint issues found (non-blocking)"
-      - run: ruff format src/ --check --quiet || echo "Format issues found"
+      - run: ruff check src/ --quiet
+      - run: ruff format src/ --check --quiet
 
   type-check:
     runs-on: ubuntu-latest
@@ -25,7 +25,7 @@ jobs:
         with: { python-version: "3.13" }
       - run: pip install uv
       - run: uv sync --group dev
-      - run: mypy src/ || echo "Type issues found (non-blocking)"
+      - run: mypy src/
 
   test:
     runs-on: ubuntu-latest
@@ -36,7 +36,7 @@ jobs:
       - run: pip install uv
       - run: uv sync --group dev
       - run: pip install -e .
-      - run: pytest tests/ -q --tb=no --cov=src/half --cov-fail-under=74 --asyncio-mode=auto --ignore=tests/coverage --ignore=tests/infrastructure --ignore=tests/integration || echo "Test failures found (non-blocking)"
+      - run: pytest tests/ -q --tb=no --cov=src/half --cov-fail-under=74 --asyncio-mode=auto --ignore=tests/coverage --ignore=tests/infrastructure --ignore=tests/integration
 
   integration:
     needs: [test]
@@ -52,9 +52,9 @@ jobs:
         run: |
           PYTHONPATH=. python -m half.http_sidecar &
           sleep 3
-          curl -sf http://127.0.0.1:9721/api/status || echo "Sidecar failed to start"
+          curl -sf http://127.0.0.1:9721/api/status
       - name: Run integration tests
-        run: pytest tests/integration/ -q --tb=no || echo "Integration test issues found"
+        run: pytest tests/integration/ -q --tb=no
       - name: Cleanup
         run: pkill -f "half.http_sidecar" || true
 
@@ -66,7 +66,7 @@ jobs:
         with: { python-version: "3.13" }
       - run: pip install uv
       - run: uv sync --group dev
-      - run: bandit -r src/half -ll --quiet || echo "Security scan non-blocking"
+      - run: bandit -r src/half -ll --quiet
 
   secrets-scan:
     runs-on: ubuntu-latest
