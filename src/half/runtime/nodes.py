@@ -39,21 +39,38 @@ def _write_artifact(phase: str, name: str, content: str) -> Path:
 def phase_1_discovery(state: HalfState) -> dict[str, Any]:
     """Phase 1A: Requirements discovery.
 
-    Generates REQUIREMENTS.md from the project concept.
-    Produces structured capabilities, users, constraints.
+    Uses the DiscoveryAgent with LLM provider to analyze the project
+    concept and generate structured requirements. Falls back to template
+    text if the LLM is unavailable.
     """
+    from half.agents.discovery import DiscoveryAgent
+
     project = state.get("project_name", "default")
     logger.info("Phase 1A: Requirements discovery for '%s'", project)
 
-    content = f"""# Requirements: {project}
+    # Use the DiscoveryAgent with the configured LLM provider
+    agent = DiscoveryAgent(project_name=project)
+    concept = state.get("project_concept", project)
+
+    try:
+        doc = agent.analyze_with_llm(concept)
+        content = doc.render_markdown()
+        source = "llm"
+        logger.info("DiscoveryAgent LLM analysis succeeded for '%s'", project)
+    except Exception:
+        logger.exception(
+            "LLM analysis failed for '%s', using template fallback", project
+        )
+        # Graceful fallback: use the standard template
+        content = f"""# Requirements: {project}
 
 ## Elevator Pitch
-[Project concept — expand with HALF-Discovery agent]
+{concept}
 
 ## Core Capabilities
 | ID | Capability | Priority | Confidence |
 |----|-----------|----------|------------|
-| C-001 | [Primary capability] | P0 | HIGH |
+| C-001 | [LLM unavailable — populate manually] | P0 | HIGH |
 
 ## Target Users
 - **Primary:** [User persona]
@@ -75,6 +92,8 @@ def phase_1_discovery(state: HalfState) -> dict[str, Any]:
 ## Open Questions
 - [Question needing human input]
 """
+        source = "fallback"
+
     _write_artifact("phase-1", "01-REQUIREMENTS.md", content)
     return {
         "current_step": "phase-1-discovery",
@@ -83,7 +102,10 @@ def phase_1_discovery(state: HalfState) -> dict[str, Any]:
             {"name": "01-REQUIREMENTS.md", "phase": "phase-1"},
         ],
         "messages": [
-            {"role": "assistant", "content": "Phase 1A: REQUIREMENTS.md generated"}
+            {
+                "role": "assistant",
+                "content": f"Phase 1A: REQUIREMENTS.md generated ({source})",
+            }
         ],
     }
 

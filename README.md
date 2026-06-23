@@ -49,7 +49,7 @@ graph LR
 # Install from PyPI (30 seconds)
 pip install hermes-half
 half version
-# → HALF v1.0.1
+# → HALF v1.0.0
 
 # Full local setup with GUI + services
 git clone https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework.git
@@ -177,8 +177,8 @@ error_budget:
 - Path traversal protection via pre-execution hooks
 - Secrets detection in CI (gitleaks)
 - Weekly dependency scans via Dependabot
-- Zero-trust agent identity (SPIFFE/SPIRE config)
-- eBPF Grimlock datapath enforcement (kernel-level)
+- Zero-trust agent identity (SPIFFE/SPIRE config) — *Coming in v1.x*
+- eBPF Grimlock datapath enforcement (kernel-level) — *Coming in v1.x*
 
 ---
 

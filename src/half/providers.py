@@ -27,8 +27,11 @@ def _redact(value: str | None, show_last: int = 4) -> str:
 import json
 import logging
 import os
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger("half.providers")
 
@@ -219,6 +222,95 @@ class ProviderRouter:
             "custom": "http://127.0.0.1:8000/v1",
         }
         return defaults.get(mapping.provider, defaults["openrouter"])
+
+    def generate_text(
+        self,
+        prompt: str,
+        role: str = "coder",
+        system_prompt: str | None = None,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+    ) -> str:
+        """Send a text generation request to the configured LLM provider.
+
+        Uses the OpenAI-compatible chat completions API. Works with
+        OpenRouter, DeepSeek, LM Studio, and any OpenAI-compatible endpoint.
+
+        Args:
+            prompt: The user prompt to send.
+            role: Agent role (planner, coder, reviewer).
+            system_prompt: Optional system-level instruction.
+            max_tokens: Maximum tokens in the response.
+            temperature: Sampling temperature (0.0–1.0).
+
+        Returns:
+            Generated text content, or empty string on failure.
+        """
+        mapping = self.get_model(role)
+        endpoint = self.get_endpoint(role)
+        api_key = self.get_api_key(role)
+
+        messages: list[dict[str, str]] = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        headers: dict[str, str] = {
+            "Content-Type": "application/json",
+        }
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        body = json.dumps({
+            "model": mapping.model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }).encode("utf-8")
+
+        url = f"{endpoint.rstrip('/')}/chat/completions"
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers=headers,
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                result: dict[str, Any] = json.loads(resp.read())
+            choices = result.get("choices", [])
+            if choices:
+                content = choices[0].get("message", {}).get("content", "")
+                logger.info(
+                    "LLM call succeeded for role='%s' model='%s' (%d tokens)",
+                    role,
+                    mapping.model,
+                    result.get("usage", {}).get("total_tokens", "?"),
+                )
+                return content
+            logger.warning("LLM returned no choices: %s", result)
+            return ""
+        except urllib.error.HTTPError as e:
+            logger.warning(
+                "LLM HTTP %d for role='%s' model='%s': %s",
+                e.code,
+                role,
+                mapping.model,
+                e.read().decode(errors="replace")[:200],
+            )
+            return ""
+        except urllib.error.URLError as e:
+            logger.warning(
+                "LLM connection failed for role='%s' endpoint='%s': %s",
+                role,
+                url,
+                e.reason,
+            )
+            return ""
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("LLM response error for role='%s': %s", role, e)
+            return ""
 
     def list_models(self) -> list[dict[str, str]]:
         """List all configured model mappings.

@@ -52,6 +52,11 @@ def main() -> None:
     subparsers.add_parser("status", help="Show pipeline status")
     rp = subparsers.add_parser("run-phase", help="Execute a pipeline phase")
     rp.add_argument("phase", help="Phase identifier (e.g., phase-1)")
+    rp.add_argument(
+        "--concept",
+        default="",
+        help="Project concept/idea for the Discovery agent to analyze",
+    )
     gp = subparsers.add_parser("gate-check", help="Run gate checks for a phase")
     gp.add_argument("phase", help="Phase identifier (e.g., phase-1)")
     subparsers.add_parser("generate-mrp", help="Generate Merge-Readiness Pack")
@@ -116,7 +121,7 @@ def _route_command(args: argparse.Namespace) -> dict[str, object] | None:
     if args.command == "run-phase":
         from half.half_sidecar import cmd_run_phase
 
-        return cmd_run_phase(args.phase)
+        return cmd_run_phase(args.phase, concept=args.concept)
 
     if args.command == "gate-check":
         from half.half_sidecar import cmd_gate_check
