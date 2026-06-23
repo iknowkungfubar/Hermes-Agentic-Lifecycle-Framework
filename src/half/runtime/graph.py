@@ -282,6 +282,7 @@ def _deploy_node(state: HalfState) -> dict[str, Any]:
 
 def create_half_executor(
     project_name: str = "default",
+    project_concept: str = "",
     mode: str = "full",
     db_path: str = config.CHECKPOINTS_DB,
 ) -> tuple[Any, HalfState]:
@@ -289,6 +290,7 @@ def create_half_executor(
 
     Args:
         project_name: Project identifier.
+        project_concept: The user's original concept/idea to build.
         mode: Pipeline mode (full, prototype, patch, audit).
         db_path: SQLite checkpointer database path.
 
@@ -312,6 +314,10 @@ def create_half_executor(
     )
 
     # Create initial state
-    init = initial_state(project_name=project_name, mode=mode)
+    init = initial_state(
+        project_name=project_name,
+        project_concept=project_concept,
+        mode=mode,
+    )
 
     return app, init

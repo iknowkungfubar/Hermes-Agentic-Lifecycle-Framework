@@ -63,20 +63,107 @@ def cmd_status() -> dict[str, Any]:
     }
 
 
-def cmd_run_phase(phase: str) -> dict[str, Any]:
-    """Execute a pipeline phase."""
+def cmd_run_phase(
+    phase: str,
+    concept: str = "",
+) -> dict[str, Any]:
+    """Execute a pipeline phase via the LangGraph state machine.
+
+    Builds the full 5-phase graph, invokes it with streaming to print
+    progress as each node executes, handles human-interrupt checkpoints,
+    and returns the final pipeline state.
+
+    Args:
+        phase: Phase identifier (e.g., "phase-1").
+        concept: Optional project concept/idea to build.
+
+    Returns:
+        Dict with execution status and final pipeline state.
+    """
+    from datetime import datetime
+
+    from half import config as half_config
     from half.runtime.graph import create_half_executor
 
-    logger.info("Running phase: %s", phase)
+    logger.info("Running phase: %s (concept=%s)", phase, concept or "(not set)")
     try:
-        app, init_state = create_half_executor()
-        _ = app  # Silence unused warning
-        _ = init_state
+        # Ensure all runtime directories exist before execution
+        half_config.ensure_dirs()
+
+        app, init_state = create_half_executor(
+            project_name="default",
+            project_concept=concept,
+        )
+
+        thread_id = (
+            f"half-{phase}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        )
+        run_config = {"configurable": {"thread_id": thread_id}}
+
+        completed_nodes: list[str] = []
+        interrupted = False
+
+        # Stream through the graph, printing progress for each node
+        for event in app.stream(init_state, run_config):
+            if isinstance(event, dict):
+                for node_name, output in event.items():
+                    completed_nodes.append(node_name)
+
+                    # Extract step name and messages
+                    if isinstance(output, dict):
+                        step = output.get("current_step", node_name)
+                        messages = output.get("messages", [])
+                        gate_results = output.get("gate_results", [])
+
+                        # Print assistant progress messages
+                        for msg in messages:
+                            if isinstance(msg, dict) and msg.get("role") == "assistant":
+                                content = msg.get("content", "")
+                                if content:
+                                    print(f"  [{step}] {content}")
+
+                        # Print gate results
+                        for gate in gate_results:
+                            if isinstance(gate, dict):
+                                gid = gate.get("gate_id", "?")
+                                status = (
+                                    "PASSED" if gate.get("passed") else "FAILED"
+                                )
+                                print(f"  [GATE {gid}] {status}")
+
+                    logger.info("Node '%s' completed", node_name)
+
+        # Check if pipeline hit an interrupt (human checkpoint)
+        snapshot = app.get_state(run_config)
+        if snapshot.next is not None:
+            next_nodes = ", ".join(snapshot.next) if snapshot.next else "?"
+            logger.info(
+                "Pipeline paused at human checkpoint. Next: %s", next_nodes
+            )
+            interrupted = True
+
+        current_step = snapshot.values.get("current_step", "unknown")
+        current_phase = snapshot.values.get("current_phase", phase)
+
+        logger.info(
+            "Phase %s execution complete. Final step: %s. "
+            "Nodes executed: %d",
+            phase,
+            current_step,
+            len(completed_nodes),
+        )
+
         return {
-            "status": "started",
+            "status": "ok",
             "phase": phase,
-            "message": f"Phase {phase} dispatched to LangGraph executor",
+            "current_step": current_step,
+            "current_phase": current_phase,
+            "nodes_executed": completed_nodes,
+            "node_count": len(completed_nodes),
+            "interrupted": interrupted,
+            "pipeline_complete": snapshot.next is None,
         }
+
     except Exception as e:
         logger.exception("Phase execution failed: %s", e)
         return {"status": "error", "phase": phase, "error": str(e)}

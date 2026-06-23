@@ -35,6 +35,7 @@ class HalfState(TypedDict):
 
     # Project metadata
     project_name: str
+    project_concept: str  # User's original concept/idea to build
     mode: str  # full, prototype, patch, audit
 
     # Current execution position
@@ -72,11 +73,13 @@ class HalfState(TypedDict):
 
 def initial_state(
     project_name: str = "default",
+    project_concept: str = "",
     mode: str = "full",
 ) -> HalfState:
     """Create the initial HALF state."""
     return HalfState(
         project_name=project_name,
+        project_concept=project_concept or project_name,
         mode=mode,
         current_phase="phase-1",
         current_step="start",
