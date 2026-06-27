@@ -40,7 +40,10 @@ def sidecar_url() -> str:
 @pytest.fixture
 def test_audio_file() -> str:
     """Create a temporary WAV file for voice tests."""
-    import struct, wave, tempfile
+    import struct
+    import tempfile
+    import wave
+
     f = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
     f.close()
     with wave.open(f.name, "w") as w:
@@ -58,8 +61,14 @@ def test_git_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
     subprocess.run(["git", "init", "-q"], cwd=str(repo), capture_output=True)
-    subprocess.run(["git", "config", "user.email", "ci@test.com"], cwd=str(repo), capture_output=True)
-    subprocess.run(["git", "config", "user.name", "CI"], cwd=str(repo), capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "ci@test.com"],
+        cwd=str(repo),
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "CI"], cwd=str(repo), capture_output=True
+    )
     (repo / "README.md").write_text("# Test")
     (repo / "src").mkdir()
     (repo / "src" / "main.py").write_text("def main(): return 42")
@@ -68,10 +77,16 @@ def test_git_repo(tmp_path: Path) -> Path:
     (repo / ".harness").mkdir()
     (repo / ".harness" / "agents.md").write_text("# Rules\nKeep it simple.")
     subprocess.run(["git", "add", "-A"], cwd=str(repo), capture_output=True)
-    subprocess.run(["git", "commit", "-q", "-m", "Initial commit"], cwd=str(repo), capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "Initial commit"],
+        cwd=str(repo),
+        capture_output=True,
+    )
     (repo / "src" / "utils.py").write_text("def util(): return 'hello'")
     subprocess.run(["git", "add", "-A"], cwd=str(repo), capture_output=True)
-    subprocess.run(["git", "commit", "-q", "-m", "Add utils"], cwd=str(repo), capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "Add utils"], cwd=str(repo), capture_output=True
+    )
     return repo
 
 

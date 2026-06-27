@@ -8,8 +8,8 @@ import signal
 import subprocess
 import sys
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -23,7 +23,9 @@ def _start_sidecar():
     env = {**os.environ, "PYTHONPATH": "."}
     proc = subprocess.Popen(
         [sys.executable, "-m", "half.http_sidecar"],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     for _ in range(30):
         try:
@@ -50,7 +52,10 @@ def sidecar():
 
 @pytest.fixture
 def test_audio():
-    import struct, wave, tempfile
+    import struct
+    import tempfile
+    import wave
+
     f = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
     f.close()
     with wave.open(f.name, "w") as w:
@@ -71,9 +76,13 @@ def test_audio():
 class TestHalfSidecarAll:
     def test_all_cmds(self):
         from half.half_sidecar import (
-            cmd_status, cmd_run_phase, cmd_gate_check,
-            cmd_generate_mrp, cmd_focalboard_create
+            cmd_focalboard_create,
+            cmd_gate_check,
+            cmd_generate_mrp,
+            cmd_run_phase,
+            cmd_status,
         )
+
         assert isinstance(cmd_status(), dict)
         assert isinstance(cmd_run_phase("phase-1"), dict)
         assert isinstance(cmd_run_phase("phase-7"), dict)  # error path
@@ -88,6 +97,7 @@ class TestHalfSidecarAll:
 
     def test_voice_stt_tts(self, test_audio):
         from half.half_sidecar import cmd_voice_stt, cmd_voice_tts
+
         try:
             r = cmd_voice_stt(test_audio)
             assert isinstance(r, dict)
@@ -100,8 +110,9 @@ class TestHalfSidecarAll:
             pass
 
     def test_doctor(self, sidecar):
-        from half.half_sidecar import _format_doctor_report
         from half.doctor import Doctor
+        from half.half_sidecar import _format_doctor_report
+
         d = Doctor()
         report = d.run_full_diagnostics()
         formatted = _format_doctor_report(report)
@@ -110,7 +121,9 @@ class TestHalfSidecarAll:
 
     def test_main_routes(self):
         import argparse
+
         from half.__main__ import _route_command
+
         ns = argparse.Namespace
         routes = [
             (ns(command="version", version=False), None),
@@ -118,7 +131,10 @@ class TestHalfSidecarAll:
             (ns(command="run-phase", phase="phase-1", version=False), dict),
             (ns(command="gate-check", phase="phase-1", version=False), dict),
             (ns(command="generate-mrp", version=False), dict),
-            (ns(command="init", project="p", mode="full", dir="/tmp", version=False), dict),
+            (
+                ns(command="init", project="p", mode="full", dir="/tmp", version=False),
+                dict,
+            ),
         ]
         for args, exp in routes:
             r = _route_command(args)
@@ -134,8 +150,11 @@ class TestHalfSidecarAll:
 class TestHTTPSidecarAll:
     def test_all_endpoints(self, sidecar):
         endpoints = [
-            "/api/status", "/api/get_finality_gate_status",
-            "/api/vram", "/api/stalled", "/api/diff",
+            "/api/status",
+            "/api/get_finality_gate_status",
+            "/api/vram",
+            "/api/stalled",
+            "/api/diff",
         ]
         for ep in endpoints:
             r = urllib.request.urlopen(f"{sidecar}{ep}", timeout=5)
@@ -143,6 +162,7 @@ class TestHTTPSidecarAll:
 
     def test_handler_class(self):
         from half.http_sidecar import HalfAPIHandler, run_server
+
         assert hasattr(HalfAPIHandler, "do_GET")
         assert hasattr(HalfAPIHandler, "do_POST")
         assert hasattr(HalfAPIHandler, "_json_response")
@@ -158,6 +178,7 @@ class TestHTTPSidecarAll:
 class TestRestDaemonAll:
     def test_handler(self):
         from half.rest_daemon import RESTAPIHandler, run_server
+
         assert hasattr(RESTAPIHandler, "do_GET")
         assert hasattr(RESTAPIHandler, "do_POST")
         assert callable(run_server)
@@ -169,6 +190,7 @@ class TestRestDaemonAll:
 class TestWebhooksAll:
     def test_webhook_full(self):
         from half.webhooks import WebhookHandler, WebhookServer
+
         h = WebhookHandler()
         assert h is not None
         s = WebhookServer(handler=h)
@@ -182,8 +204,10 @@ class TestWebhooksAll:
 # ═══════════════════════════════════════════════════════════════════════════════
 class TestSandboxAll:
     def test_sandbox_execute(self):
-        from half.sandbox import ExecutionSandbox
         import tempfile
+
+        from half.sandbox import ExecutionSandbox
+
         with tempfile.TemporaryDirectory() as tmp:
             try:
                 s = ExecutionSandbox()
@@ -203,6 +227,7 @@ class TestSandboxAll:
 class TestPrewarmAll:
     def test_prewarm_cleanup(self):
         from half.prewarm import PreWarmDeployment, WarmContainer
+
         pw = PreWarmDeployment()
         for name in ["svc-a", "svc-b"]:
             pw._warm_containers[name] = WarmContainer(name=name, image=f"{name}:latest")
@@ -217,6 +242,7 @@ class TestPrewarmAll:
 class TestVoiceAll:
     def test_voice_discovery(self):
         from half.half_voice.engine import VoiceEngine
+
         e = VoiceEngine()
         w = e._find_whisper()
         p = e._find_piper()
@@ -231,7 +257,8 @@ class TestVoiceAll:
 # ═══════════════════════════════════════════════════════════════════════════════
 class TestSecurityAll:
     def test_scanners(self):
-        from half.security_scanners import GarakScanner, BumblebeeScanner
+        from half.security_scanners import BumblebeeScanner, GarakScanner
+
         g = GarakScanner()
         assert g is not None
         b = BumblebeeScanner()
@@ -244,6 +271,7 @@ class TestSecurityAll:
 class TestBrowserAll:
     def test_agent(self):
         from half.browser_research import BrowserResearchAgent
+
         a = BrowserResearchAgent()
         assert a is not None
 
@@ -258,6 +286,7 @@ class TestNoSlopAll:
         (tmp_path / "src/a/x.py").write_text("import os\ndef f(): return os.getcwd()\n")
         (tmp_path / "src/b/y.py").write_text("class C: pass\n")
         from half.no_slop import NoSlopIndexer
+
         idx = NoSlopIndexer(root_path=str(tmp_path))
         r = idx.build_index()
         assert isinstance(r, dict)
@@ -269,12 +298,23 @@ class TestNoSlopAll:
 class TestEnvBootstrapAll:
     def test_bootstrap(self, tmp_path):
         subprocess.run(["git", "init", "-q"], cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "config", "user.name", "T"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "t@t.com"],
+            cwd=str(tmp_path),
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "T"], cwd=str(tmp_path), capture_output=True
+        )
         (tmp_path / "README.md").write_text("# Test")
         subprocess.run(["git", "add", "-A"], cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "init"],
+            cwd=str(tmp_path),
+            capture_output=True,
+        )
         from half.env_bootstrap import EnvironmentBootstrapper
+
         boot = EnvironmentBootstrapper(root_path=str(tmp_path))
         snap = boot.capture_snapshot("task", "proj")
         assert snap.project_name == "proj"
@@ -288,14 +328,25 @@ class TestEnvBootstrapAll:
 class TestReflectionAll:
     def test_reflection(self, tmp_path):
         subprocess.run(["git", "init", "-q"], cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "config", "user.name", "T"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "t@t.com"],
+            cwd=str(tmp_path),
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "T"], cwd=str(tmp_path), capture_output=True
+        )
         (tmp_path / "test.py").write_text("x=1")
         (tmp_path / ".harness").mkdir()
         (tmp_path / ".harness" / "agents.md").write_text("# Rules")
         subprocess.run(["git", "add", "-A"], cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "init"],
+            cwd=str(tmp_path),
+            capture_output=True,
+        )
         from half.reflection_loop import ReflectionLoop
+
         loop = ReflectionLoop(repo_path=str(tmp_path))
         report = loop.run()
         assert isinstance(report.findings, list)

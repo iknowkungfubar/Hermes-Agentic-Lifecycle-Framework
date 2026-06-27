@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 import subprocess
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 
 import pytest
 
@@ -33,7 +33,9 @@ class TestHalfSidecarHTTP:
         assert "status" in data
 
     def test_finality_endpoint(self):
-        r = urllib.request.urlopen(f"{SIDECAR_URL}/api/get_finality_gate_status", timeout=5)
+        r = urllib.request.urlopen(
+            f"{SIDECAR_URL}/api/get_finality_gate_status", timeout=5
+        )
         assert r.status == 200
         data = json.loads(r.read())
         assert "locked" in data or "mrp_ready" in data
@@ -64,22 +66,31 @@ class TestHalfSidecarSubprocess:
     @classmethod
     def setup_class(cls):
         import sys
+
         cls.python = sys.executable
 
     def test_cli_status(self):
         import os
+
         env = {**os.environ, "PYTHONPATH": "."}
         result = subprocess.run(
             [self.python, "-m", "half.half_sidecar", "status"],
-            capture_output=True, text=True, timeout=10, env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=env,
         )
         assert result.returncode == 0, f"stderr: {result.stderr}"
 
     def test_cli_mrp(self):
         import os
+
         env = {**os.environ, "PYTHONPATH": "."}
         result = subprocess.run(
             [self.python, "-m", "half.half_sidecar", "mrp"],
-            capture_output=True, text=True, timeout=10, env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=env,
         )
         assert result.returncode == 0, f"stderr: {result.stderr}"

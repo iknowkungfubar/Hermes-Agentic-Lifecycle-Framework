@@ -22,16 +22,32 @@ class TestFullPipeline:
 
         # Step 1: init
         r = subprocess.run(
-            [sys.executable, "-m", "half.__main__", "init",
-             "--project", "test-project", "--mode", "full", "--dir", str(project_dir)],
-            capture_output=True, text=True, timeout=30, env=env,
+            [
+                sys.executable,
+                "-m",
+                "half.__main__",
+                "init",
+                "--project",
+                "test-project",
+                "--mode",
+                "full",
+                "--dir",
+                str(project_dir),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=env,
         )
         assert r.returncode == 0, f"init failed: {r.stderr}"
 
         # Step 2: status
         r = subprocess.run(
             [sys.executable, "-m", "half.__main__", "status"],
-            capture_output=True, text=True, timeout=10, env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=env,
         )
         assert r.returncode == 0
         data = json.loads(r.stdout)
@@ -40,20 +56,29 @@ class TestFullPipeline:
         # Step 3: gate-check phase-1
         r = subprocess.run(
             [sys.executable, "-m", "half.__main__", "gate-check", "phase-1"],
-            capture_output=True, text=True, timeout=10, env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=env,
         )
         assert r.returncode == 0
 
         # Step 4: run-phase phase-1
         r = subprocess.run(
             [sys.executable, "-m", "half.__main__", "run-phase", "phase-1"],
-            capture_output=True, text=True, timeout=30, env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=env,
         )
         assert r.returncode == 0
 
         # Step 5: generate-mrp
         r = subprocess.run(
             [sys.executable, "-m", "half.__main__", "generate-mrp"],
-            capture_output=True, text=True, timeout=30, env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=env,
         )
         assert r.returncode == 0

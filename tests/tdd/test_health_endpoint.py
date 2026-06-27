@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import json
-from http.server import HTTPServer
 import threading
 import time
 import urllib.request
+from http.server import HTTPServer
 
 import pytest
 
@@ -17,6 +17,7 @@ class TestHealthEndpoint:
     @pytest.fixture(scope="class")
     def server(self):
         from half.http_sidecar import HalfAPIHandler
+
         port = 19777
         srv = HTTPServer(("127.0.0.1", port), HalfAPIHandler)
         t = threading.Thread(target=srv.serve_forever, daemon=True)

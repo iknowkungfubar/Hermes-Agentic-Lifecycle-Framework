@@ -95,9 +95,7 @@ def cmd_run_phase(
             project_concept=concept,
         )
 
-        thread_id = (
-            f"half-{phase}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-        )
+        thread_id = f"half-{phase}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
         run_config = {"configurable": {"thread_id": thread_id}}
 
         completed_nodes: list[str] = []
@@ -126,9 +124,7 @@ def cmd_run_phase(
                         for gate in gate_results:
                             if isinstance(gate, dict):
                                 gid = gate.get("gate_id", "?")
-                                status = (
-                                    "PASSED" if gate.get("passed") else "FAILED"
-                                )
+                                status = "PASSED" if gate.get("passed") else "FAILED"
                                 print(f"  [GATE {gid}] {status}")
 
                     logger.info("Node '%s' completed", node_name)
@@ -137,17 +133,14 @@ def cmd_run_phase(
         snapshot = app.get_state(run_config)
         if snapshot.next is not None:
             next_nodes = ", ".join(snapshot.next) if snapshot.next else "?"
-            logger.info(
-                "Pipeline paused at human checkpoint. Next: %s", next_nodes
-            )
+            logger.info("Pipeline paused at human checkpoint. Next: %s", next_nodes)
             interrupted = True
 
         current_step = snapshot.values.get("current_step", "unknown")
         current_phase = snapshot.values.get("current_phase", phase)
 
         logger.info(
-            "Phase %s execution complete. Final step: %s. "
-            "Nodes executed: %d",
+            "Phase %s execution complete. Final step: %s. Nodes executed: %d",
             phase,
             current_step,
             len(completed_nodes),

@@ -12,6 +12,7 @@ class TestPGliteBulk:
     def test_bulk_operations(self):
         with tempfile.TemporaryDirectory() as tmp:
             from half.pglite_registry import PGliteRegistry
+
             reg = PGliteRegistry(db_path=str(Path(tmp) / "t.db"))
             src = Path(tmp) / "src"
             src.mkdir()
@@ -27,6 +28,7 @@ class TestPGliteBulk:
 class TestBootBulk:
     def test_boot_creates_phases(self):
         from half.boot_sequence import BootSequence
+
         boot = BootSequence()
         report = boot.run()
         assert len(report.phases) >= 3
@@ -36,6 +38,7 @@ class TestBootBulk:
 class TestDoomLoopBulk:
     def test_doom_loop_detection(self):
         from half.doom_loop import DoomLoopDetector
+
         detector = DoomLoopDetector(max_retries=3)
         detector.register_session("test-loop", "initial spec")
         for i in range(4):
@@ -49,6 +52,7 @@ class TestGateCheckBulk:
     def test_gate_check_init(self):
         with tempfile.TemporaryDirectory() as tmp:
             from half.core.gate_checker import GateChecker
+
             checker = GateChecker(artifacts_dir=Path(tmp))
             assert checker is not None
 
@@ -56,6 +60,7 @@ class TestGateCheckBulk:
 class TestSpecVerifyBulk:
     def test_verify_missing_file_returns_not_passed(self):
         from half.spec_verify import SpecVerifier
+
         report = SpecVerifier().verify_file("/nonexistent/path/test.py")
         assert not report.passed
 
@@ -63,6 +68,7 @@ class TestSpecVerifyBulk:
 class TestDoctorBulk:
     def test_doctor_full(self):
         from half.doctor import Doctor
+
         doctor = Doctor()
         report = doctor.run_full_diagnostics()
         assert report is not None

@@ -11,7 +11,13 @@ import pytest
 
 class TestHalfSidecarDirect:
     def test_status_direct(self):
-        from half.half_sidecar import cmd_status, cmd_generate_mrp, cmd_gate_check, cmd_run_phase
+        from half.half_sidecar import (
+            cmd_gate_check,
+            cmd_generate_mrp,
+            cmd_run_phase,
+            cmd_status,
+        )
+
         assert isinstance(cmd_status(), dict)
         assert isinstance(cmd_generate_mrp(), dict)
         assert isinstance(cmd_gate_check("phase-1"), dict)
@@ -21,12 +27,14 @@ class TestHalfSidecarDirect:
 
     def test_gate_check_all_phases(self):
         from half.half_sidecar import cmd_gate_check
+
         for phase in ["phase-1", "phase-2", "phase-3", "phase-4", "phase-5"]:
             r = cmd_gate_check(phase)
             assert isinstance(r, dict)
 
     def test_mrp_structure(self):
         from half.half_sidecar import cmd_generate_mrp
+
         r = cmd_generate_mrp()
         assert isinstance(r, dict)
 
@@ -34,6 +42,7 @@ class TestHalfSidecarDirect:
 class TestHTTPSidecarDirect:
     def test_import_classes(self):
         from half.http_sidecar import HalfAPIHandler, run_server
+
         assert hasattr(HalfAPIHandler, "do_GET")
         assert hasattr(HalfAPIHandler, "do_POST")
         assert hasattr(HalfAPIHandler, "_json_response")
@@ -44,6 +53,7 @@ class TestHTTPSidecarDirect:
 class TestRestDaemonDirect:
     def test_import_classes(self):
         from half.rest_daemon import RESTAPIHandler, run_server
+
         assert hasattr(RESTAPIHandler, "do_GET")
         assert hasattr(RESTAPIHandler, "do_POST")
         assert callable(run_server)
@@ -52,6 +62,7 @@ class TestRestDaemonDirect:
 class TestWebhooksDirect:
     def test_webhook_models(self):
         from half.webhooks import WebhookHandler, WebhookServer
+
         handler = WebhookHandler()
         assert handler is not None
         server = WebhookServer(handler=handler)

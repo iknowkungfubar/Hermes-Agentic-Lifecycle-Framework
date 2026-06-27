@@ -8,8 +8,8 @@ import signal
 import subprocess
 import sys
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -27,7 +27,9 @@ def sidecar_server():
     env = {**os.environ, "PYTHONPATH": "."}
     proc = subprocess.Popen(
         [sys.executable, "-m", "half.http_sidecar"],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     # Wait for server
     for _ in range(30):
@@ -54,7 +56,9 @@ class TestLiveHTTP:
         assert "status" in json.loads(r.read())
 
     def test_finality(self, sidecar_server):
-        r = urllib.request.urlopen(f"{sidecar_server}/api/get_finality_gate_status", timeout=5)
+        r = urllib.request.urlopen(
+            f"{sidecar_server}/api/get_finality_gate_status", timeout=5
+        )
         assert r.status == 200
 
     def test_vram(self, sidecar_server):

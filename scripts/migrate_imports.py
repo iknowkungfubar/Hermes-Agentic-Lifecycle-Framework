@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Migrate src/ to half/ namespace: move sub-packages and fix all imports."""
+
 import os
 import shutil
 import subprocess
@@ -11,8 +12,13 @@ HALF = SRC / "half"
 
 # Directories to move under half/
 DIRS_TO_MOVE = [
-    "core", "agents", "runtime", "state",
-    "agent_mail", "half_voice", "half_focalboard",
+    "core",
+    "agents",
+    "runtime",
+    "state",
+    "agent_mail",
+    "half_voice",
+    "half_focalboard",
 ]
 
 # File to move
@@ -43,7 +49,9 @@ print("\n=== Updating all imports from src. to half. ===")
 
 # Find all Python files
 python_files = list(HALF.rglob("*.py")) + list((REPO / "tests").rglob("*.py"))
-python_files = [f for f in python_files if ".venv" not in str(f) and "egg-info" not in str(f)]
+python_files = [
+    f for f in python_files if ".venv" not in str(f) and "egg-info" not in str(f)
+]
 
 count = 0
 for filepath in python_files:

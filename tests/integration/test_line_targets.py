@@ -15,6 +15,7 @@ class TestHalfSidecarLineRanges:
     def test_line80_82_exception(self):
         """Hit lines 80-82: exception handler in cmd_run_phase."""
         from half.half_sidecar import cmd_run_phase
+
         # Pass an invalid phase that causes GateChecker to throw
         r = cmd_run_phase("phase-99")
         assert isinstance(r, dict)
@@ -23,12 +24,14 @@ class TestHalfSidecarLineRanges:
     def test_line159_160_voice_tts(self):
         """Hit lines 159-160: cmd_voice_tts error path."""
         from half.half_sidecar import cmd_voice_tts
+
         r = cmd_voice_tts("hello world")
         assert isinstance(r, dict)
 
     def test_line184_191_focalboard(self):
         """Hit lines 184-191: cmd_focalboard_create."""
         from half.half_sidecar import cmd_focalboard_create
+
         try:
             r = cmd_focalboard_create()
             assert isinstance(r, dict)
@@ -37,9 +40,11 @@ class TestHalfSidecarLineRanges:
 
     def test_line203_258_main_function(self):
         """Hit lines 203-258: main() function with various args."""
+        import io
+        import sys as _sys
+
         from half.__main__ import main
-        import io, sys as _sys
-        
+
         # Test with --version
         captured = io.StringIO()
         old_out = _sys.stdout
@@ -59,22 +64,28 @@ class TestHalfSidecarLineRanges:
 
     def test_line270_320_http_server(self):
         """Hit _run_http_server briefly."""
-        from half.half_sidecar import _run_http_server
         import threading
+
+        from half.half_sidecar import _run_http_server
+
         # Start server briefly in a thread to hit the function
         result = []
+
         def run():
             try:
                 _run_http_server(host="127.0.0.1", port=19999)
                 result.append(True)
             except Exception as e:
                 result.append(e)
+
         t = threading.Thread(target=run, daemon=True)
         t.start()
         import time
+
         time.sleep(1)
         # The server should be running now — check it started
         import socket
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect(("127.0.0.1", 19999))
@@ -86,10 +97,14 @@ class TestHalfSidecarLineRanges:
 
     def test_line324_main_module(self):
         """Hit __main__ block line 324."""
-        import subprocess, sys as _sys
+        import subprocess
+        import sys as _sys
+
         r = subprocess.run(
             [_sys.executable, "-m", "half.half_sidecar", "status"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         assert r.returncode == 0
 
@@ -99,7 +114,9 @@ class TestHTTPSidecarHandlerCalls:
 
     def test_live_get(self):
         """Hit do_GET by making real HTTP request to running sidecar."""
-        import socket, urllib.request
+        import socket
+        import urllib.request
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if s.connect_ex(("127.0.0.1", 9721)) != 0:
             s.close()
@@ -110,6 +127,7 @@ class TestHTTPSidecarHandlerCalls:
 
     def test_handler_class(self):
         from half.http_sidecar import HalfAPIHandler
+
         assert hasattr(HalfAPIHandler, "do_GET")
         assert hasattr(HalfAPIHandler, "do_POST")
         assert hasattr(HalfAPIHandler, "_json_response")
@@ -118,6 +136,7 @@ class TestHTTPSidecarHandlerCalls:
 class TestRestDaemonHandlerCalls:
     def test_handler(self):
         from half.rest_daemon import RESTAPIHandler
+
         assert hasattr(RESTAPIHandler, "do_GET")
         assert hasattr(RESTAPIHandler, "do_POST")
 
@@ -125,6 +144,7 @@ class TestRestDaemonHandlerCalls:
 class TestWebhooksHandlerCalls:
     def test_handler_creation(self):
         from half.webhooks import WebhookHandler, WebhookServer
+
         h = WebhookHandler()
         s = WebhookServer(handler=h)
         assert s.host == "127.0.0.1"
@@ -133,6 +153,7 @@ class TestWebhooksHandlerCalls:
 class TestSandboxImport:
     def test_import_and_init(self):
         from half.sandbox import ExecutionSandbox
+
         try:
             s = ExecutionSandbox()
             assert s is not None
@@ -143,6 +164,7 @@ class TestSandboxImport:
 class TestPrewarmLifecycle:
     def test_full_lifecycle(self):
         from half.prewarm import PreWarmDeployment, WarmContainer
+
         pw = PreWarmDeployment()
         for n in ["a", "b", "c"]:
             pw._warm_containers[n] = WarmContainer(name=n, image=f"{n}:latest")
@@ -154,6 +176,7 @@ class TestPrewarmLifecycle:
 class TestVoiceAttrs:
     def test_engine_discovery(self):
         from half.half_voice.engine import VoiceEngine
+
         e = VoiceEngine()
         assert hasattr(e, "_stt_available")
         assert hasattr(e, "_tts_available")
@@ -161,7 +184,8 @@ class TestVoiceAttrs:
 
 class TestSecurityConstructors:
     def test_scanners(self):
-        from half.security_scanners import GarakScanner, BumblebeeScanner
+        from half.security_scanners import BumblebeeScanner, GarakScanner
+
         assert GarakScanner() is not None
         assert BumblebeeScanner() is not None
 
@@ -169,14 +193,17 @@ class TestSecurityConstructors:
 class TestBrowserConstructor:
     def test_agent(self):
         from half.browser_research import BrowserResearchAgent
+
         assert BrowserResearchAgent() is not None
 
 
 class TestIndexingSearch:
     def test_build_and_search(self):
         import tempfile
+
         with tempfile.TemporaryDirectory() as tmp:
             from half.indexing import RepoIndexer
+
             idx = RepoIndexer(root=tmp)
             idx.build_index()
             results = idx.search("anything")

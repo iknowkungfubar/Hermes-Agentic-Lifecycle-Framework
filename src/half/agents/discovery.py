@@ -119,9 +119,7 @@ Return a JSON object with these exact keys:
                     self.requirements.elevator_pitch = concept
                     return self.requirements
             else:
-                logger.warning(
-                    "Could not parse LLM response as JSON — using defaults"
-                )
+                logger.warning("Could not parse LLM response as JSON — using defaults")
                 self.requirements.elevator_pitch = concept
                 return self.requirements
 

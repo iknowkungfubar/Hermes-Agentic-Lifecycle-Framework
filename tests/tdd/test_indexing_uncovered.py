@@ -15,8 +15,11 @@ class TestIndexingUncovered:
         """Hit lines 49, 62, 80-81 — file discovery and summarization."""
         with tempfile.TemporaryDirectory() as tmp:
             from half.indexing import RepoIndexer
+
             (Path(tmp) / "src").mkdir()
-            (Path(tmp) / "src" / "mod.py").write_text("import os\ndef func(): return os.getcwd()\nclass Helper: pass\n")
+            (Path(tmp) / "src" / "mod.py").write_text(
+                "import os\ndef func(): return os.getcwd()\nclass Helper: pass\n"
+            )
             idx = RepoIndexer(root=tmp)
             result = idx.build_index()
             assert isinstance(result, dict)
@@ -26,7 +29,10 @@ class TestIndexingUncovered:
         """Hit lines 131, 142, 145-146 — search with query match."""
         with tempfile.TemporaryDirectory() as tmp:
             from half.indexing import RepoIndexer
-            (Path(tmp) / "app.py").write_text("import sys\ndef main(): return sys.version\n")
+
+            (Path(tmp) / "app.py").write_text(
+                "import sys\ndef main(): return sys.version\n"
+            )
             idx = RepoIndexer(root=tmp)
             idx.build_index()
             results = idx.search("main")
@@ -36,6 +42,7 @@ class TestIndexingUncovered:
         """Hit line 156, 166-167, 169, 185 — multi-file search."""
         with tempfile.TemporaryDirectory() as tmp:
             from half.indexing import RepoIndexer
+
             for name in ["a.py", "b.py", "c.py"]:
                 (Path(tmp) / name).write_text("x = 1\ny = 2\n")
             idx = RepoIndexer(root=tmp)

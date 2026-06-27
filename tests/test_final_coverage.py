@@ -137,6 +137,7 @@ class TestVoiceEngineDetailed:
         import subprocess
 
         from half.half_voice import VoiceEngine
+
         try:
             subprocess.run(["arecord", "--version"], capture_output=True, timeout=5)
             engine = VoiceEngine()

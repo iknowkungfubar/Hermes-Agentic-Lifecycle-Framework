@@ -13,6 +13,7 @@ class TestNoSlopDetailed:
     def test_index_with_nested_dirs(self):
         with tempfile.TemporaryDirectory() as tmp:
             from half.no_slop import NoSlopIndexer
+
             (Path(tmp) / "subdir").mkdir()
             (Path(tmp) / "subdir" / "a.py").write_text("x = 1\n")
             indexer = NoSlopIndexer(root_path=tmp)
@@ -24,6 +25,7 @@ class TestPGliteDetailed:
     def test_index_codebase(self):
         with tempfile.TemporaryDirectory() as tmp:
             from half.pglite_registry import PGliteRegistry
+
             (Path(tmp) / "src").mkdir()
             (Path(tmp) / "src" / "mod.py").write_text("def f(): return 1\n")
             registry = PGliteRegistry(db_path=str(Path(tmp) / "test.db"))
@@ -34,6 +36,7 @@ class TestPGliteDetailed:
 class TestEventDrivenDetailed:
     def test_handle_ci_webhook(self):
         from half.event_driven import EventDrivenAgency, EventTrigger
+
         agency = EventDrivenAgency()
         agency.register_trigger(EventTrigger("ci", "ci_failure", "master", "echo fix"))
         fired = agency.handle_ci_webhook({"status": "failure", "branch": "master"})
@@ -43,10 +46,12 @@ class TestEventDrivenDetailed:
 class TestHalfSidecarDetailed:
     def test_cmd_generate_mrp(self):
         from half.half_sidecar import cmd_generate_mrp
+
         result = cmd_generate_mrp()
         assert isinstance(result, dict)
 
     def test_cmd_gate_check(self):
         from half.half_sidecar import cmd_gate_check
+
         result = cmd_gate_check("phase-1")
         assert isinstance(result, dict)

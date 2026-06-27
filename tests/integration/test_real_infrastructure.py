@@ -18,9 +18,17 @@ class TestSandboxWithPodman:
         """Execute a command inside a real Podman container."""
         try:
             result = subprocess.run(
-                ["podman", "run", "--rm", "docker.io/library/alpine:latest",
-                 "echo", "hello_from_sandbox"],
-                capture_output=True, text=True, timeout=15,
+                [
+                    "podman",
+                    "run",
+                    "--rm",
+                    "docker.io/library/alpine:latest",
+                    "echo",
+                    "hello_from_sandbox",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             assert result.returncode == 0
             assert "hello_from_sandbox" in result.stdout
@@ -31,9 +39,21 @@ class TestSandboxWithPodman:
         """Verify the sandbox has no network access."""
         try:
             result = subprocess.run(
-                ["podman", "run", "--rm", "--network", "none",
-                 "docker.io/library/alpine:latest", "ping", "-c", "1", "8.8.8.8"],
-                capture_output=True, text=True, timeout=10,
+                [
+                    "podman",
+                    "run",
+                    "--rm",
+                    "--network",
+                    "none",
+                    "docker.io/library/alpine:latest",
+                    "ping",
+                    "-c",
+                    "1",
+                    "8.8.8.8",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             # Should fail — no network
             assert result.returncode != 0
@@ -47,24 +67,46 @@ class TestPrewarmWithPodman:
     def test_pull_and_run(self):
         """Verify we can pull and run a container (prewarm equivalent)."""
         import time
+
         try:
             result = subprocess.run(
-                ["podman", "run", "-d", "--name", "half-test-prewarm",
-                 "docker.io/library/alpine:latest", "sleep", "5"],
-                capture_output=True, text=True, timeout=30,
+                [
+                    "podman",
+                    "run",
+                    "-d",
+                    "--name",
+                    "half-test-prewarm",
+                    "docker.io/library/alpine:latest",
+                    "sleep",
+                    "5",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             if result.returncode == 0:
                 container_id = result.stdout.strip()
                 time.sleep(1)
                 inspect = subprocess.run(
-                    ["podman", "inspect", container_id, "--format", "{{.State.Status}}"],
-                    capture_output=True, text=True, timeout=10,
+                    [
+                        "podman",
+                        "inspect",
+                        container_id,
+                        "--format",
+                        "{{.State.Status}}",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 assert "running" in inspect.stdout
                 # Wait for container to exit (sleep 5)
                 time.sleep(6)
-                subprocess.run(["podman", "rm", "-f", container_id],
-                               capture_output=True, timeout=15)
+                subprocess.run(
+                    ["podman", "rm", "-f", container_id],
+                    capture_output=True,
+                    timeout=15,
+                )
             else:
                 pytest.skip(f"Could not start container: {result.stderr}")
         except FileNotFoundError:
@@ -80,15 +122,29 @@ class TestVoiceWithRealAudio:
         try:
             # Create a real WAV file with a tone
             subprocess.run(
-                ["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
-                 "-ac", "1", "-ar", "16000", str(audio_file)],
-                capture_output=True, text=True, timeout=10,
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    "sine=frequency=440:duration=1",
+                    "-ac",
+                    "1",
+                    "-ar",
+                    "16000",
+                    str(audio_file),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             assert audio_file.exists()
             assert audio_file.stat().st_size > 1000
 
             # Test transcribe with the real audio
             from half.half_sidecar import cmd_voice_stt
+
             result = cmd_voice_stt(str(audio_file))
             assert isinstance(result, dict)
         finally:
@@ -100,6 +156,7 @@ class TestVoiceWithRealAudio:
     def test_tts_generates_audio(self):
         """Test TTS pipeline actually generates audio."""
         from half.half_voice.engine import VoiceEngine
+
         engine = VoiceEngine()
         if not engine._tts_available:
             pytest.skip("TTS engine not available")
@@ -121,7 +178,9 @@ class TestSecurityScannersInstalled:
         try:
             r = subprocess.run(
                 [sys.executable, "-m", "bandit", "--version"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             assert r.returncode == 0
         except (FileNotFoundError, ModuleNotFoundError):
@@ -131,8 +190,16 @@ class TestSecurityScannersInstalled:
         """Verify ruff can run a security check."""
         try:
             r = subprocess.run(
-                ["ruff", "check", "--select", "S", str(Path.cwd() / "src" / "half" / "config.py")],
-                capture_output=True, text=True, timeout=10,
+                [
+                    "ruff",
+                    "check",
+                    "--select",
+                    "S",
+                    str(Path.cwd() / "src" / "half" / "config.py"),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             # ruff may return non-zero if it finds issues, that's OK
             assert r.returncode >= 0
@@ -147,6 +214,7 @@ class TestBrowserResearchWithRequests:
         """Test that basic web fetching works."""
         try:
             import urllib.request
+
             r = urllib.request.urlopen("https://example.com", timeout=5)
             assert r.status == 200
             content = r.read().decode()
@@ -161,6 +229,7 @@ class TestIndexingWithRealFiles:
     def test_index_real_project(self):
         """Index a real project directory."""
         from half.indexing import RepoIndexer
+
         idx = RepoIndexer(root=str(Path.cwd() / "src" / "half"))
         result = idx.build_index()
         assert isinstance(result, dict)
@@ -169,6 +238,7 @@ class TestIndexingWithRealFiles:
     def test_search_finds_files(self):
         """Search should find indexed files."""
         from half.indexing import RepoIndexer
+
         idx = RepoIndexer(root=str(Path.cwd() / "src" / "half"))
         idx.build_index()
         results = idx.search("def ")

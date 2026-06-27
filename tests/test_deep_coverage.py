@@ -12,12 +12,15 @@ import pytest
 class TestPGliteDeep:
     def test_full_registry_lifecycle(self):
         with tempfile.TemporaryDirectory() as tmp:
-            from half.pglite_registry import PGliteRegistry, AGENT_VIEWS
+            from half.pglite_registry import AGENT_VIEWS, PGliteRegistry
+
             db = str(Path(tmp) / "p.db")
             reg = PGliteRegistry(db_path=db)
 
             # Index files
-            (Path(tmp) / "a.py").write_text("import os\nX=1\ndef f():return X\nclass C:pass\n")
+            (Path(tmp) / "a.py").write_text(
+                "import os\nX=1\ndef f():return X\nclass C:pass\n"
+            )
             reg.index_codebase(tmp)
 
             # Search
@@ -50,6 +53,7 @@ class TestPGliteDeep:
 class TestBootDeep:
     def test_phase1_hardware_checks(self):
         from half.boot_sequence import BootSequence
+
         boot = BootSequence()
         report = boot.run()
         phase1 = report.phases[0]
@@ -58,6 +62,7 @@ class TestBootDeep:
 
     def test_report_string(self):
         from half.boot_sequence import BootSequence
+
         boot = BootSequence()
         boot.run()
         output = boot.print_report()
@@ -67,7 +72,8 @@ class TestBootDeep:
 class TestGateCheckerDeep:
     def test_phase1_gates(self):
         with tempfile.TemporaryDirectory() as tmp:
-            from half.core.gate_checker import GateChecker, GateCheck
+            from half.core.gate_checker import GateCheck, GateChecker
+
             artifacts = Path(tmp)
             (artifacts / "phase-1").mkdir(parents=True)
             (artifacts / "phase-1" / "01-REQUIREMENTS.md").write_text("# Reqs\n")
@@ -81,21 +87,33 @@ class TestGateCheckerDeep:
     def test_has_blocking_failures(self):
         with tempfile.TemporaryDirectory() as tmp:
             from half.core.gate_checker import GateChecker
+
             gc = GateChecker(artifacts_dir=Path(tmp))
-            assert gc.has_blocking_failures([{"passed": True, "blocking": True}]) is False
-            assert gc.has_blocking_failures([{"passed": False, "blocking": True}]) is True
+            assert (
+                gc.has_blocking_failures([{"passed": True, "blocking": True}]) is False
+            )
+            assert (
+                gc.has_blocking_failures([{"passed": False, "blocking": True}]) is True
+            )
 
     def test_summary(self):
         with tempfile.TemporaryDirectory() as tmp:
             from half.core.gate_checker import GateChecker
+
             gc = GateChecker(artifacts_dir=Path(tmp))
-            s = gc.summary([{"passed": True, "blocking": False}, {"passed": False, "blocking": True}])
+            s = gc.summary(
+                [
+                    {"passed": True, "blocking": False},
+                    {"passed": False, "blocking": True},
+                ]
+            )
             assert isinstance(s, str)
 
 
 class TestDatabaseDeep:
     def test_db_helpers(self):
         from half.agent_mail.database import cleanup_db, get_db
+
         cleanup_db()
         db = get_db()
         assert db is not None
@@ -104,6 +122,7 @@ class TestDatabaseDeep:
 class TestDoomLoopDeep:
     def test_doom_loop_analysis(self):
         from half.doom_loop import DoomLoopDetector
+
         detector = DoomLoopDetector(max_retries=3)
         detector.register_session("dl-test", "spec")
         # Trigger doom loop with 3+ same error type
@@ -115,6 +134,7 @@ class TestDoomLoopDeep:
 
     def test_growing_traceback(self):
         from half.doom_loop import DoomLoopDetector
+
         detector = DoomLoopDetector(max_retries=5)
         detector.register_session("dl-tb", "spec")
         tb = "x"
@@ -128,11 +148,13 @@ class TestDoomLoopDeep:
 class TestSpecVerifyDeep:
     def test_verify_missing_file(self):
         from half.spec_verify import SpecVerifier
+
         r = SpecVerifier().verify_file("/nonexistent/test.py")
         assert not r.passed
 
     def test_verify_empty_file(self, tmp_path):
         from half.spec_verify import SpecVerifier
+
         f = tmp_path / "e.py"
         f.write_text("")
         r = SpecVerifier().verify_file(f)
@@ -140,6 +162,7 @@ class TestSpecVerifyDeep:
 
     def test_verify_dangerous(self, tmp_path):
         from half.spec_verify import SpecVerifier
+
         f = tmp_path / "d.py"
         f.write_text("import subprocess\nsubprocess.call(['rm'])\n")
         r = SpecVerifier().verify_file(f)
