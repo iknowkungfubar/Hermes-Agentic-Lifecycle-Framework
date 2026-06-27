@@ -5,14 +5,19 @@ on:
     branches: [master, main]
   push:
     branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with: { python-version: "3.13" }
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f76 # v5.5.0
+        with:
+          python-version: "3.13"
       - run: pip install ruff
       - run: ruff check src/ --quiet
       - run: ruff format src/ --check --quiet
@@ -20,60 +25,66 @@ jobs:
   type-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with: { python-version: "3.13" }
-      - run: pip install uv
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f76 # v5.5.0
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@6b9c6063abd6010835654d32e2b0b0d4b492a561 # v5.0.0
       - run: uv sync --group dev
-      - run: mypy src/
+      - run: uv run mypy src/
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with: { python-version: "3.13" }
-      - run: pip install uv
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f76 # v5.5.0
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@6b9c6063abd6010835654d32e2b0b0d4b492a561 # v5.0.0
       - run: uv sync --group dev
-      - run: pip install -e .
-      - run: pytest tests/ -q --tb=no --cov=src/half --cov-fail-under=74 --asyncio-mode=auto --ignore=tests/coverage --ignore=tests/infrastructure --ignore=tests/integration
+      - run: uv run pip install -e .
+      - run: uv run pytest tests/ -q --tb=no --cov=src/half --cov-fail-under=74 --asyncio-mode=auto --ignore=tests/coverage --ignore=tests/infrastructure --ignore=tests/integration
 
   integration:
     needs: [test]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with: { python-version: "3.13" }
-      - run: pip install uv
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f76 # v5.5.0
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@6b9c6063abd6010835654d32e2b0b0d4b492a561 # v5.0.0
       - run: uv sync --group dev
-      - run: pip install -e .
+      - run: uv run pip install -e .
       - name: Start HTTP sidecar
         run: |
-          PYTHONPATH=. python -m half.http_sidecar &
+          PYTHONPATH=. uv run python -m half.http_sidecar &
           sleep 3
           curl -sf http://127.0.0.1:9721/api/status
       - name: Run integration tests
-        run: pytest tests/integration/ -q --tb=no
+        run: uv run pytest tests/integration/ -q --tb=no
       - name: Cleanup
         run: pkill -f "half.http_sidecar" || true
 
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with: { python-version: "3.13" }
-      - run: pip install uv
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f76 # v5.5.0
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@6b9c6063abd6010835654d32e2b0b0d4b492a561 # v5.0.0
       - run: uv sync --group dev
-      - run: bandit -r src/half -ll --quiet
+      - run: uv run bandit -r src/half -ll --quiet
 
   secrets-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
       - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        uses: gitleaks/gitleaks-action@83373c2ad3a2a111826378c0612e8fba88d78ec7 # v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -82,9 +93,10 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: github/codeql-action/init@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
-        with: { languages: python }
+        with:
+          languages: python
       - uses: github/codeql-action/autobuild@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
       - uses: github/codeql-action/analyze@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
 
@@ -93,6 +105,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - run: docker build -t half:latest -f docker/Dockerfile .
       - run: echo "Build successful"
