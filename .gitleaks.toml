@@ -1,0 +1,12 @@
+# gitleaks.toml — baseline config for Hermes Agentic Lifecycle Framework
+# Prevents false positives on test fixtures and config templates
+
+title = "HALF gitleaks config"
+
+[allowlist]
+description = "Known safe patterns and paths"
+paths = [
+    "tests/",
+    "docs/",
+    "*.md",
+]
