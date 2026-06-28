@@ -288,7 +288,7 @@ class ProviderRouter:
                     mapping.model,
                     result.get("usage", {}).get("total_tokens", "?"),
                 )
-                return content
+                return content  # type: ignore[no-any-return]
             logger.warning("LLM returned no choices: %s", result)
             return ""
         except urllib.error.HTTPError as e:
