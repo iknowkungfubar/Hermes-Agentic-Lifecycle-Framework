@@ -54,7 +54,7 @@ def phase_1_discovery(state: HalfState) -> dict[str, Any]:
 
     try:
         doc = agent.analyze_with_llm(concept)
-        content = doc.render_markdown()
+        content = doc.render_markdown()  # type: ignore[attr-defined]
         source = "llm"
         logger.info("DiscoveryAgent LLM analysis succeeded for '%s'", project)
     except Exception:
