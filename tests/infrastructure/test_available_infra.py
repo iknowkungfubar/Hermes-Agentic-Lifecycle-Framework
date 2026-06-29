@@ -1,7 +1,6 @@
+from __future__ import annotations
 import os
 """Use available infrastructure: Podman, Prometheus, Grafana, network, ffmpeg."""
-
-from __future__ import annotations
 
 import json
 import subprocess
