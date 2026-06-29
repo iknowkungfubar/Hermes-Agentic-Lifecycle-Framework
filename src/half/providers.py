@@ -241,7 +241,7 @@ class ProviderRouter:
             role: Agent role (planner, coder, reviewer).
             system_prompt: Optional system-level instruction.
             max_tokens: Maximum tokens in the response.
-            temperature: Sampling temperature (0.0–1.0).
+            temperature: Sampling temperature (0.0-1.0).
 
         Returns:
             Generated text content, or empty string on failure.
