@@ -38,6 +38,7 @@ ALLOWED_METADATA_KEYS: set[str] = {
     "phase_version",
     "gate_id",
     "retry_count",
+    "source",
 }
 
 CHECKPOINT_DIR: Path = Path(config.CHECKPOINTS_DIR)

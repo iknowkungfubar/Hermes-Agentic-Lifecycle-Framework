@@ -241,7 +241,7 @@ class ProviderRouter:
             role: Agent role (planner, coder, reviewer).
             system_prompt: Optional system-level instruction.
             max_tokens: Maximum tokens in the response.
-            temperature: Sampling temperature (0.0–1.0).
+            temperature: Sampling temperature (0.0-1.0).
 
         Returns:
             Generated text content, or empty string on failure.
@@ -261,12 +261,14 @@ class ProviderRouter:
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
 
-        body = json.dumps({
-            "model": mapping.model,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-        }).encode("utf-8")
+        body = json.dumps(
+            {
+                "model": mapping.model,
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            }
+        ).encode("utf-8")
 
         url = f"{endpoint.rstrip('/')}/chat/completions"
         req = urllib.request.Request(
