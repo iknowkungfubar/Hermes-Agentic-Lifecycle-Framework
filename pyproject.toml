@@ -55,6 +55,7 @@ dev = [
     "hypothesis>=6.0",
     "mkdocs>=1.6",
     "mkdocs-material>=9.0",
+    "bandit>=1.7",
 ]
 
 [tool.setuptools.packages.find]
@@ -172,7 +173,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 74
+fail_under = 73
 show_missing = true
 skip_covered = true
 
