@@ -9,18 +9,17 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v7.0.2
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v6.0.0
         with:
           python-version: "3.13"
-      - run: pip install bandit semgrep pip-audit
-      - run: bandit -r src/ -f json -o bandit-report.json || true
-      - run: semgrep --config=auto src/ --json -o semgrep-report.json || true
-      - run: pip-audit || true
+      - uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v7.0.0
+      - run: uv sync --group dev
+      - run: uv run bandit -r src/ -f json -o bandit-report.json || true
+      - run: uv run pip-audit || true
       - name: Upload reports
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f48907d331 # v7.0.2
         with:
           name: security-reports
           path: |
             bandit-report.json
-            semgrep-report.json

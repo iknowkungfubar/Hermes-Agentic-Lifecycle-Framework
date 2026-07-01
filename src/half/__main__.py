@@ -121,7 +121,7 @@ def _route_command(args: argparse.Namespace) -> dict[str, object] | None:
     if args.command == "run-phase":
         from half.half_sidecar import cmd_run_phase
 
-        return cmd_run_phase(args.phase, concept=args.concept)
+        return cmd_run_phase(args.phase, concept=getattr(args, "concept", ""))
 
     if args.command == "gate-check":
         from half.half_sidecar import cmd_gate_check
