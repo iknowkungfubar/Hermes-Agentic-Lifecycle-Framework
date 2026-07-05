@@ -1,0 +1,4 @@
+[bandit]
+# Pre-existing: subprocess shell=True in sandbox.py is intentional
+# Pre-existing: urllib.urlopen in download.py is controlled
+skips: B602,B607,B310

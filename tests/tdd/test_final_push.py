@@ -1,3 +1,4 @@
+import shutil
 """Final push — exercise remaining infrastructure lines with real Podman/Docker."""
 
 from __future__ import annotations
@@ -129,6 +130,7 @@ class TestPrewarmContainer:
 class TestVoiceFinal:
     """Exercise voice engine with real audio pipeline."""
 
+    @pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg not installed")
     def test_ffmpeg_audio(self):
         import tempfile
         audio = Path(tempfile.mkstemp(suffix=".wav")[1])
