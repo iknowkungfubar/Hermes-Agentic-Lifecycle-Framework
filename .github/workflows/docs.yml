@@ -27,8 +27,8 @@ jobs:
           python-version: '3.13'
       - run: pip install mkdocs mkdocs-material
       - run: mkdocs build
-      - uses: actions/upload-pages-artifact@0252fc4ba762b31528b4f70e76e414b6d15727ac # v5.0.0
+      - uses: actions/upload-pages-artifact@v3 # v5.0.0
         with:
           path: site
       - id: deployment
-        uses: actions/deploy-pages@9dbe382e963b615a8da4634e0e4059a297acb009 # v5.0.0
+        uses: actions/deploy-pages@v4 # v5.0.0
