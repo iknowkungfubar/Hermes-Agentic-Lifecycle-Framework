@@ -18,7 +18,7 @@ jobs:
       - run: uv run bandit -r src/ -f json -o bandit-report.json || true
       - run: uv run pip-audit || true
       - name: Upload reports
-        uses: actions/upload-artifact@v4 # v4
+        uses: actions/upload-artifact@v7 # v4
         with:
           name: security-reports
           path: |
