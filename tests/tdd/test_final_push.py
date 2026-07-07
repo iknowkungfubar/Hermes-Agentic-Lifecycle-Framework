@@ -1,9 +1,9 @@
-import shutil
 """Final push — exercise remaining infrastructure lines with real Podman/Docker."""
 
 from __future__ import annotations
 
 import os
+import shutil
 import signal
 import subprocess
 import sys
