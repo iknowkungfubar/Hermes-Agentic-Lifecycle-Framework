@@ -56,11 +56,17 @@ jobs:
       - uses: astral-sh/setup-uv@v7 # v5
       - run: uv sync --group dev
       - run: uv run pip install -e .
+      - name: Install integration test dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
       - name: Start HTTP sidecar
         run: |
           PYTHONPATH=. uv run python -m half.http_sidecar &
-          sleep 3
-          curl -sf http://127.0.0.1:9721/api/status
+          for i in $(seq 1 10); do
+            sleep 1
+            curl -sf http://127.0.0.1:9721/api/status && break
+          done
       - name: Run integration tests
         run: uv run pytest tests/integration/ -q --tb=no
       - name: Cleanup
