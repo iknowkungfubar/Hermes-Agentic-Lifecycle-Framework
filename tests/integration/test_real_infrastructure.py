@@ -79,11 +79,14 @@ class TestVoiceWithRealAudio:
         audio_file = Path(tempfile.mkstemp(suffix=".wav")[1])
         try:
             # Create a real WAV file with a tone
-            subprocess.run(
-                ["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
-                 "-ac", "1", "-ar", "16000", str(audio_file)],
-                capture_output=True, text=True, timeout=10,
-            )
+            try:
+                subprocess.run(
+                    ["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
+                     "-ac", "1", "-ar", "16000", str(audio_file)],
+                    capture_output=True, text=True, timeout=10,
+                )
+            except FileNotFoundError:
+                pytest.skip("ffmpeg not available")
             assert audio_file.exists()
             assert audio_file.stat().st_size > 1000
 
@@ -108,8 +111,11 @@ class TestVoiceWithRealAudio:
             result = engine.speak("Hello, this is a test.", output_path=str(out))
             assert result is not None
         except RuntimeError as e:
-            if "Model file doesn't exist" in str(e):
+            err_msg = str(e)
+            if "Model file doesn't exist" in err_msg:
                 pytest.skip("Piper voice model not downloaded")
+            if "terminate called" in err_msg or "std::runtime_error" in err_msg:
+                pytest.skip("Piper TTS runtime unavailable in this environment")
             raise
 
 

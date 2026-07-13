@@ -28,14 +28,18 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync --group dev
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
       - name: Build native engines
         run: |
           bash scripts/setup.sh --no-docker --no-ebpf --no-pglite
       - name: Start HTTP sidecar
         run: |
           PYTHONPATH=. .venv/bin/python -m half.http_sidecar &
-          sleep 3
-          curl -sf http://127.0.0.1:9721/api/status || echo "Sidecar failed"
+          for i in $(seq 1 10); do
+            sleep 1
+            curl -sf http://127.0.0.1:9721/api/status && break
+          done || echo "Sidecar failed"
       - name: Run integration tests
         run: |
           PYTHONPATH=. .venv/bin/pytest tests/integration/ -v --tb=short

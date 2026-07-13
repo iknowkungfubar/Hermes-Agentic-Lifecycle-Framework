@@ -22,9 +22,19 @@ def _sidecar_running() -> bool:
         return False
 
 
-@pytest.mark.skipif(not _sidecar_running(), reason="sidecar not running on :9721")
 class TestHalfSidecarHTTP:
-    """Tests against the live HTTP sidecar server."""
+    """Tests against the live HTTP sidecar server.
+
+    Uses runtime fixture check instead of class-level skipif to avoid
+    race between test collection (evaluates skip condition) and execution
+    (sidecar may have crashed in between).
+    """
+
+    @pytest.fixture(autouse=True)
+    def _skip_if_sidecar_down(self):
+        """Skip test if sidecar is not running at execution time."""
+        if not _sidecar_running():
+            pytest.skip("sidecar not running on :9721")
 
     def test_status_endpoint(self):
         r = urllib.request.urlopen(f"{SIDECAR_URL}/api/status", timeout=5)
