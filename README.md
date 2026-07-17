@@ -6,7 +6,8 @@
 
 **Transform high-level business concepts into production-ready software through autonomous, multi-agent orchestration.**
 
-[![CI](https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/actions/workflows/ci.yml/badge.svg)](https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/actions/workflows/ci.yml)
+[![CI](https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/iknowkungfubar/Hermes-Agentic-Lifecycle-Framework/actions/workflows/codeql.yml)
 [![PyPI](https://img.shields.io/pypi/v/hermes-half)](https://pypi.org/project/hermes-half/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](pyproject.toml)
