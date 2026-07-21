@@ -12,6 +12,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
+          POSTGRES_USER: root
           POSTGRES_DB: half_test
           POSTGRES_PASSWORD: test_secret
         options: >-
