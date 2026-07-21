@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from half.runtime.nodes._write_artifact import _write_artifact
-
-if TYPE_CHECKING:
-    from half.runtime.state import HalfState
+from half.runtime.state import HalfState  # noqa: TC001
 
 logger = logging.getLogger("half.runtime.nodes")
-
 
 def phase_4_infrastructure(state: HalfState) -> dict[str, Any]:
     """Phase 4A: Infrastructure as Code generation."""
@@ -34,7 +31,6 @@ def phase_4_infrastructure(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_4_cicd(state: HalfState) -> dict[str, Any]:
     """Phase 4B: CI/CD pipeline generation."""
     logger.info("Phase 4B: CI/CD generation")
@@ -49,7 +45,6 @@ def phase_4_cicd(state: HalfState) -> dict[str, Any]:
             {"role": "assistant", "content": "Phase 4B: CI pipeline generated"}
         ],
     }
-
 
 def phase_4_launch(state: HalfState) -> dict[str, Any]:
     """Phase 4C: Production readiness checklist."""
@@ -83,7 +78,6 @@ def phase_4_launch(state: HalfState) -> dict[str, Any]:
             }
         ],
     }
-
 
 def phase_4_gate(state: HalfState) -> dict[str, Any]:
     """Gate: Phase 4 -- Finality Gate check."""

@@ -5,15 +5,12 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from half.runtime.nodes._write_artifact import _write_artifact
-
-if TYPE_CHECKING:
-    from half.runtime.state import HalfState
+from half.runtime.state import HalfState  # noqa: TC001
 
 logger = logging.getLogger("half.runtime.nodes")
-
 
 def phase_1_discovery(state: HalfState) -> dict[str, Any]:
     """Phase 1A: Requirements discovery.
@@ -88,7 +85,6 @@ def phase_1_discovery(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_1_specification(state: HalfState) -> dict[str, Any]:
     """Phase 1B: Technical specification generation."""
     project = state.get("project_name", "default")
@@ -148,7 +144,6 @@ def phase_1_specification(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_1_architecture(state: HalfState) -> dict[str, Any]:
     """Phase 1C: Ideal State Architecture with ADRs."""
     project = state.get("project_name", "default")
@@ -198,7 +193,6 @@ graph TB
             }
         ],
     }
-
 
 def phase_1_gate(state: HalfState) -> dict[str, Any]:
     """Gate: Phase 1 completeness -- verifies all 5 artifacts exist."""

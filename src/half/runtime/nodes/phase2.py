@@ -5,15 +5,12 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from half.runtime.nodes._write_artifact import _write_artifact
-
-if TYPE_CHECKING:
-    from half.runtime.state import HalfState
+from half.runtime.state import HalfState  # noqa: TC001
 
 logger = logging.getLogger("half.runtime.nodes")
-
 
 def phase_2_scaffold(state: HalfState) -> dict[str, Any]:
     """Phase 2A: Repository scaffolding -- creates project structure."""
@@ -44,7 +41,6 @@ def phase_2_scaffold(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_2_research(state: HalfState) -> dict[str, Any]:
     """Phase 2B.1: Research (Read-Only) -- analyzes codebase."""
     project = state.get("project_name", "default")
@@ -71,7 +67,6 @@ def phase_2_research(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_2_plan(state: HalfState) -> dict[str, Any]:
     """Phase 2B.2: Plan (Design-Only) -- generates implementation spec."""
     logger.info("Phase 2B.2: Implementation planning")
@@ -91,7 +86,6 @@ def phase_2_plan(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_2_implement(state: HalfState) -> dict[str, Any]:
     """Phase 2B.3: Implement (Write-Restricted) -- harness-first TDD."""
     project = state.get("project_name", "default")
@@ -104,7 +98,6 @@ def phase_2_implement(state: HalfState) -> dict[str, Any]:
     test_content = f'''"""Tests for {project}."""
 
 from __future__ import annotations
-
 
 def test_placeholder() -> None:
     """Placeholder test -- replace with real tests."""
@@ -121,7 +114,6 @@ def test_placeholder() -> None:
             }
         ],
     }
-
 
 def phase_2_simplify(state: HalfState) -> dict[str, Any]:
     """Phase 2B.4: Code-Simplifier -- AST-based refactoring analysis."""
@@ -143,7 +135,6 @@ def phase_2_simplify(state: HalfState) -> dict[str, Any]:
             }
         ],
     }
-
 
 def phase_2_gate(state: HalfState) -> dict[str, Any]:
     """Gate: Phase 2 -- verifies tests exist and are runnable."""

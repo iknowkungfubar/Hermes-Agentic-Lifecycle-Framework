@@ -6,15 +6,12 @@ import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from half.runtime.nodes._write_artifact import _write_artifact
-
-if TYPE_CHECKING:
-    from half.runtime.state import HalfState
+from half.runtime.state import HalfState  # noqa: TC001
 
 logger = logging.getLogger("half.runtime.nodes")
-
 
 def phase_3_testing(state: HalfState) -> dict[str, Any]:
     """Phase 3A: Runs pytest and generates coverage report."""
@@ -60,7 +57,6 @@ def phase_3_testing(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_3_security(state: HalfState) -> dict[str, Any]:
     """Phase 3B: Security scanning with bandit."""
     logger.info("Phase 3B: Security scan")
@@ -99,7 +95,6 @@ def phase_3_security(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_3_integration(state: HalfState) -> dict[str, Any]:
     """Phase 3C: Integration test report generation."""
     logger.info("Phase 3C: Integration check")
@@ -114,7 +109,6 @@ def phase_3_integration(state: HalfState) -> dict[str, Any]:
             {"role": "assistant", "content": "Phase 3C: Integration report generated"}
         ],
     }
-
 
 def phase_3_gate(state: HalfState) -> dict[str, Any]:
     """Gate: Phase 3 -- checks security findings severity."""

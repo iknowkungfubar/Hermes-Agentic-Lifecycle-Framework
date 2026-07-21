@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from half.runtime.state import HalfState
+from half.runtime.state import HalfState  # noqa: TC001
 
 
 def route_from_gate(state: HalfState) -> str:
@@ -30,7 +29,6 @@ def route_from_gate(state: HalfState) -> str:
         if retries < state.get("max_retries", 3):
             return "retry_phase"
         return "fail_safe_escalate"
-
 
 def route_from_finality_gate(state: HalfState) -> str:
     """Route after Finality Gate: deploy or wait."""

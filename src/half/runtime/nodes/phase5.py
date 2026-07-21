@@ -5,15 +5,12 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from half.runtime.nodes._write_artifact import _write_artifact
-
-if TYPE_CHECKING:
-    from half.runtime.state import HalfState
+from half.runtime.state import HalfState  # noqa: TC001
 
 logger = logging.getLogger("half.runtime.nodes")
-
 
 def phase_5_observe(state: HalfState) -> dict[str, Any]:
     """Phase 5A: Writes monitoring configuration."""
@@ -30,7 +27,6 @@ def phase_5_observe(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_5_iterate(state: HalfState) -> dict[str, Any]:
     """Phase 5B: Issue triage playbook."""
     logger.info("Phase 5B: Iteration setup")
@@ -46,7 +42,6 @@ def phase_5_iterate(state: HalfState) -> dict[str, Any]:
         ],
     }
 
-
 def phase_5_codify(state: HalfState) -> dict[str, Any]:
     """Phase 5C: Codification Imperative -- records corrections."""
     logger.info("Phase 5C: Codification")
@@ -61,7 +56,6 @@ def phase_5_codify(state: HalfState) -> dict[str, Any]:
             {"role": "assistant", "content": "Phase 5C: Codification log initialized"}
         ],
     }
-
 
 def phase_5_gate(state: HalfState) -> dict[str, Any]:
     """Gate: Phase 5 -- verifies monitoring and codification active."""
