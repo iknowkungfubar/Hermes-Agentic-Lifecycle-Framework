@@ -4,6 +4,7 @@ Split from a single 754-line module into a package organized by phase.
 All symbols are re-exported here for backward compatibility.
 """
 
+from half.runtime.nodes._write_artifact import _write_artifact
 from half.runtime.nodes.phase1 import (
     phase_1_architecture,
     phase_1_discovery,
@@ -37,9 +38,9 @@ from half.runtime.nodes.phase5 import (
     phase_5_observe,
 )
 from half.runtime.nodes.routing import route_from_finality_gate, route_from_gate
-from half.runtime.nodes._write_artifact import _write_artifact
 
 __all__ = [
+    "_write_artifact",
     "phase_1_architecture",
     "phase_1_discovery",
     "phase_1_gate",
@@ -64,5 +65,4 @@ __all__ = [
     "phase_5_observe",
     "route_from_finality_gate",
     "route_from_gate",
-    "_write_artifact",
 ]

@@ -68,7 +68,9 @@ def phase_5_gate(state: HalfState) -> dict[str, Any]:
     logger.info("Phase 5: Gate check")
     from half import config as half_config
 
-    monitoring = (Path(half_config.ARTIFACTS_PHASE_5) / "monitoring-config.yaml").exists()
+    monitoring = (
+        Path(half_config.ARTIFACTS_PHASE_5) / "monitoring-config.yaml"
+    ).exists()
     passed = monitoring
     return {
         "current_step": "phase-5-gate",
