@@ -21,8 +21,6 @@ from half.routing.models import LoopScript, LoopScriptTask, RoutingDecision
 from half.routing.router import TaskRouter
 
 __all__ = [
-    "TaskDomain",
-    "WorkflowType",
     "CODE_KEYWORDS",
     "CONTENT_KEYWORDS",
     "DATA_KEYWORDS",
@@ -33,5 +31,7 @@ __all__ = [
     "LoopScript",
     "LoopScriptTask",
     "RoutingDecision",
+    "TaskDomain",
     "TaskRouter",
+    "WorkflowType",
 ]
