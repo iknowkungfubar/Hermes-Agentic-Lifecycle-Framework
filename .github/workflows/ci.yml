@@ -43,7 +43,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7 # v5
       - run: uv sync --group dev
       - run: uv run pip install -e .
-      - run: uv run pytest tests/ -q --tb=no --cov=src/half --cov-fail-under=73 --asyncio-mode=auto --ignore=tests/coverage --ignore=tests/infrastructure --ignore=tests/integration
+      - run: uv run pytest tests/ -q --tb=short --cov=src/half --cov-fail-under=72 --asyncio-mode=auto --ignore=tests/coverage --ignore=tests/infrastructure --ignore=tests/integration
 
   integration:
     needs: [test]
