@@ -161,7 +161,7 @@ class TestHalfCLI:
         """half version should print version info."""
         from half import __version__
 
-        assert __version__ == "1.0.0"
+        assert __version__ == "1.0.1"
 
     def test_import_main(self):
         """The main function should be importable."""
@@ -206,7 +206,7 @@ class TestHalfInit:
         """Version constant should exist."""
         import half
 
-        assert half.__version__ == "1.0.0"
+        assert half.__version__ == "1.0.1"
 
     def test_license_constant(self):
         """License constant should exist."""
@@ -215,7 +215,7 @@ class TestHalfInit:
         assert half.__license__ == "MIT"
 
     def test_python_version_check(self):
-        """Python version check should pass on 3.13+."""
+        """Python version check should pass on 3.11+."""
         import sys
 
-        assert sys.version_info >= (3, 13)
+        assert sys.version_info >= (3, 11)

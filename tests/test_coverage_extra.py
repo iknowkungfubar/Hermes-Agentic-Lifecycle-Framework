@@ -23,7 +23,7 @@ class TestCLIMainCoverage:
             timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
-        assert "HALF v1.0.0" in result.stdout
+        assert "HALF v1.0.1" in result.stdout
 
     def test_help_flag(self):
         """--help should print usage."""
@@ -37,7 +37,7 @@ class TestCLIMainCoverage:
         assert "Hermes Agentic Lifecycle Framework" in result.stdout
 
     def test_version_command(self):
-        """'version' command should print version."""
+        """--version command should print version."""
         result = subprocess.run(
             [sys.executable, "-m", "half.__main__", "version"],
             capture_output=True,
@@ -45,7 +45,7 @@ class TestCLIMainCoverage:
             timeout=10,
             cwd=Path(__file__).resolve().parent.parent,
         )
-        assert "HALF v1.0.0" in result.stdout
+        assert "HALF v1.0.1" in result.stdout
 
     def test_status_command(self):
         """'status' command should return pipeline status."""

@@ -106,7 +106,7 @@ class TestCLIRouting:
             result = _route_command(args)
             assert result is None
             output = sys.stdout.getvalue()
-            assert "HALF v1.0.0" in output
+            assert "HALF v1.0.1" in output
         finally:
             sys.stdout = old_stdout
 

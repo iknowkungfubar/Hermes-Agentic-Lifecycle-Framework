@@ -5,10 +5,11 @@ All notable changes to the Hermes Agentic Lifecycle Framework (HALF) are documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.0.1] - 2026-06-12
+## [1.0.1] - 2026-07-24
 
 ### Added
-- Full-featured Tauri 2.0 Command Center GUI with PDA chat interface
+- Dropped Python requirement to >=3.11 (was >=3.13) — unlocks pip install on all modern runtimes
+- Updated Python classifiers for 3.11, 3.12, 3.13, 3.14
 - Commander Agent PDA — interactive chat in the center pane
 - Commands: status, help, run phase, gate check, generate MRP, deploy
 - Live pipeline phase status, error budget, GPU VRAM monitoring
