@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from half.runtime.state import HalfState
+# Runtime import, not TYPE_CHECKING-only: langgraph's add_conditional_edges()
+# calls get_type_hints() which evaluates the HalfState forward reference at
+# runtime, so a TYPE_CHECKING-only import raises NameError (see 53e7321).
+from half.runtime.state import HalfState  # noqa: TC001
 
 
 def route_from_gate(state: HalfState) -> str:
