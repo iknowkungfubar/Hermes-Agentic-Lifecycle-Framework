@@ -18,9 +18,10 @@ jobs:
       - uses: actions/setup-python@v6 # v5
         with:
           python-version: "3.13"
-      - run: pip install ruff
-      - run: ruff check src/ --quiet
-      - run: ruff format src/ --check --quiet
+      - uses: astral-sh/setup-uv@v7 # v5
+      - run: uv sync --group dev
+      - run: uv run ruff check src/ --quiet
+      - run: uv run ruff format src/ --check --quiet
 
   type-check:
     runs-on: ubuntu-latest
