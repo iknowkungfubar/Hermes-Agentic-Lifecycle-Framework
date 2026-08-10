@@ -85,9 +85,7 @@ def _service_up(host: str, port: int) -> bool:
         return False
 
 
-@pytest.mark.skipif(
-    not _service_up("127.0.0.1", 9090), reason="Prometheus not running"
-)
+@pytest.mark.skipif(not _service_up("127.0.0.1", 9090), reason="Prometheus not running")
 class TestPrometheusAPI:
     """Exercise Prometheus HTTP API — tests network and observability."""
 
@@ -106,9 +104,7 @@ class TestPrometheusAPI:
         assert r.status == 200
 
 
-@pytest.mark.skipif(
-    not _service_up("127.0.0.1", 3000), reason="Grafana not running"
-)
+@pytest.mark.skipif(not _service_up("127.0.0.1", 3000), reason="Grafana not running")
 class TestGrafanaAPI:
     """Exercise Grafana HTTP API."""
 
